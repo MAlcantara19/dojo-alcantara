@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dojô Alcântara — versão 1 (área pública)
 
-## Getting Started
+Site estático: não precisa instalar nada para rodar.
 
-First, run the development server:
+## Ver no computador
+Dê dois cliques em `index.html`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Editar o conteúdo
+Abra `data.js` no VS Code e troque avisos, eventos, galeria e textos.
+Para colocar fotos: crie a pasta `img/`, copie as fotos e use `src: "img/foto.jpg"` na galeria.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Publicar de graça na Vercel
+1. Crie um repositório no GitHub e envie esta pasta.
+2. Na Vercel: Add New → Project → escolha o repositório → Deploy (sem mudar nada).
+3. Cada vez que você enviar uma mudança ao GitHub, o site atualiza sozinho.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Instalar como app no celular
+Abra o link no Chrome e toque em ⋮ → "Adicionar à tela inicial".
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Próximas versões
+2: login e painel admin (Firebase) · 3: conteúdo por faixa, treinos e simulados.

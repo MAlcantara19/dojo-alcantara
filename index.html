@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dojô Alcântara</title>
+  <meta name="description" content="Avisos, calendário, galeria e conteúdo de judô do Dojô Alcântara.">
+  <meta name="theme-color" content="#2b0f57">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#conteudo">Ir para o conteúdo</a>
+
+  <header class="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false" aria-controls="drawer">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </button>
+    <span class="topbar-title">Dojô Alcântara</span>
+    <button class="icon-btn" id="themeBtn" aria-label="Alternar tema claro e escuro">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" fill="currentColor"/></svg>
+    </button>
+  </header>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <nav class="drawer" id="drawer" aria-label="Menu principal" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="logo-mini" aria-hidden="true">DA</span>
+      <strong>Dojô Alcântara</strong>
+      <button class="icon-btn" id="closeBtn" aria-label="Fechar menu">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+    <a href="#inicio">Início</a>
+    <a href="#avisos">Avisos</a>
+    <a href="#calendario">Calendário</a>
+    <a href="#galeria">Galeria</a>
+    <a href="#sobre">Sobre nós</a>
+    <a href="#entrar" class="drawer-cta">Área do aluno</a>
+  </nav>
+
+  <main id="conteudo">
+    <section class="hero" id="inicio">
+      <span class="kanji" aria-hidden="true">柔道</span>
+      <div class="hero-inner">
+        <div class="logo" aria-label="Espaço para a logo do dojô"><span>DA</span></div>
+        <h1>Dojô Alcântara</h1>
+        <p class="slogan" id="slogan"></p>
+
+        <div class="next" id="nextEvent" hidden>
+          <span class="next-label">Próximo evento</span>
+          <strong class="next-title" id="nextTitle"></strong>
+          <span class="next-meta" id="nextMeta"></span>
+          <span class="next-count" id="nextCount"></span>
+        </div>
+
+        <div class="shortcuts" role="list">
+          <a role="listitem" href="#avisos">Avisos</a>
+          <a role="listitem" href="#calendario">Calendário</a>
+          <a role="listitem" href="#galeria">Galeria</a>
+          <a role="listitem" href="#sobre">Sobre nós</a>
+        </div>
+      </div>
+      <div class="belts" aria-hidden="true">
+        <i style="--c:#f4f1ff"></i><i style="--c:#f2d23c"></i><i style="--c:#f08a24"></i><i style="--c:#2f9e5b"></i>
+        <i style="--c:#2b6cd8"></i><i style="--c:#8a4bd6"></i><i style="--c:#7a4a2a"></i><i style="--c:#111"></i>
+      </div>
+    </section>
+
+    <section class="block" id="avisos">
+      <h2>Avisos</h2>
+      <p class="lead">O que você precisa saber antes do próximo treino.</p>
+      <div class="stack" id="avisosList"></div>
+    </section>
+
+    <section class="block alt" id="calendario">
+      <h2>Calendário</h2>
+      <p class="lead">Campeonatos, provas de faixa e confraternizações.</p>
+      <ol class="events" id="eventsList"></ol>
+    </section>
+
+    <section class="block" id="galeria">
+      <h2>Galeria</h2>
+      <p class="lead">Momentos dos treinos e eventos.</p>
+      <div class="grid" id="galleryGrid"></div>
+    </section>
+
+    <section class="block alt" id="sobre">
+      <h2>Sobre nós</h2>
+      <div class="prose" id="sobreText"></div>
+    </section>
+
+    <section class="block" id="entrar">
+      <div class="login-card">
+        <h2>Área do aluno</h2>
+        <p>Materiais da sua faixa, treinos e simulados ficam aqui, com login e senha criados pelo professor.</p>
+        <button class="btn" disabled>Entrar (em breve)</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>© <span id="year"></span> Dojô Alcântara</p>
+    <p class="foot-links" id="footLinks"></p>
+  </footer>
+
+  <button class="to-top" id="toTop" aria-label="Voltar ao topo" hidden>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

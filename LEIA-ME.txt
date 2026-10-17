@@ -1,0 +1,22 @@
+ATUALIZAÇÃO 3 — Login real + painel (avisos e eventos) ligados ao Firebase
+
+A) No projeto (C:\projetos\dojo-alcantara)
+ 1. Pare o servidor (Ctrl+C).
+ 2. npm install firebase   (se já instalou, não tem problema repetir)
+ 3. Copie a pasta "app" deste zip para o projeto e SUBSTITUA os arquivos.
+ 4. npm run dev
+
+B) No console do Firebase (console.firebase.google.com -> dojo-alcantara)
+ 1. Authentication -> Método de login -> E-mail/senha: ativado.
+ 2. Authentication -> Users -> Adicionar usuário: SEU e-mail + uma senha forte.
+    Copie o "UID do usuário" dele.
+ 3. Firestore Database -> Dados -> Iniciar coleção:
+      ID da coleção: users
+      ID do documento: (cole o UID)
+      Campos:  papel (string) = admin     nome (string) = Matheus
+ 4. Firestore Database -> Regras: apague o que está lá, cole o conteúdo do arquivo
+    firestore.rules deste zip e clique em PUBLICAR.
+
+C) Testar
+ - Abra http://localhost:3000/admin, entre com o e-mail e a senha do passo B2.
+ - Publique um aviso. Ele deve aparecer na página inicial.
