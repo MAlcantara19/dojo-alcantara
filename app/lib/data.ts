@@ -12,8 +12,8 @@ export const dojo = {
   nome: "Dojô Alcântara",
   slogan: "Judô para todas as idades",
   contato: {
-    instagram: "", // ex.: "dojoalcantara"
-    whatsapp: "", // ex.: "5524999999999"
+    instagram: "", // ex.: "@dojoalcantara"
+    whatsapp: "", // ex.: "5524992924519"
   },
 };
 

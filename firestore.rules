@@ -8,20 +8,34 @@ service cloud.firestore {
     function ehAdmin() { return logado() && temPerfil() && perfil().papel == 'admin'; }
     function ehEquipe() { return logado() && temPerfil() && perfil().papel in ['admin', 'professor']; }
 
+    function texto(campo, max) {
+      return request.resource.data[campo] is string
+        && request.resource.data[campo].size() > 0
+        && request.resource.data[campo].size() <= max;
+    }
+    function dataValida() {
+      return request.resource.data.data is string && request.resource.data.data.size() == 10;
+    }
+
     // Perfis: cada pessoa lê o próprio; só o admin cria ou altera.
     match /users/{uid} {
       allow read: if logado() && (request.auth.uid == uid || ehAdmin());
       allow write: if ehAdmin();
     }
 
-    // Conteúdo público: qualquer pessoa lê; só admin e professores editam.
+    // Avisos: qualquer pessoa lê; admin e professores publicam (com tamanhos limitados).
     match /avisos/{id} {
       allow read: if true;
-      allow write: if ehEquipe();
+      allow create, update: if ehEquipe() && texto('titulo', 80) && texto('texto', 600) && dataValida();
+      allow delete: if ehEquipe();
     }
+
+    // Eventos: idem.
     match /eventos/{id} {
       allow read: if true;
-      allow write: if ehEquipe();
+      allow create, update: if ehEquipe() && texto('titulo', 80) && texto('hora', 30)
+        && texto('local', 80) && texto('tipo', 30) && dataValida();
+      allow delete: if ehEquipe();
     }
 
     // Todo o resto fica bloqueado.

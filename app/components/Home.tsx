@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { dojo, galeria, sobre } from "../lib/data";
 import { useAvisos, useEventos } from "../lib/conteudo";
+import { linkGoogleAgenda } from "../lib/ics";
 
 const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -120,6 +121,12 @@ export default function Home() {
       <section className="block" id="calendario">
         <h2>Calendário</h2>
         <p className="lead">Campeonatos, provas de faixa e confraternizações.</p>
+        <div className="subscribe">
+          <a href="https://calendar.google.com/calendar/r?cid=webcal://dojo-alcantara.vercel.app/calendario.ics" target="_blank" rel="noopener noreferrer">
+            Assinar no Google Agenda
+          </a>
+          <a href="webcal://dojo-alcantara.vercel.app/calendario.ics">Assinar no iPhone</a>
+        </div>
         <ol className="events">
           {ev.carregando && <li className="empty">Carregando eventos…</li>}
           {!ev.carregando && futuros.length === 0 && <li className="empty">Nenhum evento marcado. Volte em breve.</li>}
@@ -135,6 +142,9 @@ export default function Home() {
                   <h3>{e.titulo}</h3>
                   <p>{[e.hora, e.local].filter(Boolean).join(" · ")}</p>
                   <span className="tag">{e.tipo}</span>
+                  <a className="add-cal" href={linkGoogleAgenda(e)} target="_blank" rel="noopener noreferrer">
+                    + Adicionar ao meu calendário
+                  </a>
                 </div>
               </li>
             );
@@ -180,6 +190,7 @@ export default function Home() {
       <footer className="foot">
         <p>© {hoje ? hoje.getFullYear() : 2026} Dojô Alcântara</p>
         <p className="foot-links">
+          <Link href="/privacidade">Privacidade</Link>
           {dojo.contato.instagram && (
             <a href={`https://instagram.com/${dojo.contato.instagram}`} target="_blank" rel="noopener noreferrer">
               Instagram

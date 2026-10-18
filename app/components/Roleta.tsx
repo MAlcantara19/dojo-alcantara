@@ -63,7 +63,9 @@ export default function Roleta() {
       </div>
 
       <div className={"reel" + (girando ? " spinning" : "")} aria-live="polite">
-        <span className="reel-word">{atual ? atual.termo : "Toque em girar"}</span>
+        <span key={`${atual?.termo ?? "vazio"}-${girando}`} className="reel-word">
+          {atual ? atual.termo : "Toque em girar"}
+        </span>
         {atual && !girando && mostrar && <span className="reel-meaning">{atual.significado}</span>}
       </div>
 
