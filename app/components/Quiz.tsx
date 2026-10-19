@@ -196,7 +196,7 @@ export default function Quiz() {
   }
 
   return (
-    <div className="card quiz">
+    <div className="card quiz" key={`${sim.id}-${i}`}>
       <div className="quiz-topo">
         <p className="quiz-count">
           {sim.titulo} · pergunta {i + 1} de {sim.perguntas.length}

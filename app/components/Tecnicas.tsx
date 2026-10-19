@@ -84,6 +84,7 @@ export default function Tecnicas() {
 
       {grupoBlocos.length === 0 && <p className="empty">Nenhuma técnica encontrada.</p>}
 
+      <div className="troca tool" key={aba + modo}>
       {grupoBlocos.map((b) => (
         <section key={b.chave} className="tblock" style={{ "--c": b.cor } as React.CSSProperties}>
           <h2>
@@ -112,6 +113,7 @@ export default function Tecnicas() {
           </div>
         </section>
       ))}
+      </div>
 
       {aberta && (
         <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>

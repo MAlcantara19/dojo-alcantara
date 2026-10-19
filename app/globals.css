@@ -579,3 +579,37 @@ button.resumo-card:hover{border-color:var(--bright)}
 .tag-aberto{background:rgba(242,210,60,.25);border-color:#d9a441;color:var(--text);margin-left:6px}
 .quiz-topo{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
 .quiz-topo .quiz-count{margin:0}
+
+/* Abertura, transições entre páginas e onda ao tocar (todas configuráveis no painel) */
+.abertura{position:fixed;inset:0;z-index:300;display:grid;place-items:center;color:#fff;background:linear-gradient(160deg,#0b0414,#2b0f57 55%,#6a35c9);animation:aberturaSai 1.7s ease-in-out forwards}
+.abertura-conteudo{display:grid;justify-items:center;gap:14px;text-align:center}
+.abertura-conteudo strong{font:800 clamp(1.8rem,8vw,2.8rem) "Bricolage Grotesque",sans-serif}
+.abertura-faixas{display:flex;width:min(70vw,260px);height:10px;border-radius:99px;overflow:hidden}
+.abertura-faixas i{flex:1}
+@keyframes aberturaSai{0%,70%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
+.ondinha{position:fixed;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;pointer-events:none;z-index:250;border:2px solid var(--bright);background:color-mix(in srgb,var(--bright) 25%,transparent)}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes aparecer-suave{from{opacity:0}to{opacity:1}}
+  @keyframes zoom-entrada{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes deslizar-entrada{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes onda{to{transform:scale(14);opacity:0}}
+  @keyframes logo-entra{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.06)}100%{opacity:1;transform:none}}
+  @keyframes faixas-entram{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  html[data-transicao="suave"] .page-anim{animation:aparecer-suave .4s ease both}
+  html[data-transicao="subir"] .page-anim{animation:subir .45s cubic-bezier(.2,.7,.2,1) both}
+  html[data-transicao="zoom"] .page-anim{animation:zoom-entrada .4s ease both}
+  html[data-transicao="deslizar"] .page-anim{animation:deslizar-entrada .4s cubic-bezier(.2,.7,.2,1) both}
+  .ondinha{animation:onda .6s ease-out forwards}
+  .abertura-conteudo .logo{animation:logo-entra .8s cubic-bezier(.2,.7,.2,1) both}
+  .abertura-faixas{transform-origin:left;animation:faixas-entram .9s .3s ease-out both}
+  /* ao trocar de categoria, aba ou pergunta, o conteúdo novo entra com um efeito */
+  .troca{animation:subir .35s ease both}
+  .quiz{animation:subir .35s ease both}
+  .wheel-box{animation:zoom-entrada .45s ease both}
+}
+html[data-tilt="off"] .tilt{transform:none!important}
+html[data-rolagem="off"] .block h2,html[data-rolagem="off"] .block .lead,html[data-rolagem="off"] .card,html[data-rolagem="off"] .event,html[data-rolagem="off"] .study-card,html[data-rolagem="off"] .tile,html[data-rolagem="off"] .login-card,html[data-rolagem="off"] .prose p,html[data-rolagem="off"] .tilt-wrap{animation:none!important}
+html[data-movimento="off"] .abertura,html[data-movimento="off"] .ondinha{display:none}
+.check-linha input[type=checkbox],.check-linha{cursor:pointer}
+.check-linha{display:flex;align-items:flex-start;gap:10px;width:100%}
+.check-linha>span{display:grid;min-width:0}

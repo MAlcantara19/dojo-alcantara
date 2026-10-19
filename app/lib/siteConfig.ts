@@ -3,7 +3,15 @@ import { dojo, sobre } from "./data";
 import { getDb } from "./firebase";
 import { useCarga } from "./useCarga";
 
-export type Efeitos = { movimento: boolean; kanji: boolean; brilho: boolean };
+export type Transicao = "nenhuma" | "suave" | "subir" | "zoom" | "deslizar";
+export const TRANSICOES: { valor: Transicao; rotulo: string }[] = [
+  { valor: "nenhuma", rotulo: "Nenhum" },
+  { valor: "suave", rotulo: "Surgir suave" },
+  { valor: "subir", rotulo: "Subir" },
+  { valor: "zoom", rotulo: "Zoom" },
+  { valor: "deslizar", rotulo: "Deslizar da direita" },
+];
+export type Efeitos = { movimento: boolean; kanji: boolean; brilho: boolean; intro: boolean; ondinha: boolean; tilt: boolean; rolagem: boolean; transicao: Transicao };
 export type SiteConfig = {
   nome: string;
   slogan: string;
@@ -27,7 +35,7 @@ export const siteBase: SiteConfig = {
   instagram: dojo.contato.instagram,
   whatsapp: dojo.contato.whatsapp,
   sobre,
-  efeitos: { movimento: true, kanji: true, brilho: true },
+  efeitos: { movimento: true, kanji: true, brilho: true, intro: true, ondinha: true, tilt: true, rolagem: true, transicao: "subir" },
   drivePasta: "",
   driveFichas: "",
   driveChave: "",
@@ -65,6 +73,11 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
       movimento: p.efeitos?.movimento !== false,
       kanji: p.efeitos?.kanji !== false,
       brilho: p.efeitos?.brilho !== false,
+      intro: p.efeitos?.intro !== false,
+      ondinha: p.efeitos?.ondinha !== false,
+      tilt: p.efeitos?.tilt !== false,
+      rolagem: p.efeitos?.rolagem !== false,
+      transicao: TRANSICOES.some((t) => t.valor === p.efeitos?.transicao) ? (p.efeitos?.transicao as Transicao) : "subir",
     },
     drivePasta: str(p.drivePasta, ""),
     driveFichas: str(p.driveFichas, ""),

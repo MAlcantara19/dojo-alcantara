@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ehEquipe } from "../lib/auth";
 import { siglaDe, useSite } from "../lib/siteConfig";
+import Abertura from "./Abertura";
 import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
@@ -80,7 +81,28 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     r.dataset.movimento = site.efeitos.movimento ? "on" : "off";
     r.dataset.kanji = site.efeitos.kanji ? "on" : "off";
     r.dataset.brilho = site.efeitos.brilho ? "on" : "off";
-  }, [site.efeitos.movimento, site.efeitos.kanji, site.efeitos.brilho]);
+    r.dataset.tilt = site.efeitos.tilt ? "on" : "off";
+    r.dataset.rolagem = site.efeitos.rolagem ? "on" : "off";
+    r.dataset.transicao = site.efeitos.transicao;
+  }, [site.efeitos.movimento, site.efeitos.kanji, site.efeitos.brilho, site.efeitos.tilt, site.efeitos.rolagem, site.efeitos.transicao]);
+
+  // Onda ao tocar em botões, cartões e categorias
+  const ondinha = site.efeitos.ondinha && site.efeitos.movimento;
+  useEffect(() => {
+    if (!ondinha || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const alvos = ".btn, .tilt, .pill, .tabs button, .option, .resumo-card, .study-card, .shortcuts a, .drawer a, .jump a, .tlinks a";
+    const h = (e: PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest(alvos)) return;
+      const onda = document.createElement("span");
+      onda.className = "ondinha";
+      onda.style.left = `${e.clientX}px`;
+      onda.style.top = `${e.clientY}px`;
+      document.body.appendChild(onda);
+      setTimeout(() => onda.remove(), 650);
+    };
+    document.addEventListener("pointerdown", h, { passive: true });
+    return () => document.removeEventListener("pointerdown", h);
+  }, [ondinha]);
 
   // Esc fecha a gaveta
   useEffect(() => {
@@ -115,6 +137,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <Abertura />
       <a className="skip" href="#conteudo">
         Ir para o conteúdo
       </a>
@@ -201,7 +224,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </Link>
       </nav>
 
-      <div className="page">{children}</div>
+      <div className="page page-anim" key={pathname}>
+        {children}
+      </div>
 
       <button
         className="to-top"

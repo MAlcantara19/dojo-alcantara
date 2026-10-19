@@ -5,6 +5,7 @@ import { dataBR, hojeISO, type Aluno } from "../lib/aluno";
 import { addAvisoTurma, addTurma, apagarAvisoTurma, apagarTurma, lerAvisosTurma, lerTurmas, listarAlunos, renomearTurma, salvarTurma, type AvisoTurma, type Escopo, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
+import GerenciarAlunos from "./GerenciarAlunos";
 
 const VAZIO_T: Turma[] = [];
 const VAZIO_A: Aluno[] = [];
@@ -18,6 +19,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
   const alunos = useCarga(() => listarAlunos(escopo), VAZIO_A);
   const avisos = useCarga(() => lerAvisosTurma(escopo), VAZIO_AV);
   const [editando, setEditando] = useState<string | null>(null);
+  const [gerenciando, setGerenciando] = useState<string | null>(null);
   const [aviso, setAviso] = useState<{ onde: string; texto: string } | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -148,6 +150,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                     Cancelar
                   </button>
                 </div>
+                <GerenciarAlunos turma={t} turmas={turmas.dados} alunos={alunos.dados} onFeito={alunos.recarregar} />
               </form>
             ) : (
               <>
@@ -189,6 +192,9 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                     <button className="btn btn-ghost" onClick={() => setEditando(t.id)}>
                       Editar turma
                     </button>
+                    <button className="btn btn-ghost" onClick={() => setGerenciando(gerenciando === t.id ? null : t.id)}>
+                      {gerenciando === t.id ? "Fechar alunos" : "Gerenciar alunos"}
+                    </button>
                     <button className="btn btn-ghost" disabled={ocupado} onClick={() => window.confirm(`Apagar a turma “${rotulo}”? Os alunos continuam cadastrados, mas ficam sem turma na lista.`) && void rodar(t.id, () => apagarTurma(t.id), "Turma apagada.", turmas.recarregar)}>
                       Apagar turma
                     </button>
@@ -197,6 +203,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
               </>
             )}
             {msg(t.id)}
+            {ehAdmin && gerenciando === t.id && <GerenciarAlunos turma={t} turmas={turmas.dados} alunos={alunos.dados} onFeito={alunos.recarregar} />}
 
             <h3 className="sub">Avisos da turma</h3>
             <form className="form tedit" onSubmit={(e) => novoAviso(e, t)}>

@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from "firebase/firestore";
 import type { Aluno } from "./aluno";
 import { hojeISO } from "./aluno";
 import { paraEmail, type Papel } from "./auth";
@@ -147,6 +147,16 @@ export async function mudarFaixa(uid: string, faixa: string) {
 export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string };
 export async function atualizarAluno(uid: string, d: DadosAluno) {
   await updateDoc(doc(getDb(), "users", uid), { ...d });
+}
+
+/** Coloca vários alunos de uma vez numa turma (use "" para deixá-los sem turma). */
+export async function mudarTurmaLote(uids: string[], turma: string) {
+  const db = getDb();
+  for (let i = 0; i < uids.length; i += 400) {
+    const lote = writeBatch(db);
+    uids.slice(i, i + 400).forEach((uid) => lote.update(doc(db, "users", uid), { academia: turma }));
+    await lote.commit();
+  }
 }
 
 export async function mudarTurma(uid: string, academia: string) {

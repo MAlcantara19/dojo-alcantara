@@ -6,7 +6,7 @@ import { enderecoOk } from "../lib/katasDb";
 import { testarDrive } from "../lib/fichas";
 import CampoImagem from "./CampoImagem";
 import { idDaPastaDrive } from "../lib/links";
-import { lerSite, mesclar, salvarSite, type SiteConfig } from "../lib/siteConfig";
+import { lerSite, mesclar, salvarSite, TRANSICOES, type SiteConfig, type Transicao } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
 
 const VAZIO: Partial<SiteConfig> = {};
@@ -38,7 +38,16 @@ export default function AdminSite() {
       instagram: g("instagram").replace(/^@/, "").replace(/[^A-Za-z0-9_.]/g, ""),
       whatsapp: g("whatsapp").replace(/\D/g, ""),
       sobre: g("sobre").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).slice(0, 12),
-      efeitos: { movimento: f.get("movimento") === "on", kanji: f.get("kanji") === "on", brilho: f.get("brilho") === "on" },
+      efeitos: {
+        movimento: f.get("movimento") === "on",
+        kanji: f.get("kanji") === "on",
+        brilho: f.get("brilho") === "on",
+        intro: f.get("intro") === "on",
+        ondinha: f.get("ondinha") === "on",
+        tilt: f.get("tilt") === "on",
+        rolagem: f.get("rolagem") === "on",
+        transicao: (TRANSICOES.some((t) => t.valor === g("transicao")) ? g("transicao") : "subir") as Transicao,
+      },
       drivePasta: idDaPastaDrive(g("pasta")),
       driveFichas: idDaPastaDrive(g("fichas")),
       driveChave: g("chave"),
@@ -123,10 +132,24 @@ export default function AdminSite() {
           <label htmlFor="s-dias">Dias em que a foto nova fica em destaque</label>
           <input id="s-dias" name="dias" type="number" min={1} max={60} defaultValue={atual.diasDestaque} />
         </div>
+        <h3 className="sub">Efeitos do site</h3>
+        <p className="form-help">Ligue ou desligue cada efeito. Se desligar “Animações em geral”, todos os movimentos param (bom para quem prefere um site mais sério ou usa celular antigo).</p>
         <fieldset className="checks">
-          <legend>Efeitos de movimento</legend>
+          <legend>O que se mexe</legend>
           <label>
-            <input type="checkbox" name="movimento" defaultChecked={atual.efeitos.movimento} /> Animações em geral (entradas, rolagem, passar o dedo)
+            <input type="checkbox" name="movimento" defaultChecked={atual.efeitos.movimento} /> Animações em geral (liga e desliga tudo de uma vez)
+          </label>
+          <label>
+            <input type="checkbox" name="intro" defaultChecked={atual.efeitos.intro} /> Abertura: logo e nome aparecem ao entrar no site (uma vez por visita)
+          </label>
+          <label>
+            <input type="checkbox" name="ondinha" defaultChecked={atual.efeitos.ondinha} /> Onda ao tocar em botões, cartões e categorias
+          </label>
+          <label>
+            <input type="checkbox" name="tilt" defaultChecked={atual.efeitos.tilt} /> Cartões 3D que inclinam (técnicas e galeria)
+          </label>
+          <label>
+            <input type="checkbox" name="rolagem" defaultChecked={atual.efeitos.rolagem} /> Itens que sobem ao aparecer na rolagem
           </label>
           <label>
             <input type="checkbox" name="kanji" defaultChecked={atual.efeitos.kanji} /> Letras japonesas flutuando no fundo da página inicial
@@ -135,6 +158,16 @@ export default function AdminSite() {
             <input type="checkbox" name="brilho" defaultChecked={atual.efeitos.brilho} /> Brilho pulsando na logo
           </label>
         </fieldset>
+        <div className="field">
+          <label htmlFor="s-trans">Efeito ao trocar de página</label>
+          <select id="s-trans" name="transicao" defaultValue={atual.efeitos.transicao}>
+            {TRANSICOES.map((t) => (
+              <option key={t.valor} value={t.valor}>
+                {t.rotulo}
+              </option>
+            ))}
+          </select>
+        </div>
         <button className="btn btn-primary" type="submit" disabled={ocupado}>
           Salvar
         </button>
