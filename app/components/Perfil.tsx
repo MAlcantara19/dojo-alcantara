@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut, updatePassword } from "firebase/auth";
+import Link from "next/link";
 import { useState } from "react";
 import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa } from "../lib/aluno";
 import { addMedida, addNota, apagarSub, confirmarSenhaTrocada, lerAluno, lerMedidas, lerNotas, lerResultados, type Medida, type Nota, type Resultado } from "../lib/alunos";
@@ -99,6 +100,24 @@ function Conteudo({ uid }: { uid: string }) {
   if (perfilCompleto.carregando) return <p className="form-help">Carregando seu perfil…</p>;
   if (!p) return <p className="notice">Não consegui ler o seu perfil. Tente de novo em instantes.</p>;
 
+  if (p.papel !== "aluno") {
+    return (
+      <>
+        <p className="notice" role="note">
+          Você entrou como {p.papel === "admin" ? "administrador" : "professor"}. A área do aluno é para quem é aluno. Para editar o site, use o painel.
+        </p>
+        <div className="tool-actions">
+          <Link className="btn btn-primary" href="/admin">
+            Ir para o painel
+          </Link>
+          <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
+            Sair
+          </button>
+        </div>
+      </>
+    );
+  }
+
   const idx = indiceFaixa(p.faixa);
   const pesos = medidas.dados.filter((m) => typeof m.peso === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.peso as number }));
   const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.altura as number }));
@@ -118,7 +137,7 @@ function Conteudo({ uid }: { uid: string }) {
             {p.academia ? ` · ${p.academia}` : ""}
           </p>
           <p className="tmeta">
-            Faixa {p.faixa.toLowerCase()} · {idade(p.dataNascimento, hoje)} anos · idade de campeonato em {hoje.getFullYear()}: {anoCampeonato(p.dataNascimento, hoje)}
+            Faixa {(p.faixa ?? "").toLowerCase()}{p.dataNascimento ? ` · ${idade(p.dataNascimento, hoje)} anos · idade de campeonato em ${hoje.getFullYear()}: ${anoCampeonato(p.dataNascimento, hoje)}` : ""}
           </p>
         </div>
         <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>

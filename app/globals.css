@@ -451,3 +451,24 @@ html[data-movimento="off"] .tilt{transform:none!important}
     .tilt-wrap{animation:subir linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
   }
 }
+
+/* Seções do painel e da área do aluno, cada uma com a sua cor (como as faixas) */
+.aba>.panel,.solo-card>.panel{--cat:#2b6cd8;border:1px solid color-mix(in srgb,var(--cat) 40%,var(--line));border-top:8px solid var(--cat);background:color-mix(in srgb,var(--cat) 7%,var(--surface))}
+.aba>.panel:nth-of-type(7n+2),.solo-card>.panel:nth-of-type(7n+2){--cat:#d9a91a}
+.aba>.panel:nth-of-type(7n+3),.solo-card>.panel:nth-of-type(7n+3){--cat:#f08a24}
+.aba>.panel:nth-of-type(7n+4),.solo-card>.panel:nth-of-type(7n+4){--cat:#2f9e5b}
+.aba>.panel:nth-of-type(7n+5),.solo-card>.panel:nth-of-type(7n+5){--cat:#8a4bd6}
+.aba>.panel:nth-of-type(7n+6),.solo-card>.panel:nth-of-type(7n+6){--cat:#8b5a3c}
+.aba>.panel:nth-of-type(7n+7),.solo-card>.panel:nth-of-type(7n+7){--cat:#5d6779}
+.aba>.panel h2,.solo-card>.panel h2{display:flex;align-items:center;gap:10px}
+.aba>.panel h2::before,.solo-card>.panel h2::before{content:"";flex:none;width:14px;height:14px;border-radius:50%;background:var(--cat);box-shadow:0 0 0 3px color-mix(in srgb,var(--cat) 30%,transparent)}
+.tabs-scroll button::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:var(--pt,#8c86a3)}
+.tabs-scroll button:nth-child(1)::before{--pt:#2b6cd8}
+.tabs-scroll button:nth-child(2)::before{--pt:#d9a91a}
+.tabs-scroll button:nth-child(3)::before{--pt:#f08a24}
+.tabs-scroll button:nth-child(4)::before{--pt:#2f9e5b}
+.tabs-scroll button:nth-child(5)::before{--pt:#8a4bd6}
+.tabs-scroll button:nth-child(6)::before{--pt:#8b5a3c}
+.tabs-scroll button:nth-child(7)::before{--pt:#5d6779}
+.btn-claro{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7)}
+.btn-claro:hover{background:rgba(255,255,255,.15)}

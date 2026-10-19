@@ -31,6 +31,6 @@ export function mensagemErro(e: unknown): string {
     return "E-mail ou celular, ou senha, incorretos.";
   if (code === "auth/too-many-requests") return "Muitas tentativas. Espere alguns minutos e tente de novo.";
   if (code === "auth/network-request-failed") return "Sem conexão com a internet. Tente de novo.";
-  if (code === "permission-denied" || code === "firestore/permission-denied") return "Você não tem permissão para fazer isso.";
+  if (code === "permission-denied" || code === "firestore/permission-denied") return "Sem permissão para isso. Se você acabou de atualizar o site, publique as regras novas (arquivo firestore.rules) em Firebase → Firestore → Regras.";
   return "Algo deu errado. Tente de novo.";
 }

@@ -9,7 +9,7 @@ import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
 
-const grupos = [
+const gruposBase = [
   {
     titulo: "Dojô",
     itens: [
@@ -30,20 +30,26 @@ const grupos = [
       { href: "", rotulo: "Apostilas" },
     ],
   },
-  {
-    titulo: "Área do aluno",
-    itens: [{ href: "/perfil", rotulo: "Meu perfil · Entrar" }],
-  },
-  {
-    titulo: "Atalhos",
-    itens: [{ href: "/admin", rotulo: "Painel do professor" }],
-  },
 ];
+
+function gruposDe(logado: boolean, equipe: boolean) {
+  const conta = !logado
+    ? [
+        { href: "/perfil", rotulo: "Entrar como aluno" },
+        { href: "/admin", rotulo: "Entrar como professor" },
+      ]
+    : equipe
+      ? [{ href: "/admin", rotulo: "Painel do professor" }]
+      : [{ href: "/perfil", rotulo: "Meu perfil" }];
+  return [...gruposBase, { titulo: logado ? "Minha conta" : "Entrar", itens: conta }];
+}
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, perfil } = useAuth();
   const site = useSite();
+  const equipe = ehEquipe(perfil);
+  const grupos = gruposDe(Boolean(user), equipe);
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [mostrarTopo, setMostrarTopo] = useState(false);
@@ -136,7 +142,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <span className="topbar-title">{site.nome}</span>
         <div className="top-actions">
           {user ? (
-            ehEquipe(perfil) ? (
+            equipe ? (
               <Link className="pill" href="/admin">
                 Painel
               </Link>
@@ -206,8 +212,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         ))}
 
-        <Link href="/perfil" className="drawer-cta" onClick={() => setAberto(false)}>
-          Meu perfil
+        <Link href={user ? (equipe ? "/admin" : "/perfil") : "/perfil"} className="drawer-cta" onClick={() => setAberto(false)}>
+          {user ? (equipe ? "Abrir o painel" : "Meu perfil") : "Entrar"}
         </Link>
       </nav>
 

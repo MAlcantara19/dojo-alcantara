@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
+import { ehEquipe } from "../lib/auth";
 import { imagemDireta } from "../lib/links";
+import { useAuth } from "../lib/useAuth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import { enderecoOk } from "../lib/katasDb";
@@ -29,6 +31,7 @@ const hojeTexto = () => {
 
 export default function Home() {
   const site = useSite();
+  const { user, perfil } = useAuth();
   // Vazio no servidor; no navegador vira a data de hoje (evita erro de hidratação)
   const hojeStr = useSyncExternalStore(semAssinatura, hojeTexto, () => "");
   const hoje = hojeStr ? parseData(hojeStr) : null;
@@ -185,11 +188,27 @@ export default function Home() {
 
       <section className="block alt" id="entrar">
         <div className="login-card">
-          <h2>Área do aluno</h2>
-          <p>Materiais da sua faixa, treinos e simulados ficam aqui, com login e senha criados pelo professor.</p>
-          <Link href="/perfil" className="btn">
-            Entrar
-          </Link>
+          <h2>{user ? "Sua conta" : "Área do aluno"}</h2>
+          {user ? (
+            <>
+              <p>Você já está conectado.</p>
+              <Link href={ehEquipe(perfil) ? "/admin" : "/perfil"} className="btn">
+                {ehEquipe(perfil) ? "Ir para o painel" : "Ver meu perfil"}
+              </Link>
+            </>
+          ) : (
+            <>
+              <p>Materiais da sua faixa, treinos e simulados ficam aqui, com login e senha criados pelo professor.</p>
+              <div className="tool-actions">
+                <Link href="/perfil" className="btn">
+                  Entrar como aluno
+                </Link>
+                <Link href="/admin" className="btn btn-claro">
+                  Entrar como professor
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
