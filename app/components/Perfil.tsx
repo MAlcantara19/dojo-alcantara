@@ -4,18 +4,19 @@ import { signOut, updatePassword } from "firebase/auth";
 import Link from "next/link";
 import { useState } from "react";
 import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre } from "../lib/aluno";
-import { addMedida, addNota, apagarSub, confirmarSenhaTrocada, lerAluno, lerMedidas, lerNotas, lerResultados, type Medida, type Nota, type Resultado } from "../lib/alunos";
+import { addMedida, addNota, apagarSub, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
-import { useConfigTecnicas } from "../lib/conteudo";
+import { useTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import { getAuthInstance } from "../lib/firebase";
-import { faixaEfetiva, tecnicas } from "../lib/tecnicas";
+import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
 import LoginForm from "./LoginForm";
 
+const VAZIO_AV: AvisoTurma[] = [];
 const VAZIO_M: Medida[] = [];
 const VAZIO_N: Nota[] = [];
 const VAZIO_R: Resultado[] = [];
@@ -52,7 +53,10 @@ function Conteudo({ uid }: { uid: string }) {
   const medidas = useCarga(() => lerMedidas(uid), VAZIO_M);
   const notas = useCarga(() => lerNotas(uid), VAZIO_N);
   const resultados = useCarga(() => lerResultados(uid), VAZIO_R);
-  const { mapa } = useConfigTecnicas();
+  const { mapa, lista: catalogo } = useTecnicas();
+  const academia = perfilCompleto.dados?.academia ?? "";
+  const minhaTurma = useCarga<Turma | null>(() => lerMinhaTurma(academia), null, Boolean(academia));
+  const avisosTurma = useCarga(() => lerAvisosTurma([academia]), VAZIO_AV, Boolean(academia));
   const [msg, setMsg] = useState("");
 
   const hoje = new Date();
@@ -122,7 +126,7 @@ function Conteudo({ uid }: { uid: string }) {
   const pesos = medidas.dados.filter((m) => typeof m.peso === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.peso as number }));
   const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.altura as number }));
 
-  const paraTreinar = tecnicas
+  const paraTreinar = catalogo
     .map((t) => ({ ...t, faixa: faixaEfetiva(t, mapa[t.id]).faixa, nota: mapa[t.id]?.nota || t.nota, cfg: mapa[t.id] }))
     .filter((t) => t.faixa && indiceFaixa(t.faixa) >= 0 && indiceFaixa(t.faixa) <= idx + 1);
 
@@ -151,6 +155,61 @@ function Conteudo({ uid }: { uid: string }) {
         <p className="form-note" role="status">
           {msg}
         </p>
+      )}
+
+      {academia && (
+        <section className="panel">
+          <h2>Minha turma{minhaTurma.dados ? `: ${minhaTurma.dados.apelido || minhaTurma.dados.nome}` : ""}</h2>
+          {minhaTurma.dados?.descricao && <p>{minhaTurma.dados.descricao}</p>}
+          <ul className="manage">
+            {minhaTurma.dados?.localNome || minhaTurma.dados?.endereco ? (
+              <li>
+                <span>
+                  <strong>Onde treinar</strong>
+                  <small>{minhaTurma.dados?.localNome}</small>
+                  <small>{minhaTurma.dados?.endereco}</small>
+                </span>
+                {minhaTurma.dados?.endereco && (
+                  <a className="btn btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(minhaTurma.dados.endereco)}`} target="_blank" rel="noopener noreferrer">
+                    📍 Mapa
+                  </a>
+                )}
+              </li>
+            ) : null}
+            {minhaTurma.dados?.horarios && (
+              <li>
+                <span>
+                  <strong>Horários</strong>
+                  <small className="pre">{minhaTurma.dados.horarios}</small>
+                </span>
+              </li>
+            )}
+            {minhaTurma.dados?.grupoWhatsApp && (
+              <li>
+                <span>
+                  <strong>Grupo da turma</strong>
+                  <small>Avisos e conversa no WhatsApp</small>
+                </span>
+                <a className="btn btn-ghost" href={minhaTurma.dados.grupoWhatsApp} target="_blank" rel="noopener noreferrer">
+                  💬 Entrar
+                </a>
+              </li>
+            )}
+          </ul>
+          <h3 className="sub">Avisos da turma</h3>
+          <ul className="manage">
+            {avisosTurma.dados.length === 0 && <li className="empty">Nenhum aviso da sua turma por enquanto.</li>}
+            {avisosTurma.dados.slice(0, 8).map((a) => (
+              <li key={a.id}>
+                <span>
+                  <strong>{a.titulo}</strong>
+                  <small>{dataBR(a.data)}</small>
+                  <small className="pre">{a.texto}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section className="panel">

@@ -121,7 +121,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="block alt" id="avisos">
+      <div className="duo alt">
+      <section className="block" id="avisos">
         <h2>Avisos</h2>
         <p className="lead">O que você precisa saber antes do próximo treino.</p>
         <div className="stack">
@@ -170,6 +171,7 @@ export default function Home() {
           })}
         </ol>
       </section>
+      </div>
 
       <section className="block alt" id="galeria">
         <h2>Galeria</h2>
@@ -177,6 +179,7 @@ export default function Home() {
         <GaleriaGrid />
       </section>
 
+      <div className="duo">
       <section className="block" id="sobre">
         <h2>Sobre nós</h2>
         <div className="prose">
@@ -186,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="block alt" id="entrar">
+      <section className="block" id="entrar">
         <div className="login-card">
           <h2>{user ? "Sua conta" : "Área do aluno"}</h2>
           {user ? (
@@ -211,6 +214,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      </div>
 
       <footer className="foot">
         <p>© {hoje ? hoje.getFullYear() : 2026} {site.nome}</p>

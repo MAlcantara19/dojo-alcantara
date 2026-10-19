@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useConfigTecnicas } from "../lib/conteudo";
+import { useTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
-import { faixaEfetiva, familias, grupos, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { faixaEfetiva, familias, grupos, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
@@ -21,11 +21,11 @@ export default function Tecnicas() {
   const [aba, setAba] = useState<Aba>("todas");
   const [modo, setModo] = useState<Modo>("grupo");
   const [busca, setBusca] = useState("");
-  const { mapa } = useConfigTecnicas();
+  const { mapa, lista: catalogo } = useTecnicas();
   const [aberta, setAberta] = useState<Item | null>(null);
 
   const termo = busca.trim().toLowerCase();
-  const lista: Item[] = tecnicas
+  const lista: Item[] = catalogo
     .map((t) => {
       const f = faixaEfetiva(t, mapa[t.id]);
       return { ...t, nota: mapa[t.id]?.nota || t.nota, faixaFinal: f.faixa, sugerida: f.sugerida };

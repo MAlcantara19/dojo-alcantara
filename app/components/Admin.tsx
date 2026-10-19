@@ -8,6 +8,7 @@ import { useResultadosEquipe } from "../lib/resultados";
 import { useAuth } from "../lib/useAuth";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
+import AdminEquipe from "./AdminEquipe";
 import AdminEstudo from "./AdminEstudo";
 import AdminFichas from "./AdminFichas";
 import AdminGaleria from "./AdminGaleria";
@@ -16,10 +17,11 @@ import AdminMural from "./AdminMural";
 import AdminResultados from "./AdminResultados";
 import AdminResumo from "./AdminResumo";
 import AdminSite from "./AdminSite";
+import AdminTurmas from "./AdminTurmas";
 import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
-type Aba = "resumo" | "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
+type Aba = "resumo" | "mural" | "turmas" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "equipe" | "site";
 
 export default function Admin() {
   const { carregando, user, perfil } = useAuth();
@@ -48,10 +50,10 @@ export default function Admin() {
     );
   }
 
-  return <Painel nome={perfil?.nome ?? user.email ?? "professor"} uid={user.uid} ehAdmin={perfil?.papel === "admin"} turmas={perfil?.turmas ?? []} />;
+  return <Painel nome={perfil?.nome ?? "sem nome"} email={user.email ?? ""} uid={user.uid} ehAdmin={perfil?.papel === "admin"} turmas={perfil?.turmas ?? []} />;
 }
 
-function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehAdmin: boolean; turmas: string[] }) {
+function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: string; uid: string; ehAdmin: boolean; turmas: string[] }) {
   const escopo = ehAdmin ? null : turmas;
   const [aba, setAba] = useState<Aba>("resumo");
   const res = useResultadosEquipe(escopo);
@@ -59,18 +61,24 @@ function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehA
   const abas: [Aba, string][] = [
     ["resumo", "Resumo"],
     ["mural", "Mural"],
+    ["turmas", "Turmas"],
     ["alunos", "Alunos"],
     ["aulas", "Aulas"],
     ["conteudo", "Conteúdo"],
     ["estudo", "Estudo"],
     ["resultados", res.novos > 0 ? `Resultados (${res.novos})` : "Resultados"],
-    ...(ehAdmin ? ([["site", "Site"]] as [Aba, string][]) : []),
+    ...(ehAdmin ? ([["equipe", "Equipe"], ["site", "Site"]] as [Aba, string][]) : []),
   ];
 
   return (
     <>
       <div className="admin-top">
-        <p className="lead">Olá, {nome}. O que você publicar aparece no site na hora.</p>
+        <div>
+          <span className={"papel " + (ehAdmin ? "papel-admin" : "papel-prof")}>{ehAdmin ? "Administrador" : "Professor"}</span>
+          <p className="lead">
+            Olá, {nome}.{email && !email.endsWith("@celular.dojoalcantara.app") ? ` (${email})` : ""} O que você publicar aparece no site na hora.
+          </p>
+        </div>
         <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
           Sair
         </button>
@@ -93,6 +101,7 @@ function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehA
       <div className="aba" key={aba}>
         {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} />}
         {aba === "mural" && <AdminMural />}
+        {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
         {aba === "conteudo" && (
@@ -104,6 +113,7 @@ function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehA
           </>
         )}
         {aba === "estudo" && <AdminEstudo />}
+        {aba === "equipe" && ehAdmin && <AdminEquipe />}
         {aba === "site" && ehAdmin && <AdminSite />}
         {aba === "resultados" && <AdminResultados itens={res.dados} carregando={res.carregando} erro={res.erro} visto={res.visto} marcarVisto={res.marcarVisto} />}
       </div>

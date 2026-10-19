@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useConfigTecnicas } from "../lib/conteudo";
+import { useTecnicas } from "../lib/conteudo";
 import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
-import { corDe, faixaEfetiva, familias, grupos, rotuloGrupo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { corDe, faixaEfetiva, familias, grupos, rotuloGrupo, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
 import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
@@ -54,7 +54,7 @@ export default function Roleta() {
   const [escolhas, setEscolhas] = useState<{ texto: string; certa: boolean }[]>([]);
   const [marcada, setMarcada] = useState<number | null>(null);
   const [placar, setPlacar] = useState({ acertos: 0, jogadas: 0 });
-  const { mapa } = useConfigTecnicas();
+  const { mapa, lista: catalogo } = useTecnicas();
   const dbPalavras = useCarga(lerPalavras, VAZIO_PAL);
   const dbExe = useCarga(lerExercicios, VAZIO_EXE);
   const dbListas = useCarga(lerListasPalavras, VAZIO_LISTAS);
@@ -63,7 +63,7 @@ export default function Roleta() {
   const exercicios = useMemo(() => exerciciosOuPadrao(dbExe.dados), [dbExe.dados]);
 
   const palavras: Palavra[] = escolhida.itens;
-  const tecs = useMemo(() => tecnicas.filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro]);
+  const tecs = useMemo(() => catalogo.filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro, catalogo]);
 
   const fatias: Fatia[] =
     modo === "palavras"

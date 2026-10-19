@@ -154,3 +154,25 @@ export function faixaEfetiva(t: Tecnica, cfg?: { faixa?: string }): FaixaEfetiva
   }
   return { sugerida: false };
 }
+
+/* ---------- Catálogo editável pelo painel ---------- */
+export type AjusteTecnica = { nome?: string; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
+
+const categoriaOk = (v?: string): v is Categoria => v === "Nage-waza" || v === "Katame-waza";
+const familiaOk = (v?: string): v is Familia => Boolean(v && v in familias);
+const grupoOk = (v?: string): v is GrupoId => Boolean(v && v in grupos);
+
+/** As técnicas do site: as da lista do Kodokan (com o nome que você editou, ou escondidas) + as que você criou. */
+export function montarCatalogo(ajustes: Record<string, AjusteTecnica>, incluirEscondidas = false): Tecnica[] {
+  const base = tecnicas.filter((t) => incluirEscondidas || !ajustes[t.id]?.ocultar).map((t) => ({ ...t, nome: ajustes[t.id]?.nome || t.nome }));
+  const extras: Tecnica[] = Object.entries(ajustes)
+    .filter(([, a]) => a.custom && a.nome && (incluirEscondidas || !a.ocultar))
+    .map(([id, a]) => {
+      const categoria: Categoria = categoriaOk(a.categoria) ? a.categoria : "Nage-waza";
+      const familia: Familia | undefined = familiaOk(a.familia) ? a.familia : categoria === "Katame-waza" ? "Osaekomi-waza" : undefined;
+      const grupo: GrupoId = categoria === "Nage-waza" && grupoOk(a.grupo) ? a.grupo : "-";
+      return { id, nome: a.nome as string, categoria, familia, grupo };
+    })
+    .sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+  return [...base, ...extras];
+}

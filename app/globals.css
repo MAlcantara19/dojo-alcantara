@@ -516,3 +516,38 @@ button.resumo-card:hover{border-color:var(--bright)}
 .confete i:nth-child(16){left:86%;background:#2b6cd8;animation-delay:0.48s}
 .confete i:nth-child(17){left:92%;background:#d9334a;animation-delay:0.60s}
 .confete i:nth-child(18){left:97%;background:#f2d23c;animation-delay:0.00s}
+
+.papel{display:inline-block;padding:.15rem .7rem;border-radius:999px;font-size:.78rem;font-weight:800;letter-spacing:.02em}
+.papel-admin{background:linear-gradient(160deg,var(--bright),var(--deep));color:#fff}
+.papel-prof{background:#2f9e5b;color:#fff}
+.admin-top .lead{margin-top:6px}
+.pill-conta{display:grid;gap:0;line-height:1.15;padding:.3rem .8rem;text-align:left}
+.pill-conta .pill-nome{font-weight:800;font-size:.9rem}
+.pill-conta small{font-size:.68rem;font-weight:500;opacity:.9}
+.pill-conta .pill-email{display:none}
+@media (min-width:700px){.pill-conta .pill-email{display:block}}
+.acoes-conta{display:grid;gap:8px;margin-top:6px}
+.perigo{border-color:#d9534f!important;color:#d9534f!important}
+
+/* Página inicial: seções lado a lado em telas largas */
+.duo{display:grid;max-width:1100px;margin:0 auto}
+.duo.alt{max-width:none;background:var(--surface-2)}
+.duo.alt>.block{max-width:none;margin:0}
+.duo>.block{max-width:none;padding:48px 20px}
+.duo.alt>.block>*{max-width:560px;margin-left:auto;margin-right:auto}
+@media (min-width:960px){
+  .duo{grid-template-columns:1fr 1fr;gap:0 28px;padding:0 20px}
+  .duo>.block{padding:48px 0}
+  .duo.alt{padding:0}
+  .duo.alt>.block{padding:48px 28px}
+  .duo.alt>.block>*{max-width:none}
+  .duo.alt{padding-left:max(20px,calc((100% - 1100px)/2));padding-right:max(20px,calc((100% - 1100px)/2))}
+}
+/* listas do painel: texto à esquerda, botões à direita, sem desperdiçar espaço */
+.manage li>span:first-child{min-width:0;flex:1}
+.manage li .tlinks{flex:none;flex-wrap:nowrap}
+.manage li .tlinks .btn,.manage li>.btn{padding:.4rem .8rem;font-size:.85rem;white-space:nowrap}
+@media (max-width:420px){.manage li .tlinks{flex-wrap:wrap;justify-content:flex-end}}
+@media (min-width:1000px){.aba{max-width:none}.solo.wide .solo-card{width:min(100%,980px)}}
+.check-linha{display:flex;align-items:center;gap:8px;font-weight:600}
+.check-linha input{width:auto}

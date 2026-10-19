@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
-import { apagarCardKata, criarCardKata, enderecoOk, lerKatasDb, montarKatas, salvarMidiaKata, type Imagem, type Video } from "../lib/katasDb";
+import { apagarCardKata, criarCardKata, enderecoOk, lerKatasDb, montarKatas, salvarMidiaKata, salvarTextosKata, seriesParaTexto, textoParaSeries, type Imagem, type Video } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
 
@@ -96,6 +96,42 @@ export default function AdminKatas() {
 
       {atual && (
         <>
+          <form
+            className="form tedit"
+            key={atual.id + atual.nome + atual.dan + atual.resumo + atual.series.length}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              const nome = String(f.get("nome") ?? "").trim();
+              if (!nome) return setMsg("O nome do kata não pode ficar vazio.");
+              const series = textoParaSeries(String(f.get("series") ?? ""));
+              if (series.some((s) => s.tecnicas.length === 0)) return setMsg("Cada série precisa de pelo menos uma técnica embaixo do título.");
+              void rodar(() => salvarTextosKata(atual.id, { nome, dan: String(f.get("dan") ?? "").trim(), resumo: String(f.get("resumo") ?? "").trim(), series }), "Textos e técnicas salvos.");
+            }}
+          >
+            <strong>Textos e técnicas de {atual.nome}</strong>
+            <div className="field">
+              <label>Nome</label>
+              <input name="nome" type="text" maxLength={60} defaultValue={atual.nome} autoComplete="off" />
+            </div>
+            <div className="field">
+              <label>Para qual graduação</label>
+              <input name="dan" type="text" maxLength={80} defaultValue={atual.dan} autoComplete="off" />
+            </div>
+            <div className="field">
+              <label>Resumo</label>
+              <textarea name="resumo" rows={2} maxLength={300} defaultValue={atual.resumo} />
+            </div>
+            <div className="field">
+              <label>Técnicas por série</label>
+              <textarea name="series" rows={10} maxLength={6000} defaultValue={seriesParaTexto(atual.series)} />
+              <p className="form-help">Um bloco por série, separados por uma linha em branco. A primeira linha do bloco é o título da série e, embaixo, uma técnica por linha. Para explicar uma técnica, escreva: Nome | explicação.</p>
+            </div>
+            <button className="btn btn-primary" type="submit" disabled={ocupado}>
+              Salvar textos e técnicas
+            </button>
+          </form>
+
           <form className="form tedit" onSubmit={novoVideo}>
             <strong>Vídeos de {atual.nome}</strong>
             <ul className="manage">

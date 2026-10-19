@@ -13,6 +13,7 @@ export type NovaConta = {
   apelidoInterno: string;
   dataNascimento: string;
   faixa: string;
+  faixaDesde: string;
   academia: string;
   email: string;
   celular: string;
@@ -30,7 +31,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
     apelido: d.apelido,
     dataNascimento: d.dataNascimento || "",
     faixa: d.faixa,
-    faixaDesde: hojeISO(),
+    faixaDesde: d.faixaDesde || hojeISO(),
     academia: d.academia,
     papel: d.papel,
     email: d.email.trim().toLowerCase(),
@@ -63,16 +64,72 @@ export async function salvarTurmasProfessor(uid: string, turmas: string[]) {
   await updateDoc(doc(getDb(), "users", uid), { turmas });
 }
 
-/* ---------- Turmas (nomes) ---------- */
-export type Turma = { id: string; nome: string };
+/* ---------- Turmas ---------- */
+export type Turma = { id: string; nome: string; apelido: string; descricao: string; localNome: string; endereco: string; horarios: string; grupoWhatsApp: string };
+export type DadosTurma = Omit<Turma, "id">;
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+
 export async function lerTurmas(): Promise<Turma[]> {
   const snap = await getDocs(collection(getDb(), "turmas"));
-  return snap.docs.map((d) => ({ id: d.id, nome: String((d.data() as { nome?: string }).nome ?? "") })).filter((t) => t.nome).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  return snap.docs
+    .map((d) => {
+      const r = d.data() as Record<string, unknown>;
+      return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp) };
+    })
+    .filter((t) => t.nome)
+    .sort((a, b) => (a.apelido || a.nome).localeCompare(b.apelido || b.nome, "pt-BR"));
 }
+export async function lerMinhaTurma(nome: string): Promise<Turma | null> {
+  const snap = await getDocs(query(collection(getDb(), "turmas"), where("nome", "==", nome)));
+  const d = snap.docs[0];
+  if (!d) return null;
+  const r = d.data() as Record<string, unknown>;
+  return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp) };
+}
+
 export async function addTurma(nome: string) {
   await addDoc(collection(getDb(), "turmas"), { nome, criadoEm: serverTimestamp() });
 }
 export const apagarTurma = (id: string) => deleteDoc(doc(getDb(), "turmas", id));
+export async function salvarTurma(id: string, d: DadosTurma) {
+  await updateDoc(doc(getDb(), "turmas", id), { ...d });
+}
+
+/** Troca o nome da turma também nos alunos, nos professores e nos resultados antigos. */
+export async function renomearTurma(id: string, antigo: string, novo: string) {
+  const db = getDb();
+  const alunos = await getDocs(query(collection(db, "users"), where("academia", "==", antigo)));
+  const profs = await getDocs(query(collection(db, "users"), where("turmas", "array-contains", antigo)));
+  const res = await getDocs(query(collection(db, "resultados"), where("academia", "==", antigo)));
+  const av = await getDocs(query(collection(db, "avisosTurma"), where("turma", "==", antigo)));
+  const escritas: (() => Promise<void>)[] = [];
+  alunos.docs.forEach((d) => escritas.push(() => updateDoc(d.ref, { academia: novo })));
+  profs.docs.forEach((d) => {
+    const lista = ((d.data() as { turmas?: string[] }).turmas ?? []).map((t) => (t === antigo ? novo : t));
+    escritas.push(() => updateDoc(d.ref, { turmas: lista }));
+  });
+  res.docs.forEach((d) => escritas.push(() => updateDoc(d.ref, { academia: novo })));
+  av.docs.forEach((d) => escritas.push(() => updateDoc(d.ref, { turma: novo })));
+  for (const e of escritas) await e();
+  await updateDoc(doc(db, "turmas", id), { nome: novo });
+}
+
+/* ---------- Avisos de cada turma ---------- */
+export type AvisoTurma = { id: string; turma: string; titulo: string; texto: string; data: string };
+
+/** null = admin (todos); lista = só as turmas dadas (professor ou aluno). */
+export async function lerAvisosTurma(turmas: string[] | null): Promise<AvisoTurma[]> {
+  const col = collection(getDb(), "avisosTurma");
+  const snaps = turmas === null ? [await getDocs(col)] : await Promise.all(turmas.filter(Boolean).map((t) => getDocs(query(col, where("turma", "==", t)))));
+  const todos = snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AvisoTurma, "id">) })));
+  return todos.sort((a, b) => b.data.localeCompare(a.data));
+}
+export async function addAvisoTurma(a: Omit<AvisoTurma, "id">) {
+  await addDoc(collection(getDb(), "avisosTurma"), { ...a, criadoEm: serverTimestamp() });
+}
+export const apagarAvisoTurma = (id: string) => deleteDoc(doc(getDb(), "avisosTurma", id));
+
 
 export async function lerInternos(): Promise<Record<string, string>> {
   const snap = await getDocs(collection(getDb(), "usersInterno"));
@@ -85,6 +142,11 @@ export async function lerInternos(): Promise<Record<string, string>> {
 
 export async function mudarFaixa(uid: string, faixa: string) {
   await updateDoc(doc(getDb(), "users", uid), { faixa, faixaDesde: hojeISO() });
+}
+
+export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string };
+export async function atualizarAluno(uid: string, d: DadosAluno) {
+  await updateDoc(doc(getDb(), "users", uid), { ...d });
 }
 
 export async function mudarTurma(uid: string, academia: string) {

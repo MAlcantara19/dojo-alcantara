@@ -2,7 +2,6 @@
 
 import { descreverLink } from "../lib/links";
 import Img from "./Img";
-import { katas as katasBase } from "../lib/katas";
 import { useFichas } from "../lib/fichas";
 import { enderecoOk, lerKatasDb, montarKatas, type KataDoc } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
@@ -52,7 +51,7 @@ export default function Katas() {
     <>
       <div className="stack full">
         {katas.map((k) => {
-          const series = katasBase.find((b) => b.nome === k.nome)?.series ?? [];
+          const series = k.series;
           return (
             <article className="card" key={k.id}>
               <h3>{k.nome}</h3>

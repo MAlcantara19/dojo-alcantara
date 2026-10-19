@@ -78,11 +78,29 @@ service cloud.firestore {
       allow read, write: if ehAdmin();
     }
 
-    // Turmas: a equipe lê; só o admin cria e apaga.
+    // Turmas: a equipe lê; o aluno lê só a turma dele; só o admin cria, edita e apaga.
     match /turmas/{id} {
-      allow read: if ehEquipe();
-      allow create, update: if ehAdmin() && texto('nome', 60);
+      allow read: if ehEquipe() || (temPerfil() && perfil().get('academia', '') == resource.data.get('nome', ''));
+      allow create, update: if ehAdmin() && texto('nome', 60)
+        && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 60
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 300
+        && request.resource.data.get('localNome', '') is string && request.resource.data.get('localNome', '').size() <= 80
+        && request.resource.data.get('endereco', '') is string && request.resource.data.get('endereco', '').size() <= 200
+        && request.resource.data.get('horarios', '') is string && request.resource.data.get('horarios', '').size() <= 400
+        && request.resource.data.get('grupoWhatsApp', '') is string && request.resource.data.get('grupoWhatsApp', '').size() <= 200
+        && (request.resource.data.get('grupoWhatsApp', '') == '' || request.resource.data.get('grupoWhatsApp', '').matches('^https://.*'));
       allow delete: if ehAdmin();
+    }
+
+    // Avisos de cada turma: o aluno e o professor da turma leem; admin e professor da turma publicam.
+    match /avisosTurma/{id} {
+      allow read: if ehAdmin() || daMinhaTurma(resource.data.get('turma', ''))
+        || (temPerfil() && perfil().get('academia', '') == resource.data.get('turma', ''));
+      allow create: if (ehAdmin() || daMinhaTurma(request.resource.data.get('turma', '')))
+        && texto('titulo', 80) && texto('texto', 600) && dataValida()
+        && request.resource.data.turma is string && request.resource.data.turma.size() > 0;
+      allow update: if ehAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['turma']);
+      allow delete: if ehAdmin() || daMinhaTurma(resource.data.get('turma', ''));
     }
 
     // Resultados de simulados: o aluno envia o próprio; o professor lê só a turma dele; o admin lê tudo.
@@ -97,6 +115,7 @@ service cloud.firestore {
         && request.resource.data.titulo is string && request.resource.data.titulo.size() <= 80
         && request.resource.data.nome is string && request.resource.data.nome.size() <= 100
         && request.resource.data.ts is number;
+      allow update: if ehAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['academia']);
       allow delete: if ehAdmin();
     }
 
@@ -115,7 +134,7 @@ service cloud.firestore {
     match /tecnicas/{id} {
       allow read: if true;
       allow create, update: if ehEquipe()
-        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links'])
+        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'ocultar', 'custom', 'categoria', 'familia', 'grupo'])
         && request.resource.data.faixa is string && request.resource.data.faixa.size() <= 20
         && request.resource.data.pdf is string && request.resource.data.pdf.size() <= 300
         && (request.resource.data.pdf == '' || request.resource.data.pdf.matches('^https://.*'))
@@ -124,7 +143,12 @@ service cloud.firestore {
         && request.resource.data.nota is string && request.resource.data.nota.size() <= 200
         && request.resource.data.get('imagem', '') is string && request.resource.data.get('imagem', '').size() <= 300
         && (request.resource.data.get('imagem', '') == '' || request.resource.data.get('imagem', '').matches('^(https://|/|db:).*'))
-        && request.resource.data.get('links', []) is list && request.resource.data.get('links', []).size() <= 10;
+        && request.resource.data.get('links', []) is list && request.resource.data.get('links', []).size() <= 10
+        && request.resource.data.get('nome', '') is string && request.resource.data.get('nome', '').size() <= 60
+        && request.resource.data.get('ocultar', false) is bool && request.resource.data.get('custom', false) is bool
+        && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 30
+        && request.resource.data.get('familia', '') is string && request.resource.data.get('familia', '').size() <= 30
+        && request.resource.data.get('grupo', '') is string && request.resource.data.get('grupo', '').size() <= 30;
       allow delete: if ehEquipe();
     }
     match /palavras/{id} {
@@ -159,7 +183,8 @@ service cloud.firestore {
         && request.resource.data.get('imagens', []) is list && request.resource.data.get('imagens', []).size() <= 40
         && request.resource.data.get('nome', '') is string && request.resource.data.get('nome', '').size() <= 60
         && request.resource.data.get('dan', '') is string && request.resource.data.get('dan', '').size() <= 80
-        && request.resource.data.get('resumo', '') is string && request.resource.data.get('resumo', '').size() <= 300;
+        && request.resource.data.get('resumo', '') is string && request.resource.data.get('resumo', '').size() <= 300
+        && request.resource.data.get('series', []) is list && request.resource.data.get('series', []).size() <= 30;
       allow delete: if ehEquipe();
     }
     match /galeria/{id} {

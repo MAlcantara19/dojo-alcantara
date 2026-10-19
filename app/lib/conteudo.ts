@@ -3,6 +3,7 @@
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFichas } from "./fichas";
+import { montarCatalogo } from "./tecnicas";
 import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
 
@@ -70,7 +71,7 @@ export const useAvisos = () => useColecao<AvisoDoc>(lerAvisos, avisosPadrao.map(
 export const useEventos = () => useColecao<EventoDoc>(lerEventos, eventosPadrao.map((e, i) => ({ ...e, id: "p" + i })));
 
 /* ---------- Técnicas: faixa, PDF e vídeo editados pelo painel ---------- */
-export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[] };
+export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[]; nome?: string; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
 export type MapaConfig = Record<string, ConfigTecnica>;
 
 export async function lerConfigTecnicas(): Promise<MapaConfig> {
@@ -82,9 +83,11 @@ export async function lerConfigTecnicas(): Promise<MapaConfig> {
   return mapa;
 }
 
-export async function salvarConfigTecnica(id: string, c: Required<ConfigTecnica>) {
-  await setDoc(doc(getDb(), "tecnicas", id), c);
+export async function salvarConfigTecnica(id: string, c: ConfigTecnica) {
+  const limpo = Object.fromEntries(Object.entries(c).filter(([, v]) => v !== undefined));
+  await setDoc(doc(getDb(), "tecnicas", id), limpo);
 }
+export const apagarConfigTecnica = (id: string) => deleteDoc(doc(getDb(), "tecnicas", id));
 
 export function useConfigTecnicas() {
   const [bruto, setBruto] = useState<MapaConfig>({});
@@ -111,4 +114,11 @@ export function useConfigTecnicas() {
   }, [bruto, fichas.mapa]);
 
   return { mapa, bruto, automatico: fichas.mapa, recarregar: () => setTick((t) => t + 1) };
+}
+
+/** As técnicas do site já com os ajustes do painel (nomes editados, escondidas e criadas por você). */
+export function useTecnicas() {
+  const c = useConfigTecnicas();
+  const lista = useMemo(() => montarCatalogo(c.bruto), [c.bruto]);
+  return { ...c, lista };
 }

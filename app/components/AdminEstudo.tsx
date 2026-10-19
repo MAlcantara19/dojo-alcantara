@@ -170,7 +170,7 @@ function PainelPalavras() {
       </div>
       <ul className="manage">
         {lista.slice(0, 30).map((p) => (
-          <li key={p.id} className="coluna">
+          <li key={p.id} className={editando === p.id ? "coluna" : undefined}>
             {editando === p.id ? (
               <FormPalavra
                 key={p.id + p.termo + p.significado + p.listas.join()}
@@ -251,7 +251,7 @@ function PainelExercicios() {
       </form>
       <ul className="manage">
         {ex.dados.map((e) => (
-          <li key={e.id} className="coluna">
+          <li key={e.id} className={editando === e.id ? "coluna" : undefined}>
             {editando === e.id ? (
               <form
                 className="form tedit"
@@ -456,7 +456,7 @@ function PainelSimulados() {
           <ul className="manage">
             {atual.perguntas.length === 0 && <li className="empty">Este simulado ainda não tem perguntas.</li>}
             {atual.perguntas.map((q, i) => (
-              <li key={i + q.pergunta} className="coluna">
+              <li key={i + q.pergunta} className={editQ === i ? "coluna" : undefined}>
                 {editQ === i ? (
                   <FormPergunta
                     inicial={q}

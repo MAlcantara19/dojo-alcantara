@@ -142,15 +142,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <span className="topbar-title">{site.nome}</span>
         <div className="top-actions">
           {user ? (
-            equipe ? (
-              <Link className="pill" href="/admin">
-                Painel
-              </Link>
-            ) : (
-              <Link className="pill" href="/perfil">
-                Meu perfil
-              </Link>
-            )
+            <Link className="pill pill-conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email && !user.email.endsWith("@celular.dojoalcantara.app") ? user.email : ""}`.trim()}>
+              <span className="pill-nome">{(perfil?.nome ?? "Minha conta").split(" ")[0]}</span>
+              {user.email && !user.email.endsWith("@celular.dojoalcantara.app") && <small className="pill-email">{user.email}</small>}
+              <small className="pill-papel">{perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"} · {equipe ? "Painel" : "Meu perfil"}</small>
+            </Link>
           ) : (
             <>
               <Link className="pill" href="/perfil">
