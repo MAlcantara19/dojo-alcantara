@@ -14,6 +14,7 @@ export type SiteConfig = {
   sobre: string[];
   efeitos: Efeitos;
   drivePasta: string;
+  driveFichas: string;
   driveChave: string;
   diasDestaque: number;
 };
@@ -28,6 +29,7 @@ export const siteBase: SiteConfig = {
   sobre,
   efeitos: { movimento: true, kanji: true, brilho: true },
   drivePasta: "",
+  driveFichas: "",
   driveChave: "",
   diasDestaque: 7,
 };
@@ -65,6 +67,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
       brilho: p.efeitos?.brilho !== false,
     },
     drivePasta: str(p.drivePasta, ""),
+    driveFichas: str(p.driveFichas, ""),
     driveChave: str(p.driveChave, ""),
     diasDestaque: typeof p.diasDestaque === "number" && p.diasDestaque >= 1 && p.diasDestaque <= 60 ? Math.round(p.diasDestaque) : 7,
   };

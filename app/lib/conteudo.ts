@@ -1,7 +1,8 @@
 "use client";
 
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFichas } from "./fichas";
 import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
 
@@ -86,16 +87,28 @@ export async function salvarConfigTecnica(id: string, c: Required<ConfigTecnica>
 }
 
 export function useConfigTecnicas() {
-  const [mapa, setMapa] = useState<MapaConfig>({});
+  const [bruto, setBruto] = useState<MapaConfig>({});
   const [tick, setTick] = useState(0);
+  const fichas = useFichas();
   useEffect(() => {
     let ativo = true;
     lerConfigTecnicas()
-      .then((m) => ativo && setMapa(m))
-      .catch(() => ativo && setMapa({}));
+      .then((m) => ativo && setBruto(m))
+      .catch(() => ativo && setBruto({}));
     return () => {
       ativo = false;
     };
   }, [tick]);
-  return { mapa, recarregar: () => setTick((t) => t + 1) };
+
+  // O que você cadastrou à mão vale mais; as fichas do Drive completam o que faltar.
+  const mapa = useMemo(() => {
+    const m: MapaConfig = { ...bruto };
+    Object.entries(fichas.mapa).forEach(([id, f]) => {
+      const c = m[id] ?? {};
+      m[id] = { ...c, imagem: c.imagem || f.imagem, pdf: c.pdf || f.pdf };
+    });
+    return m;
+  }, [bruto, fichas.mapa]);
+
+  return { mapa, bruto, automatico: fichas.mapa, recarregar: () => setTick((t) => t + 1) };
 }

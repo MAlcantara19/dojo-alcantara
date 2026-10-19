@@ -34,6 +34,7 @@ export default function AdminGaleria() {
     const legenda = String(f.get("legenda") ?? "").trim();
     const url = String(f.get("url") ?? "").trim();
     if (!legenda) return setMsg("Escreva uma legenda para a foto.");
+    if (/\/folders\//.test(url)) return setMsg("Esse link é de uma PASTA do Drive. Para ligar a pasta à galeria, use a aba Site (“Galeria ligada a uma pasta do Google Drive”). Aqui vai o link de UMA foto.");
     if (!enderecoOk(url)) return setMsg("O endereço da foto precisa começar com https:// ou com / (arquivo da pasta public).");
     void rodar(() => addFoto(legenda, url), "Foto adicionada.", () => form.reset());
   }

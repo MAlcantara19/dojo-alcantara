@@ -21,7 +21,7 @@ export function useFotos() {
 
   const fotos = useMemo<FotoSite[]>(() => {
     const doBanco: FotoSite[] = db.dados
-      .filter((f) => enderecoOk(f.url))
+      .filter((f) => enderecoOk(f.url) && !/\/folders\//.test(f.url))
       .map((f) => ({ id: f.id, legenda: f.legenda, src: imagemDireta(f.url), baixar: urlParaBaixar(f.url), ts: f.ts }));
     const todas = [...doBanco, ...(usaDrive ? drive.dados : [])];
     if (todas.length === 0) return galeriaPadrao.map((f, i) => ({ id: "p" + i, legenda: f.legenda }));

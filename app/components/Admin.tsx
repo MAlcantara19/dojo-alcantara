@@ -9,6 +9,7 @@ import { useAuth } from "../lib/useAuth";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
 import AdminEstudo from "./AdminEstudo";
+import AdminFichas from "./AdminFichas";
 import AdminGaleria from "./AdminGaleria";
 import AdminKatas from "./AdminKatas";
 import AdminMural from "./AdminMural";
@@ -94,6 +95,7 @@ function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehA
         {aba === "conteudo" && (
           <>
             <AdminTecnicas />
+            <AdminFichas />
             <AdminKatas />
             <AdminGaleria />
           </>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { enderecoOk } from "../lib/katasDb";
+import { testarDrive } from "../lib/fichas";
 import { idDaPastaDrive } from "../lib/links";
 import { lerSite, mesclar, salvarSite, type SiteConfig } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
@@ -13,7 +14,16 @@ export default function AdminSite() {
   const c = useCarga(lerSite, VAZIO);
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [teste, setTeste] = useState<Record<string, string>>({});
   const atual = mesclar(c.dados);
+
+  async function testar(qual: "pasta" | "fichas", form: HTMLFormElement | null) {
+    if (!form) return;
+    const f = new FormData(form);
+    setTeste((t) => ({ ...t, [qual]: "Testando…" }));
+    const m = await testarDrive(String(f.get(qual) ?? ""), String(f.get("chave") ?? "").trim());
+    setTeste((t) => ({ ...t, [qual]: m }));
+  }
 
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +39,7 @@ export default function AdminSite() {
       sobre: g("sobre").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).slice(0, 12),
       efeitos: { movimento: f.get("movimento") === "on", kanji: f.get("kanji") === "on", brilho: f.get("brilho") === "on" },
       drivePasta: idDaPastaDrive(g("pasta")),
+      driveFichas: idDaPastaDrive(g("fichas")),
       driveChave: g("chave"),
       diasDestaque: Math.min(60, Math.max(1, Math.round(Number(g("dias")) || 7))),
     };
@@ -96,6 +107,19 @@ export default function AdminSite() {
         <div className="field">
           <label htmlFor="s-pasta">Link (ou código) da pasta do Drive</label>
           <input id="s-pasta" name="pasta" type="text" inputMode="url" placeholder="https://drive.google.com/drive/folders/…" defaultValue={atual.drivePasta} />
+          <button type="button" className="btn btn-ghost" onClick={(e) => void testar("pasta", e.currentTarget.form)}>
+            Testar esta pasta
+          </button>
+          {teste.pasta && <p className="form-note" role="status">{teste.pasta}</p>}
+        </div>
+        <div className="field">
+          <label htmlFor="s-fichas">Link (ou código) da pasta das fichas técnicas</label>
+          <input id="s-fichas" name="fichas" type="text" inputMode="url" placeholder="https://drive.google.com/drive/folders/…" defaultValue={atual.driveFichas} />
+          <p className="form-help">Nomeie cada arquivo com o nome da técnica (kesa-gatame.jpg, De Ashi Harai.pdf…). Imagens viram a imagem da técnica e PDFs viram o botão de PDF. Pequenos erros de grafia são tolerados.</p>
+          <button type="button" className="btn btn-ghost" onClick={(e) => void testar("fichas", e.currentTarget.form)}>
+            Testar esta pasta
+          </button>
+          {teste.fichas && <p className="form-note" role="status">{teste.fichas}</p>}
         </div>
         <div className="field">
           <label htmlFor="s-chave">Chave da API do Google</label>

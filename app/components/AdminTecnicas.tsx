@@ -10,7 +10,7 @@ import { faixaEfetiva, tecnicas, type Tecnica } from "../lib/tecnicas";
 const linkOk = (v: string) => v === "" || (/^https:\/\//.test(v) && v.length <= 300);
 
 export default function AdminTecnicas() {
-  const { mapa, recarregar } = useConfigTecnicas();
+  const { bruto: mapa, automatico, recarregar } = useConfigTecnicas();
   const [busca, setBusca] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -33,14 +33,14 @@ export default function AdminTecnicas() {
       <div className="manage-col">
         {termo && lista.length === 0 && <p className="empty">Nenhuma técnica encontrada.</p>}
         {lista.map((t) => (
-          <LinhaTecnica key={t.id} t={t} cfg={mapa[t.id]} onMsg={setMsg} onSalvou={recarregar} />
+          <LinhaTecnica key={t.id} t={t} cfg={mapa[t.id]} auto={automatico[t.id]} onMsg={setMsg} onSalvou={recarregar} />
         ))}
       </div>
     </section>
   );
 }
 
-function LinhaTecnica({ t, cfg, onMsg, onSalvou }: { t: Tecnica; cfg?: ConfigTecnica; onMsg: (m: string) => void; onSalvou: () => void }) {
+function LinhaTecnica({ t, cfg, auto, onMsg, onSalvou }: { t: Tecnica; cfg?: ConfigTecnica; auto?: { imagem?: string; pdf?: string }; onMsg: (m: string) => void; onSalvou: () => void }) {
   const [ocupado, setOcupado] = useState(false);
 
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
@@ -70,6 +70,9 @@ function LinhaTecnica({ t, cfg, onMsg, onSalvou }: { t: Tecnica; cfg?: ConfigTec
   return (
     <form className="tedit" onSubmit={salvar} key={JSON.stringify(cfg ?? {})}>
       <strong>{t.nome}</strong>
+      {auto && (auto.imagem || auto.pdf) && (
+        <small className="form-help">Ficha do Drive ligada automaticamente: {[auto.imagem && "imagem", auto.pdf && "PDF"].filter(Boolean).join(" e ")}. O que você preencher abaixo vale mais.</small>
+      )}
       <div className="field">
         <label htmlFor={`f-${t.id}`}>Faixa</label>
         <select id={`f-${t.id}`} name="faixa" defaultValue={faixaAtual}>

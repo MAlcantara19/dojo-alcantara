@@ -2,6 +2,7 @@
 
 import { descreverLink, imagemDireta } from "../lib/links";
 import { nageNoKata } from "../lib/katas";
+import { useFichas } from "../lib/fichas";
 import { enderecoOk, lerKatasDb, montarKatas, type KataDoc } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 
@@ -39,7 +40,13 @@ function Midia({ k }: { k: KataDoc }) {
 
 export default function Katas() {
   const { dados } = useCarga(lerKatasDb, VAZIO as Record<string, never>);
-  const katas = montarKatas(dados);
+  const fichas = useFichas();
+  // Fichas do Drive (imagem ou PDF com o nome do kata) entram junto com o que foi cadastrado no painel.
+  const katas = montarKatas(dados).map((k) => {
+    const f = fichas.mapa["kata:" + k.id];
+    if (!f) return k;
+    return { ...k, imagens: [...k.imagens, ...(f.imagem ? [{ legenda: "Ficha", url: f.imagem }] : [])], videos: [...k.videos, ...(f.pdf ? [{ titulo: "Ficha em PDF", url: f.pdf }] : [])] };
+  });
   const nage = katas.find((k) => k.nome === "Nage-no-kata");
 
   return (
