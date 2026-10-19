@@ -1,5 +1,6 @@
 "use client";
 
+import { descreverLink, imagemDireta } from "../lib/links";
 import { nageNoKata } from "../lib/katas";
 import { enderecoOk, lerKatasDb, montarKatas, type KataDoc } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
@@ -16,7 +17,7 @@ function Midia({ k }: { k: KataDoc }) {
         <div className="tlinks vids">
           {videos.map((v, i) => (
             <a key={i} href={v.url} target="_blank" rel="noopener noreferrer">
-              ▶ {v.titulo || `Vídeo ${i + 1}`}
+              {descreverLink(v.url).icone} {v.titulo || `${descreverLink(v.url).rotulo} ${i + 1}`}
             </a>
           ))}
         </div>
@@ -26,7 +27,7 @@ function Midia({ k }: { k: KataDoc }) {
           {imagens.map((im, i) => (
             <a key={i} href={im.url} target="_blank" rel="noopener noreferrer" title="Abrir a imagem inteira">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={im.url} alt={im.legenda || `${k.nome}, imagem ${i + 1}`} loading="lazy" />
+              <img src={imagemDireta(im.url, 600)} referrerPolicy="no-referrer" alt={im.legenda || `${k.nome}, imagem ${i + 1}`} loading="lazy" />
               {im.legenda && <small>{im.legenda}</small>}
             </a>
           ))}

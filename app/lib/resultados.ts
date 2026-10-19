@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { lerResultadosEquipe, type ResultadoEquipe } from "./alunos";
+import { lerResultadosEquipe, type Escopo, type ResultadoEquipe } from "./alunos";
 import { useCarga } from "./useCarga";
 
 const CHAVE = "dojoResultadosVisto";
@@ -16,8 +16,8 @@ function lerVisto(): number {
 }
 
 /** Resultados de simulados dos alunos + quantos são novos desde a última vez que a equipe olhou. */
-export function useResultadosEquipe() {
-  const c = useCarga(lerResultadosEquipe, VAZIO);
+export function useResultadosEquipe(escopo: Escopo) {
+  const c = useCarga(() => lerResultadosEquipe(escopo), VAZIO);
   const [visto, setVisto] = useState<number>(lerVisto);
   const novos = c.dados.filter((r) => r.ts > visto).length;
 

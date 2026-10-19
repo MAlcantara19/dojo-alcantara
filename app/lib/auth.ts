@@ -2,7 +2,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { getDb } from "./firebase";
 
 export type Papel = "admin" | "professor" | "aluno";
-export type Perfil = { papel: Papel; nome?: string; faixa?: string; academia?: string };
+export type Perfil = { papel: Papel; nome?: string; faixa?: string; academia?: string; turmas?: string[] };
 
 /** Celular vira um e-mail interno (não precisa existir caixa de entrada). */
 export function paraEmail(entrada: string): string {
@@ -16,8 +16,9 @@ export async function lerPerfil(uid: string): Promise<Perfil | null> {
   const snap = await getDoc(doc(getDb(), "users", uid));
   if (!snap.exists()) return null;
   const d = snap.data() as Partial<Perfil>;
+  const turmas = Array.isArray(d.turmas) ? d.turmas.filter((t): t is string => typeof t === "string") : [];
   if (d.papel !== "admin" && d.papel !== "professor" && d.papel !== "aluno") return null;
-  return { papel: d.papel, nome: d.nome, faixa: d.faixa, academia: d.academia };
+  return { papel: d.papel, nome: d.nome, faixa: d.faixa, academia: d.academia, turmas };
 }
 
 export function ehEquipe(p: Perfil | null): boolean {

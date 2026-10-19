@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import { dojo, galeria, sobre } from "../lib/data";
-import { lerGaleria, type FotoDoc } from "../lib/galeriaDb";
+import { imagemDireta } from "../lib/links";
+import { siglaDe, useSite } from "../lib/siteConfig";
+import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import { enderecoOk } from "../lib/katasDb";
-import { useCarga } from "../lib/useCarga";
 import { useAvisos, useEventos } from "../lib/conteudo";
 import { faixas, faixasAltas } from "../lib/faixas";
 import { linkGoogleAgenda } from "../lib/ics";
@@ -27,11 +27,8 @@ const hojeTexto = () => {
   return `${h.getFullYear()}-${h.getMonth() + 1}-${h.getDate()}`;
 };
 
-const VAZIO_FOTOS: FotoDoc[] = [];
-
 export default function Home() {
-  const fotosDb = useCarga(lerGaleria, VAZIO_FOTOS);
-  const fotos = fotosDb.dados.length ? fotosDb.dados.map((f) => ({ legenda: f.legenda, src: enderecoOk(f.url) ? f.url : undefined })) : galeria;
+  const site = useSite();
   // Vazio no servidor; no navegador vira a data de hoje (evita erro de hidratação)
   const hojeStr = useSyncExternalStore(semAssinatura, hojeTexto, () => "");
   const hoje = hojeStr ? parseData(hojeStr) : null;
@@ -53,16 +50,25 @@ export default function Home() {
 
   return (
     <main id="conteudo">
-      <section className="hero" id="inicio">
+      <section
+        className="hero"
+        id="inicio"
+        style={enderecoOk(site.bannerUrl) ? { backgroundImage: `linear-gradient(165deg, rgba(11,4,20,.88), rgba(43,15,87,.62) 55%, rgba(106,53,201,.5)), url(${imagemDireta(site.bannerUrl, 1600)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      >
         <span className="kanji" aria-hidden="true">
           柔道
         </span>
         <div className="hero-inner">
-          <div className="logo" aria-label="Espaço para a logo do dojô">
-            <span>DA</span>
+          <div className="logo" aria-label={`Logo do ${site.nome}`}>
+            {enderecoOk(site.logoUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imagemDireta(site.logoUrl, 400)} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              <span>{siglaDe(site.nome)}</span>
+            )}
           </div>
-          <h1>{dojo.nome}</h1>
-          <p className="slogan">{dojo.slogan}</p>
+          <h1>{site.nome}</h1>
+          <p className="slogan">{site.slogan}</p>
 
           {proximo && (
             <div className="next">
@@ -90,6 +96,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <DestaqueFotos />
 
       <section className="block" id="estudo">
         <h2>Estudo do judô</h2>
@@ -163,23 +171,13 @@ export default function Home() {
       <section className="block alt" id="galeria">
         <h2>Galeria</h2>
         <p className="lead">Momentos dos treinos e eventos.</p>
-        <div className="grid">
-          {fotos.map((f, i) => (
-            <figure className="tile" key={f.legenda + i}>
-              {f.src && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={f.src} alt={f.legenda} loading="lazy" />
-              )}
-              <figcaption>{f.legenda}</figcaption>
-            </figure>
-          ))}
-        </div>
+        <GaleriaGrid />
       </section>
 
       <section className="block" id="sobre">
         <h2>Sobre nós</h2>
         <div className="prose">
-          {sobre.map((p) => (
+          {site.sobre.map((p) => (
             <p key={p}>{p}</p>
           ))}
         </div>
@@ -196,16 +194,16 @@ export default function Home() {
       </section>
 
       <footer className="foot">
-        <p>© {hoje ? hoje.getFullYear() : 2026} Dojô Alcântara</p>
+        <p>© {hoje ? hoje.getFullYear() : 2026} {site.nome}</p>
         <p className="foot-links">
           <Link href="/privacidade">Privacidade</Link>
-          {dojo.contato.instagram && (
-            <a href={`https://instagram.com/${dojo.contato.instagram}`} target="_blank" rel="noopener noreferrer">
+          {site.instagram && (
+            <a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noopener noreferrer">
               Instagram
             </a>
           )}
-          {dojo.contato.whatsapp && (
-            <a href={`https://wa.me/${dojo.contato.whatsapp}`} target="_blank" rel="noopener noreferrer">
+          {site.whatsapp && (
+            <a href={`https://wa.me/${site.whatsapp}`} target="_blank" rel="noopener noreferrer">
               WhatsApp
             </a>
           )}

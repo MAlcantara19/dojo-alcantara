@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { useConfigTecnicas } from "../lib/conteudo";
 import { exerciciosOuPadrao, lerExercicios, lerPalavras, listasDePalavras, type ExercicioDoc, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
-import { corDe, faixaEfetiva, familias, grupos, linkVideo, rotuloGrupo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { corDe, faixaEfetiva, familias, grupos, rotuloGrupo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
+import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
 
 type Modo = "palavras" | "tecnicas" | "exercicios";
@@ -193,9 +194,7 @@ export default function Roleta() {
               {rotuloGrupo(tec)}
             </span>
             {faixaEfetiva(tec, cfg).faixa && <span className="reel-meaning-dark">Faixa {faixaEfetiva(tec, cfg).faixa?.toLowerCase()}</span>}
-            <a className="btn btn-ghost" href={cfg?.video || linkVideo(tec.nome)} target="_blank" rel="noopener noreferrer">
-              {cfg?.video ? "Ver vídeo" : "Buscar vídeo"}
-            </a>
+            <LinkBtns nome={tec.nome} cfg={cfg} />
             <p className="form-help">Peça para o aluno executar a técnica e explicar a entrada.</p>
           </>
         ) : exe ? (

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ehEquipe } from "../lib/auth";
+import { siglaDe, useSite } from "../lib/siteConfig";
 import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
@@ -42,6 +43,7 @@ const grupos = [
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, perfil } = useAuth();
+  const site = useSite();
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [mostrarTopo, setMostrarTopo] = useState(false);
@@ -72,6 +74,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       if (salvo === "light" || salvo === "dark") document.documentElement.setAttribute("data-theme", salvo);
     } catch {}
   }, []);
+
+  // Efeitos ligados/desligados no painel
+  useEffect(() => {
+    const r = document.documentElement;
+    r.dataset.movimento = site.efeitos.movimento ? "on" : "off";
+    r.dataset.kanji = site.efeitos.kanji ? "on" : "off";
+    r.dataset.brilho = site.efeitos.brilho ? "on" : "off";
+  }, [site.efeitos.movimento, site.efeitos.kanji, site.efeitos.brilho]);
 
   // Esc fecha a gaveta
   useEffect(() => {
@@ -123,7 +133,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
           </svg>
         </button>
-        <span className="topbar-title">Dojô Alcântara</span>
+        <span className="topbar-title">{site.nome}</span>
         <div className="top-actions">
           {user ? (
             ehEquipe(perfil) ? (
@@ -163,9 +173,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       >
         <div className="drawer-head">
           <span className="logo-mini" aria-hidden="true">
-            DA
+            {siglaDe(site.nome)}
           </span>
-          <strong>Dojô Alcântara</strong>
+          <strong>{site.nome}</strong>
           <button ref={fecharBtn} className="icon-btn close-btn" aria-label="Fechar menu" onClick={() => setAberto(false)}>
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />

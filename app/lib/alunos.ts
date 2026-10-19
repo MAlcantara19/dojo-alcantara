@@ -4,6 +4,9 @@ import { hojeISO } from "./aluno";
 import { paraEmail, type Papel } from "./auth";
 import { criarContaSecundaria, getDb } from "./firebase";
 
+/** null = admin (vê tudo); lista = turmas que o professor pode ver. */
+export type Escopo = string[] | null;
+
 export type NovaConta = {
   nome: string;
   apelido: string;
@@ -14,6 +17,7 @@ export type NovaConta = {
   email: string;
   celular: string;
   papel: Papel;
+  turmas: string[];
 };
 
 export async function criarConta(d: NovaConta, senha: string): Promise<{ login: string }> {
@@ -32,6 +36,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
     email: d.email.trim().toLowerCase(),
     celular: d.celular.replace(/\D/g, ""),
     login,
+    ...(d.papel === "professor" ? { turmas: d.turmas } : {}),
     precisaTrocarSenha: true,
     criadoEm: serverTimestamp(),
   });
@@ -39,10 +44,35 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
   return { login };
 }
 
-export async function listarAlunos(): Promise<Aluno[]> {
-  const snap = await getDocs(query(collection(getDb(), "users"), where("papel", "==", "aluno")));
+export async function listarAlunos(escopo: Escopo): Promise<Aluno[]> {
+  const col = collection(getDb(), "users");
+  const snaps =
+    escopo === null
+      ? [await getDocs(query(col, where("papel", "==", "aluno")))]
+      : await Promise.all(escopo.map((t) => getDocs(query(col, where("papel", "==", "aluno"), where("academia", "==", t)))));
+  const m = new Map<string, Aluno>();
+  snaps.forEach((s) => s.docs.forEach((d) => m.set(d.id, { uid: d.id, ...(d.data() as Omit<Aluno, "uid">) })));
+  return Array.from(m.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+export async function listarProfessores(): Promise<Aluno[]> {
+  const snap = await getDocs(query(collection(getDb(), "users"), where("papel", "==", "professor")));
   return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as Omit<Aluno, "uid">) })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
+export async function salvarTurmasProfessor(uid: string, turmas: string[]) {
+  await updateDoc(doc(getDb(), "users", uid), { turmas });
+}
+
+/* ---------- Turmas (nomes) ---------- */
+export type Turma = { id: string; nome: string };
+export async function lerTurmas(): Promise<Turma[]> {
+  const snap = await getDocs(collection(getDb(), "turmas"));
+  return snap.docs.map((d) => ({ id: d.id, nome: String((d.data() as { nome?: string }).nome ?? "") })).filter((t) => t.nome).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+export async function addTurma(nome: string) {
+  await addDoc(collection(getDb(), "turmas"), { nome, criadoEm: serverTimestamp() });
+}
+export const apagarTurma = (id: string) => deleteDoc(doc(getDb(), "turmas", id));
 
 export async function lerInternos(): Promise<Record<string, string>> {
   const snap = await getDocs(collection(getDb(), "usersInterno"));
@@ -55,6 +85,10 @@ export async function lerInternos(): Promise<Record<string, string>> {
 
 export async function mudarFaixa(uid: string, faixa: string) {
   await updateDoc(doc(getDb(), "users", uid), { faixa, faixaDesde: hojeISO() });
+}
+
+export async function mudarTurma(uid: string, academia: string) {
+  await updateDoc(doc(getDb(), "users", uid), { academia });
 }
 
 export async function salvarInterno(uid: string, apelidoInterno: string) {
@@ -97,9 +131,16 @@ export async function addResultado(uid: string, r: Omit<Resultado, "id">) {
 export async function publicarResultado(r: Omit<ResultadoEquipe, "id">) {
   await addDoc(collection(getDb(), "resultados"), r);
 }
-export async function lerResultadosEquipe(): Promise<ResultadoEquipe[]> {
-  const snap = await getDocs(query(collection(getDb(), "resultados"), orderBy("ts", "desc"), limit(100)));
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ResultadoEquipe, "id">) }));
+export async function lerResultadosEquipe(escopo: Escopo): Promise<ResultadoEquipe[]> {
+  const col = collection(getDb(), "resultados");
+  if (escopo === null) {
+    const snap = await getDocs(query(col, orderBy("ts", "desc"), limit(100)));
+    return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ResultadoEquipe, "id">) }));
+  }
+  // Professor: uma consulta por turma dele (assim o Firestore consegue conferir a permissão).
+  const snaps = await Promise.all(escopo.map((t) => getDocs(query(col, where("academia", "==", t)))));
+  const todos = snaps.flatMap((s) => s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ResultadoEquipe, "id">) })));
+  return todos.sort((a, b) => b.ts - a.ts).slice(0, 100);
 }
 export async function apagarSub(uid: string, nome: "medidas" | "notas", id: string) {
   await deleteDoc(doc(getDb(), "users", uid, nome, id));

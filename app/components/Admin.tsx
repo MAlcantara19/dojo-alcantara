@@ -13,10 +13,11 @@ import AdminGaleria from "./AdminGaleria";
 import AdminKatas from "./AdminKatas";
 import AdminMural from "./AdminMural";
 import AdminResultados from "./AdminResultados";
+import AdminSite from "./AdminSite";
 import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
-type Aba = "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados";
+type Aba = "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
 
 export default function Admin() {
   const { carregando, user, perfil } = useAuth();
@@ -45,12 +46,13 @@ export default function Admin() {
     );
   }
 
-  return <Painel nome={perfil?.nome ?? user.email ?? "professor"} uid={user.uid} ehAdmin={perfil?.papel === "admin"} />;
+  return <Painel nome={perfil?.nome ?? user.email ?? "professor"} uid={user.uid} ehAdmin={perfil?.papel === "admin"} turmas={perfil?.turmas ?? []} />;
 }
 
-function Painel({ nome, uid, ehAdmin }: { nome: string; uid: string; ehAdmin: boolean }) {
+function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehAdmin: boolean; turmas: string[] }) {
+  const escopo = ehAdmin ? null : turmas;
   const [aba, setAba] = useState<Aba>("mural");
-  const res = useResultadosEquipe();
+  const res = useResultadosEquipe(escopo);
 
   const abas: [Aba, string][] = [
     ["mural", "Mural"],
@@ -59,6 +61,7 @@ function Painel({ nome, uid, ehAdmin }: { nome: string; uid: string; ehAdmin: bo
     ["conteudo", "Conteúdo"],
     ["estudo", "Estudo"],
     ["resultados", res.novos > 0 ? `Resultados (${res.novos})` : "Resultados"],
+    ...(ehAdmin ? ([["site", "Site"]] as [Aba, string][]) : []),
   ];
 
   return (
@@ -86,7 +89,7 @@ function Painel({ nome, uid, ehAdmin }: { nome: string; uid: string; ehAdmin: bo
 
       <div className="aba" key={aba}>
         {aba === "mural" && <AdminMural />}
-        {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} />}
+        {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
         {aba === "conteudo" && (
           <>
@@ -96,6 +99,7 @@ function Painel({ nome, uid, ehAdmin }: { nome: string; uid: string; ehAdmin: bo
           </>
         )}
         {aba === "estudo" && <AdminEstudo />}
+        {aba === "site" && ehAdmin && <AdminSite />}
         {aba === "resultados" && <AdminResultados itens={res.dados} carregando={res.carregando} erro={res.erro} visto={res.visto} marcarVisto={res.marcarVisto} />}
       </div>
     </>

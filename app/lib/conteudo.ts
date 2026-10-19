@@ -69,7 +69,7 @@ export const useAvisos = () => useColecao<AvisoDoc>(lerAvisos, avisosPadrao.map(
 export const useEventos = () => useColecao<EventoDoc>(lerEventos, eventosPadrao.map((e, i) => ({ ...e, id: "p" + i })));
 
 /* ---------- Técnicas: faixa, PDF e vídeo editados pelo painel ---------- */
-export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string };
+export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[] };
 export type MapaConfig = Record<string, ConfigTecnica>;
 
 export async function lerConfigTecnicas(): Promise<MapaConfig> {

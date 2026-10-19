@@ -8,10 +8,11 @@ import { mensagemErro } from "../lib/auth";
 import { useConfigTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import { getAuthInstance } from "../lib/firebase";
-import { faixaEfetiva, linkVideo, tecnicas } from "../lib/tecnicas";
+import { faixaEfetiva, tecnicas } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import LineChart from "./LineChart";
+import LinkBtns from "./LinkBtns";
 import LoginForm from "./LoginForm";
 
 const VAZIO_M: Medida[] = [];
@@ -103,7 +104,7 @@ function Conteudo({ uid }: { uid: string }) {
   const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.altura as number }));
 
   const paraTreinar = tecnicas
-    .map((t) => ({ ...t, faixa: faixaEfetiva(t, mapa[t.id]).faixa, nota: mapa[t.id]?.nota || t.nota, video: mapa[t.id]?.video, pdf: mapa[t.id]?.pdf }))
+    .map((t) => ({ ...t, faixa: faixaEfetiva(t, mapa[t.id]).faixa, nota: mapa[t.id]?.nota || t.nota, cfg: mapa[t.id] }))
     .filter((t) => t.faixa && indiceFaixa(t.faixa) >= 0 && indiceFaixa(t.faixa) <= idx + 1);
 
   return (
@@ -157,16 +158,7 @@ function Conteudo({ uid }: { uid: string }) {
                             <strong>{t.nome}</strong>
                             {t.nota && <small>* {t.nota}</small>}
                           </span>
-                          <span className="tlinks">
-                            {t.pdf && (
-                              <a href={t.pdf} target="_blank" rel="noopener noreferrer">
-                                PDF
-                              </a>
-                            )}
-                            <a href={t.video || linkVideo(t.nome)} target="_blank" rel="noopener noreferrer">
-                              {t.video ? "Vídeo" : "Buscar vídeo"}
-                            </a>
-                          </span>
+                          <LinkBtns nome={t.nome} cfg={t.cfg} />
                         </li>
                       ))}
                   </ul>

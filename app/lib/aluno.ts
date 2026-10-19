@@ -14,6 +14,7 @@ export type Aluno = {
   celular?: string;
   login?: string;
   precisaTrocarSenha?: boolean;
+  turmas?: string[];
 };
 
 export function parseISO(s: string): Date {

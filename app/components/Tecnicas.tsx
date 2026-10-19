@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useConfigTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
-import { faixaEfetiva, familias, grupos, linkVideo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { imagemDireta } from "../lib/links";
+import LinkBtns from "./LinkBtns";
+import Modal from "./Modal";
+import TiltCard from "./TiltCard";
+import { faixaEfetiva, familias, grupos, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
@@ -18,6 +22,7 @@ export default function Tecnicas() {
   const [modo, setModo] = useState<Modo>("grupo");
   const [busca, setBusca] = useState("");
   const { mapa } = useConfigTecnicas();
+  const [aberta, setAberta] = useState<Item | null>(null);
 
   const termo = busca.trim().toLowerCase();
   const lista: Item[] = tecnicas
@@ -86,49 +91,47 @@ export default function Tecnicas() {
             {b.titulo}
             <small>{b.itens.length}</small>
           </h2>
-          <ul>
+          <div className="tgrid">
             {b.itens.map((t) => {
               const cfg = mapa[t.id];
+              const img = cfg?.imagem ? imagemDireta(cfg.imagem, 600) : "";
               return (
-                <li key={t.id}>
-                  <div>
+                <TiltCard key={t.id} className="tcard3d" onClick={() => setAberta(t)} rotulo={`Abrir ${t.nome}`}>
+                  {img && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={img} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.style.display = "none")} />
+                  )}
+                  <span className="tcard-info">
                     <strong>{t.nome}</strong>
-                    <span className="tmeta">
-                      {t.familia ?? "Nage-waza"}
-                      {t.grupo === "S" && " · Shinmeisho"}
-                      {t.faixaFinal && (
-                        <>
-                          {" · "}
-                          <i className="dot" style={{ background: corDaFaixa(t.faixaFinal) }} aria-hidden="true" />
-                          Faixa {t.faixaFinal.toLowerCase()}
-                          {t.sugerida && " (padrão do grupo)"}
-                        </>
-                      )}
-                      {t.nota && (
-                        <span className="asterisco" title={t.nota}>
-                          {" "}
-                          *
-                        </span>
-                      )}
-                    </span>
-                    {t.nota && <span className="tnota">* {t.nota}</span>}
-                  </div>
-                  <div className="tlinks">
-                    {cfg?.pdf && (
-                      <a href={cfg.pdf} target="_blank" rel="noopener noreferrer">
-                        PDF
-                      </a>
-                    )}
-                    <a href={cfg?.video || linkVideo(t.nome)} target="_blank" rel="noopener noreferrer">
-                      {cfg?.video ? "Vídeo" : "Buscar vídeo"}
-                    </a>
-                  </div>
-                </li>
+                    <small>
+                      {t.faixaFinal && <i className="dot" style={{ background: corDaFaixa(t.faixaFinal) }} aria-hidden="true" />}
+                      {t.faixaFinal ? `Faixa ${t.faixaFinal.toLowerCase()}` : t.familia}
+                      {t.nota ? " *" : ""}
+                    </small>
+                  </span>
+                </TiltCard>
               );
             })}
-          </ul>
+          </div>
         </section>
       ))}
+
+      {aberta && (
+        <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>
+          {mapa[aberta.id]?.imagem && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="modal-img" src={imagemDireta(mapa[aberta.id].imagem as string, 1200)} alt={`Imagem da técnica ${aberta.nome}`} referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.style.display = "none")} />
+          )}
+          <h3 className="modal-titulo">{aberta.nome}</h3>
+          <p className="tmeta">
+            {aberta.familia ?? "Nage-waza"}
+            {aberta.grupo === "S" && " · Shinmeisho"}
+            {aberta.faixaFinal && ` · Faixa ${aberta.faixaFinal.toLowerCase()}${aberta.sugerida ? " (padrão do grupo)" : ""}`}
+          </p>
+          {aberta.nota && <p className="tnota">* {aberta.nota}</p>}
+          <LinkBtns nome={aberta.nome} cfg={mapa[aberta.id]} />
+        </Modal>
+      )}
 
       <p className="form-help">Lista baseada nas 100 técnicas do Kodokan (2022). A faixa “padrão do grupo” pode ser trocada pelo professor, técnica por técnica.</p>
     </div>
