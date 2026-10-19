@@ -276,3 +276,38 @@ h1,h2,h3{font-family:"Bricolage Grotesque","Figtree",system-ui,sans-serif;line-h
     }
   }
 }
+
+/* Roleta visual */
+.wheel-box{position:relative;width:min(100%,400px);margin:4px auto}
+.wheel-svg{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 16px 30px rgba(43,15,87,.35))}
+.wheel-hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:23%;aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;
+  font:800 clamp(.9rem,3.6vw,1.15rem) "Bricolage Grotesque",sans-serif;color:#fff;background:linear-gradient(160deg,var(--bright),var(--deep))}
+.wheel-hub:disabled{cursor:default;opacity:.85}
+.wheel-hub:hover:not(:disabled){filter:brightness(1.15)}
+.result-card{display:grid;gap:10px;justify-items:start;padding:18px;border-radius:var(--r-lg);background:var(--surface);border:2px solid var(--line)}
+.result-word{font:800 clamp(1.6rem,7vw,2.2rem)/1.1 "Bricolage Grotesque",sans-serif;overflow-wrap:anywhere}
+.reel-meaning-dark{font-size:1.1rem;color:var(--text)}
+.chip{padding:.2rem .75rem;border-radius:999px;font-size:.85rem;font-weight:700}
+.two{display:grid;gap:12px}
+@media (min-width:700px){.two{grid-template-columns:1fr 1fr}}
+
+/* Técnicas por grupo */
+.tblock{--c:#8c86a3;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);background:color-mix(in srgb,var(--c) 12%,var(--surface))}
+.tblock h2{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:1.05rem;font-weight:800;color:var(--text);background:color-mix(in srgb,var(--c) 26%,var(--surface))}
+.tblock h2 small{margin-left:auto;font:600 .85rem "Figtree",sans-serif;color:var(--muted)}
+.swatch{width:18px;height:18px;border-radius:50%;background:var(--c);border:2px solid rgba(255,255,255,.7);box-shadow:0 0 0 1px rgba(0,0,0,.2);flex:none}
+.tblock ul{list-style:none;margin:0;padding:6px 8px 10px;display:grid}
+.tblock li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid color-mix(in srgb,var(--c) 22%,transparent)}
+.tblock li:last-child{border-bottom:0}
+.tblock li strong{display:block;font-size:1.02rem}
+.tblock .tmeta{display:block;margin:0;font-size:.85rem;color:var(--muted)}
+.tnota{display:block;font-size:.8rem;color:var(--muted)}
+.asterisco{font-weight:800;color:var(--accent)}
+.dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;margin-right:.3em;border:1px solid rgba(0,0,0,.35)}
+.stack.full,.kata-title{width:100%}
+.kata-title{font-size:1.4rem;font-weight:800;margin-top:18px}
+
+/* Edição de técnicas no painel */
+.manage-col{display:grid;gap:14px}
+.tedit{display:grid;gap:10px;padding:14px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line)}
+.tedit strong{font-size:1.1rem}

@@ -23,6 +23,7 @@ const grupos = [
       { href: "/tecnicas", rotulo: "Técnicas" },
       { href: "/simulados", rotulo: "Simulados" },
       { href: "/roleta", rotulo: "Roleta" },
+      { href: "/katas", rotulo: "Katas" },
       { href: "", rotulo: "Apostilas" },
     ],
   },

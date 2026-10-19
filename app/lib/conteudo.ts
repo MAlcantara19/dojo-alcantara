@@ -1,6 +1,6 @@
 "use client";
 
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
@@ -61,3 +61,35 @@ function useColecao<T>(carregar: () => Promise<T[]>, padrao: T[]): Carga<T> {
 
 export const useAvisos = () => useColecao<AvisoDoc>(lerAvisos, avisosPadrao.map((a, i) => ({ ...a, id: "p" + i })));
 export const useEventos = () => useColecao<EventoDoc>(lerEventos, eventosPadrao.map((e, i) => ({ ...e, id: "p" + i })));
+
+/* ---------- Técnicas: faixa, PDF e vídeo editados pelo painel ---------- */
+export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string };
+export type MapaConfig = Record<string, ConfigTecnica>;
+
+export async function lerConfigTecnicas(): Promise<MapaConfig> {
+  const snap = await getDocs(collection(getDb(), "tecnicas"));
+  const mapa: MapaConfig = {};
+  snap.docs.forEach((d) => {
+    mapa[d.id] = d.data() as ConfigTecnica;
+  });
+  return mapa;
+}
+
+export async function salvarConfigTecnica(id: string, c: Required<ConfigTecnica>) {
+  await setDoc(doc(getDb(), "tecnicas", id), c);
+}
+
+export function useConfigTecnicas() {
+  const [mapa, setMapa] = useState<MapaConfig>({});
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    let ativo = true;
+    lerConfigTecnicas()
+      .then((m) => ativo && setMapa(m))
+      .catch(() => ativo && setMapa({}));
+    return () => {
+      ativo = false;
+    };
+  }, [tick]);
+  return { mapa, recarregar: () => setTick((t) => t + 1) };
+}

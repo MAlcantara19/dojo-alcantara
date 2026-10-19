@@ -6,6 +6,7 @@ import { ehEquipe, mensagemErro } from "../lib/auth";
 import { apagar, criarAviso, criarEvento, useAvisos, useEventos } from "../lib/conteudo";
 import { getAuthInstance } from "../lib/firebase";
 import { useAuth } from "../lib/useAuth";
+import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
 const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Outro"];
@@ -210,9 +211,11 @@ function Painel({ nome }: { nome: string }) {
         </ul>
       </section>
 
+      <AdminTecnicas />
+
       <section className="panel">
         <h2>Em breve</h2>
-        <p className="lead">Alunos, materiais por faixa, academias e turmas entram nas próximas etapas.</p>
+        <p className="lead">Alunos, perfis, planejamento de aulas, simulados e palavras editáveis entram nas próximas etapas.</p>
       </section>
     </>
   );

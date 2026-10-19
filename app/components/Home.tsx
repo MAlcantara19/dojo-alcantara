@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { dojo, galeria, sobre } from "../lib/data";
 import { useAvisos, useEventos } from "../lib/conteudo";
+import { faixas, faixasAltas } from "../lib/faixas";
 import { linkGoogleAgenda } from "../lib/ics";
 
 const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -77,8 +78,8 @@ export default function Home() {
           </div>
         </div>
         <div className="belts" aria-hidden="true">
-          {["#f4f1ff", "#f2d23c", "#f08a24", "#2f9e5b", "#2b6cd8", "#8a4bd6", "#7a4a2a", "#111111"].map((c) => (
-            <i key={c} style={{ background: c }} />
+          {[...faixas, ...faixasAltas].map((f) => (
+            <i key={f.nome} title={f.nome} style={{ background: f.cor }} />
           ))}
         </div>
       </section>
