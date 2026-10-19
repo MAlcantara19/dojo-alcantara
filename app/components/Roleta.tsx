@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useConfigTecnicas } from "../lib/conteudo";
-import { exerciciosOuPadrao, lerExercicios, lerPalavras, listasDePalavras, type ExercicioDoc, type PalavraDoc } from "../lib/estudoDb";
+import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
 import { corDe, faixaEfetiva, familias, grupos, rotuloGrupo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
@@ -13,6 +13,7 @@ type Modo = "palavras" | "tecnicas" | "exercicios";
 type Jogo = "falar" | "escolher";
 const VAZIO_PAL: PalavraDoc[] = [];
 const VAZIO_EXE: ExercicioDoc[] = [];
+const VAZIO_LISTAS: ListaPalavras[] = [];
 const PALETA = ["#6a35c9", "#2b0f57", "#8b5be0", "#3d1a82"];
 const PALETA_EXE = ["#12a39a", "#cf3d9a", "#6a35c9", "#e0793f", "#3c8dbc", "#7d6fa8", "#c2417a", "#2f9e5b"];
 const LETRAS = ["A", "B", "C", "D", "E"];
@@ -44,7 +45,7 @@ function montarEscolhas(lista: Palavra[], i: number): { texto: string; certa: bo
 
 export default function Roleta() {
   const [modo, setModo] = useState<Modo>("palavras");
-  const [lista, setLista] = useState<"basica" | "ampliada">("basica");
+  const [lista, setLista] = useState("");
   const [filtro, setFiltro] = useState("todas");
   const [jogo, setJogo] = useState<Jogo>("falar");
   const [resultado, setResultado] = useState<number | null>(null);
@@ -56,10 +57,12 @@ export default function Roleta() {
   const { mapa } = useConfigTecnicas();
   const dbPalavras = useCarga(lerPalavras, VAZIO_PAL);
   const dbExe = useCarga(lerExercicios, VAZIO_EXE);
-  const { basica, ampliada } = useMemo(() => listasDePalavras(dbPalavras.dados), [dbPalavras.dados]);
+  const dbListas = useCarga(lerListasPalavras, VAZIO_LISTAS);
+  const opcoesPal = useMemo(() => opcoesDePalavras(dbPalavras.dados, dbListas.dados), [dbPalavras.dados, dbListas.dados]);
+  const escolhida = opcoesPal.find((o) => o.nome === lista) ?? opcoesPal[Math.min(1, opcoesPal.length - 1)] ?? opcoesPal[0];
   const exercicios = useMemo(() => exerciciosOuPadrao(dbExe.dados), [dbExe.dados]);
 
-  const palavras: Palavra[] = lista === "basica" ? basica : ampliada;
+  const palavras: Palavra[] = escolhida.itens;
   const tecs = useMemo(() => tecnicas.filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro]);
 
   const fatias: Fatia[] =
@@ -69,7 +72,7 @@ export default function Roleta() {
         ? tecs.map((t) => ({ rotulo: t.nome, cor: corDe(t) }))
         : exercicios.map((e, i) => ({ rotulo: e.nome, cor: PALETA_EXE[i % PALETA_EXE.length] }));
 
-  const chave = modo === "palavras" ? "p-" + lista + palavras.length : modo === "tecnicas" ? "t-" + filtro : "e-" + exercicios.length;
+  const chave = modo === "palavras" ? "p-" + escolhida.nome + palavras.length : modo === "tecnicas" ? "t-" + filtro : "e-" + exercicios.length;
   const tec = modo === "tecnicas" && resultado !== null ? tecs[resultado] : null;
   const pal = modo === "palavras" && resultado !== null ? palavras[resultado] : null;
   const exe = modo === "exercicios" && resultado !== null ? exercicios[resultado] : null;
@@ -109,9 +112,12 @@ export default function Roleta() {
         <div className="two">
           <div className="field">
             <label htmlFor="lista">Lista de palavras</label>
-            <select id="lista" value={lista} onChange={(e) => (setLista(e.target.value as "basica" | "ampliada"), limpar())} disabled={girando}>
-              <option value="basica">Palavras do dojô ({basica.length})</option>
-              <option value="ampliada">Lista ampliada ({ampliada.length})</option>
+            <select id="lista" value={escolhida.nome} onChange={(e) => (setLista(e.target.value), limpar())} disabled={girando}>
+              {opcoesPal.map((o) => (
+                <option key={o.nome} value={o.nome}>
+                  {o.nome} ({o.itens.length})
+                </option>
+              ))}
             </select>
           </div>
           <div className="field">

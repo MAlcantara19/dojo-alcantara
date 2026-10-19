@@ -5,6 +5,8 @@ import { mensagemErro } from "../lib/auth";
 import { salvarConfigTecnica, useConfigTecnicas, type ConfigTecnica } from "../lib/conteudo";
 import { faixas } from "../lib/faixas";
 import { lerLinksDoTexto, linksParaTexto } from "../lib/links";
+import { enderecoOk } from "../lib/katasDb";
+import CampoImagem from "./CampoImagem";
 import { faixaEfetiva, tecnicas, type Tecnica } from "../lib/tecnicas";
 
 const linkOk = (v: string) => v === "" || (/^https:\/\//.test(v) && v.length <= 300);
@@ -51,7 +53,7 @@ function LinhaTecnica({ t, cfg, auto, onMsg, onSalvou }: { t: Tecnica; cfg?: Con
     const video = String(f.get("video") ?? "").trim();
     const nota = String(f.get("nota") ?? "").trim().slice(0, 200);
     const imagem = String(f.get("imagem") ?? "").trim();
-    if (imagem && !(linkOk(imagem) || /^\/[A-Za-z0-9_./-]+$/.test(imagem))) return onMsg("O endereço da imagem precisa começar com https:// ou com / (arquivo da pasta public).");
+    if (imagem && !enderecoOk(imagem)) return onMsg("Escolha uma imagem do celular ou cole um link que comece com https://");
     const links = lerLinksDoTexto(String(f.get("links") ?? "")).slice(0, 10);
     if (!linkOk(pdf) || !linkOk(video) || links.some((l) => !linkOk(l.url) || l.url === "" || l.titulo.length > 60)) return onMsg("Os links precisam começar com https:// (e o título de cada link, se houver, até 60 letras).");
     setOcupado(true);
@@ -90,10 +92,7 @@ function LinhaTecnica({ t, cfg, auto, onMsg, onSalvou }: { t: Tecnica; cfg?: Con
         <label htmlFor={`v-${t.id}`}>Link do vídeo principal</label>
         <input id={`v-${t.id}`} name="video" type="url" inputMode="url" placeholder="https://…" defaultValue={cfg?.video ?? ""} />
       </div>
-      <div className="field">
-        <label htmlFor={`i-${t.id}`}>Imagem da técnica (link do Drive, https:// ou /img/…)</label>
-        <input id={`i-${t.id}`} name="imagem" type="text" inputMode="url" placeholder="https://drive.google.com/file/d/…" defaultValue={cfg?.imagem ?? ""} />
-      </div>
+      <CampoImagem name="imagem" rotulo="Imagem da técnica" valorInicial={cfg?.imagem ?? ""} ajuda="Escolha do celular ou cole o link (inclusive de arquivo do Drive)." />
       <div className="field">
         <label htmlFor={`l-${t.id}`}>Outros links (um por linha: Título | https://…)</label>
         <textarea id={`l-${t.id}`} name="links" rows={3} placeholder={"Em português | https://youtu.be/…\nMinha apresentação | https://drive.google.com/…"} defaultValue={linksParaTexto(cfg?.links)} />

@@ -28,7 +28,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
   await setDoc(doc(db, "users", uid), {
     nome: d.nome,
     apelido: d.apelido,
-    dataNascimento: d.dataNascimento,
+    dataNascimento: d.dataNascimento || "",
     faixa: d.faixa,
     faixaDesde: hojeISO(),
     academia: d.academia,

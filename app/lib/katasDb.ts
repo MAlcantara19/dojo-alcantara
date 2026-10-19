@@ -8,8 +8,8 @@ export type KataDoc = { id: string; nome: string; dan: string; resumo: string; c
 
 export const idDoKata = (nome: string) => nome.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-/** Só aceita endereços https:// ou arquivos do próprio site (/img/...). */
-export const enderecoOk = (u: string) => /^https:\/\/\S+$/.test(u) || /^\/[A-Za-z0-9_./-]+$/.test(u);
+/** Só aceita endereços https://, arquivos do próprio site (/img/...) ou fotos enviadas pelo painel (db:...). */
+export const enderecoOk = (u: string) => /^https:\/\/\S+$/.test(u) || /^\/[A-Za-z0-9_./-]+$/.test(u) || /^db:[A-Za-z0-9]{8,40}$/.test(u);
 
 export async function lerKatasDb(): Promise<Record<string, Partial<KataDoc>>> {
   const snap = await getDocs(collection(getDb(), "katas"));

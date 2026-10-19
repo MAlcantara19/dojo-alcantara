@@ -4,6 +4,7 @@ import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { enderecoOk } from "../lib/katasDb";
 import { testarDrive } from "../lib/fichas";
+import CampoImagem from "./CampoImagem";
 import { idDaPastaDrive } from "../lib/links";
 import { lerSite, mesclar, salvarSite, type SiteConfig } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
@@ -44,7 +45,7 @@ export default function AdminSite() {
       diasDestaque: Math.min(60, Math.max(1, Math.round(Number(g("dias")) || 7))),
     };
     if (!novo.nome) return setMsg("O nome do dojô não pode ficar vazio.");
-    if ((novo.logoUrl && !enderecoOk(novo.logoUrl)) || (novo.bannerUrl && !enderecoOk(novo.bannerUrl))) return setMsg("Logo e banner precisam começar com https:// ou com / (arquivo da pasta public).");
+    if ((novo.logoUrl && !enderecoOk(novo.logoUrl)) || (novo.bannerUrl && !enderecoOk(novo.bannerUrl))) return setMsg("Logo e banner: escolha uma imagem do celular ou cole um link que comece com https://");
     if (novo.whatsapp && novo.whatsapp.length < 12) return setMsg("O WhatsApp precisa ter o código do país e o DDD. Ex.: 5524999999999.");
     setOcupado(true);
     setMsg("");
@@ -76,15 +77,8 @@ export default function AdminSite() {
           <label htmlFor="s-slogan">Frase abaixo do nome</label>
           <input id="s-slogan" name="slogan" type="text" maxLength={100} defaultValue={atual.slogan} />
         </div>
-        <div className="field">
-          <label htmlFor="s-logo">Logo (endereço da imagem)</label>
-          <input id="s-logo" name="logo" type="text" inputMode="url" placeholder="/img/logo.png ou https://…" defaultValue={atual.logoUrl} />
-        </div>
-        <div className="field">
-          <label htmlFor="s-banner">Banner do topo (endereço da imagem)</label>
-          <input id="s-banner" name="banner" type="text" inputMode="url" placeholder="/img/banner.jpg ou https://…" defaultValue={atual.bannerUrl} />
-        </div>
-        <p className="form-help">Para usar uma imagem sua: coloque o arquivo na pasta public\img do projeto, envie ao GitHub e escreva /img/nome-do-arquivo.jpg aqui. Deixe em branco para voltar ao visual padrão.</p>
+        <CampoImagem name="logo" rotulo="Logo do dojô" valorInicial={atual.logoUrl} />
+        <CampoImagem name="banner" rotulo="Banner do topo da página inicial" valorInicial={atual.bannerUrl} ajuda="Dica: uma foto da turma, na horizontal, fica bonita. Deixe vazio para voltar ao visual padrão roxo." />
         <div className="two">
           <div className="field">
             <label htmlFor="s-ig">Instagram (sem @)</label>

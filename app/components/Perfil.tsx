@@ -3,7 +3,7 @@
 import { signOut, updatePassword } from "firebase/auth";
 import Link from "next/link";
 import { useState } from "react";
-import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa } from "../lib/aluno";
+import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre } from "../lib/aluno";
 import { addMedida, addNota, apagarSub, confirmarSenhaTrocada, lerAluno, lerMedidas, lerNotas, lerResultados, type Medida, type Nota, type Resultado } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useConfigTecnicas } from "../lib/conteudo";
@@ -152,6 +152,33 @@ function Conteudo({ uid }: { uid: string }) {
           {msg}
         </p>
       )}
+
+      <section className="panel">
+        <h2>Meu progresso</h2>
+        <div className="resumo-grid">
+          <div className="resumo-card">
+            <b>{p.faixa}</b>
+            <span>faixa atual{p.faixaDesde ? `, desde ${dataBR(p.faixaDesde)}` : ""}</span>
+          </div>
+          {p.faixaDesde && (
+            <div className="resumo-card">
+              <b>{mesesEntre(p.faixaDesde, hoje)}</b>
+              <span>{mesesEntre(p.faixaDesde, hoje) === 1 ? "mês" : "meses"} nesta faixa</span>
+            </div>
+          )}
+          <div className="resumo-card">
+            <b>{resultados.dados.length}</b>
+            <span>simulados feitos</span>
+          </div>
+          {resultados.dados.length > 0 && (
+            <div className="resumo-card">
+              <b>{Math.round((resultados.dados.reduce((s, r) => s + r.acertos, 0) / Math.max(1, resultados.dados.reduce((s, r) => s + r.total, 0))) * 100)}%</b>
+              <span>de acertos nos simulados</span>
+            </div>
+          )}
+        </div>
+        {idx >= 0 && idx < faixas.length - 1 && <p className="form-help">Próxima faixa: {faixas[idx + 1].nome.toLowerCase()}. Continue treinando e perguntando ao seu professor.</p>}
+      </section>
 
       <section className="panel">
         <h2>Para treinar</h2>

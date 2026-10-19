@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { ehEquipe } from "../lib/auth";
-import { imagemDireta } from "../lib/links";
 import { useAuth } from "../lib/useAuth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
+import Img, { useImagemUrl } from "./Img";
 import { enderecoOk } from "../lib/katasDb";
 import { useAvisos, useEventos } from "../lib/conteudo";
 import { faixas, faixasAltas } from "../lib/faixas";
@@ -31,6 +31,7 @@ const hojeTexto = () => {
 
 export default function Home() {
   const site = useSite();
+  const banner = useImagemUrl(site.bannerUrl, 1600);
   const { user, perfil } = useAuth();
   // Vazio no servidor; no navegador vira a data de hoje (evita erro de hidratação)
   const hojeStr = useSyncExternalStore(semAssinatura, hojeTexto, () => "");
@@ -56,7 +57,7 @@ export default function Home() {
       <section
         className="hero"
         id="inicio"
-        style={enderecoOk(site.bannerUrl) ? { backgroundImage: `linear-gradient(165deg, rgba(11,4,20,.88), rgba(43,15,87,.62) 55%, rgba(106,53,201,.5)), url(${imagemDireta(site.bannerUrl, 1600)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        style={banner ? { backgroundImage: `linear-gradient(165deg, rgba(11,4,20,.88), rgba(43,15,87,.62) 55%, rgba(106,53,201,.5)), url(${banner})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       >
         <span className="kanji" aria-hidden="true">
           柔道
@@ -64,8 +65,7 @@ export default function Home() {
         <div className="hero-inner">
           <div className="logo" aria-label={`Logo do ${site.nome}`}>
             {enderecoOk(site.logoUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={imagemDireta(site.logoUrl, 400)} alt="" referrerPolicy="no-referrer" />
+              <Img src={site.logoUrl} alt="" largura={400} eager />
             ) : (
               <span>{siglaDe(site.nome)}</span>
             )}

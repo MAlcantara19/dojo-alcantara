@@ -40,7 +40,8 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
   const termo = busca.trim().toLowerCase();
   const lista = alunos.dados.filter((a) => !termo || a.nome.toLowerCase().includes(termo) || (a.apelido ?? "").toLowerCase().includes(termo) || (internos.dados[a.uid] ?? "").toLowerCase().includes(termo));
   const aniversarios = alunos.dados
-    .map((a) => ({ a, dias: diasParaAniversario(a.dataNascimento, hoje) }))
+    .filter((a) => a.dataNascimento)
+    .map((a) => ({ a, dias: diasParaAniversario(a.dataNascimento as string, hoje) }))
     .filter((x) => x.dias <= 30)
     .sort((x, y) => x.dias - y.dias);
   const paradosNaFaixa = alunos.dados.filter((a) => a.faixa !== "Preta" && a.faixaDesde && mesesEntre(a.faixaDesde, hoje) >= limite);
@@ -75,10 +76,12 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     };
     const pw = senha.trim();
     const falha = (texto: string) => setAviso({ onde: "cadastro", texto });
-    if (!dados.nome || !dados.dataNascimento || !dados.faixa) return falha("Preencha nome completo, data de nascimento e faixa.");
-    if (tipo === "aluno" && !dados.academia) return falha("Escolha a turma do aluno. Se a lista estiver vazia, crie as turmas primeiro (seção Turmas, mais acima).");
-    if (!dados.email && dados.celular.replace(/\D/g, "").length < 10) return falha("Informe um e-mail ou um celular com DDD.");
-    if (pw.length < 6) return falha("A senha provisória precisa ter pelo menos 6 caracteres. Use o botão “Gerar senha”.");
+    const faltam: string[] = [];
+    if (!dados.nome) faltam.push("nome completo");
+    if (tipo === "aluno" && !dados.academia) faltam.push("turma (se a lista estiver vazia, crie as turmas na seção 1)");
+    if (!dados.email && dados.celular.replace(/\D/g, "").length < 10) faltam.push("e-mail ou celular com DDD");
+    if (pw.length < 6) faltam.push("senha provisória com 6 ou mais caracteres (use o botão “Gerar senha”)");
+    if (faltam.length) return falha(`Falta preencher: ${faltam.join("; ")}.`);
     setOcupado(true);
     setAviso({ onde: "cadastro", texto: "Criando a conta…" });
     try {
@@ -194,81 +197,99 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
             </div>
           )}
           <form className="form" onSubmit={criar}>
-            <div className="field">
-              <label htmlFor="al-papel">Tipo de conta</label>
-              <select id="al-papel" value={tipo} onChange={(e) => setTipo(e.target.value as "aluno" | "professor")}>
-                <option value="aluno">Aluno</option>
-                <option value="professor">Professor</option>
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="al-nome">Nome completo</label>
-              <input id="al-nome" name="nome" type="text" maxLength={100} autoComplete="off" />
-            </div>
-            <div className="two">
+            <p className="form-help">Campos com * são obrigatórios. A data de nascimento é opcional (serve para idade, categoria de campeonato e aniversários).</p>
+
+            <fieldset className="passo">
+              <legend>
+                <b>1</b> Quem é
+              </legend>
               <div className="field">
-                <label htmlFor="al-apelido">Apelido (todos veem)</label>
-                <input id="al-apelido" name="apelido" type="text" maxLength={40} autoComplete="off" />
+                <label htmlFor="al-papel">É aluno ou professor? *</label>
+                <select id="al-papel" value={tipo} onChange={(e) => setTipo(e.target.value as "aluno" | "professor")}>
+                  <option value="aluno">Aluno</option>
+                  <option value="professor">Professor</option>
+                </select>
               </div>
               <div className="field">
-                <label htmlFor="al-interno">Apelido interno (só você vê)</label>
-                <input id="al-interno" name="interno" type="text" maxLength={40} autoComplete="off" />
+                <label htmlFor="al-nome">Nome completo *</label>
+                <input id="al-nome" name="nome" type="text" maxLength={100} autoComplete="off" />
               </div>
-            </div>
-            <div className="two">
+              <div className="two">
+                <div className="field">
+                  <label htmlFor="al-apelido">Apelido (todos veem)</label>
+                  <input id="al-apelido" name="apelido" type="text" maxLength={40} autoComplete="off" />
+                </div>
+                <div className="field">
+                  <label htmlFor="al-interno">Apelido interno (só você vê)</label>
+                  <input id="al-interno" name="interno" type="text" maxLength={40} autoComplete="off" />
+                </div>
+              </div>
               <div className="field">
-                <label htmlFor="al-nasc">Data de nascimento</label>
+                <label htmlFor="al-nasc">Data de nascimento (opcional)</label>
                 <input id="al-nasc" name="nasc" type="date" max={hojeISO()} />
               </div>
+            </fieldset>
+
+            <fieldset className="passo">
+              <legend>
+                <b>2</b> No judô
+              </legend>
               <div className="field">
-                <label htmlFor="al-faixa">Faixa</label>
+                <label htmlFor="al-faixa">Faixa *</label>
                 <select id="al-faixa" name="faixa" defaultValue="Branca">
                   {faixas.map((f) => (
                     <option key={f.nome}>{f.nome}</option>
                   ))}
                 </select>
               </div>
-            </div>
-            {tipo === "aluno" ? (
-              <div className="field">
-                <label htmlFor="al-academia">Turma</label>
-                <select id="al-academia" name="academia" defaultValue="">
-                  <option value="">Escolha…</option>
+              {tipo === "aluno" ? (
+                <div className="field">
+                  <label htmlFor="al-academia">Turma *</label>
+                  <select id="al-academia" name="academia" defaultValue="">
+                    <option value="">Escolha…</option>
+                    {turmas.dados.map((t) => (
+                      <option key={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="checks">
+                  <strong>Turmas que este professor pode ver</strong>
                   {turmas.dados.map((t) => (
-                    <option key={t.id}>{t.nome}</option>
+                    <label key={t.id}>
+                      <input type="checkbox" name="turmas" value={t.nome} /> {t.nome}
+                    </label>
                   ))}
-                </select>
+                </div>
+              )}
+            </fieldset>
+
+            <fieldset className="passo">
+              <legend>
+                <b>3</b> Como a pessoa entra
+              </legend>
+              <p className="form-help">Preencha o e-mail ou o celular (pelo menos um). A pessoa entra com ele.</p>
+              <div className="two">
+                <div className="field">
+                  <label htmlFor="al-email">E-mail</label>
+                  <input id="al-email" name="email" type="email" autoComplete="off" />
+                </div>
+                <div className="field">
+                  <label htmlFor="al-cel">Celular com DDD</label>
+                  <input id="al-cel" name="celular" type="tel" inputMode="tel" autoComplete="off" placeholder="(24) 99999-9999" />
+                </div>
               </div>
-            ) : (
-              <fieldset className="checks">
-                <legend>Turmas que este professor pode ver</legend>
-                {turmas.dados.map((t) => (
-                  <label key={t.id}>
-                    <input type="checkbox" name="turmas" value={t.nome} /> {t.nome}
-                  </label>
-                ))}
-              </fieldset>
-            )}
-            <div className="two">
               <div className="field">
-                <label htmlFor="al-email">E-mail (se tiver)</label>
-                <input id="al-email" name="email" type="email" autoComplete="off" />
+                <label htmlFor="al-senha">Senha provisória *</label>
+                <div className="inline">
+                  <input id="al-senha" type="text" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="off" />
+                  <button type="button" className="btn btn-ghost" onClick={() => setSenha(senhaProvisoria())}>
+                    Gerar senha
+                  </button>
+                </div>
               </div>
-              <div className="field">
-                <label htmlFor="al-cel">Celular com DDD</label>
-                <input id="al-cel" name="celular" type="tel" inputMode="tel" autoComplete="off" placeholder="(24) 99999-9999" />
-              </div>
-            </div>
-            <p className="form-help">A pessoa entra com o e-mail, ou com o celular se não houver e-mail.</p>
-            <div className="field">
-              <label htmlFor="al-senha">Senha provisória</label>
-              <div className="inline">
-                <input id="al-senha" type="text" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="off" />
-                <button type="button" className="btn btn-ghost" onClick={() => setSenha(senhaProvisoria())}>
-                  Gerar senha
-                </button>
-              </div>
-            </div>
+            </fieldset>
+
             <button className="btn btn-primary" type="submit" disabled={ocupado}>
               {ocupado ? "Criando…" : "Criar conta"}
             </button>
@@ -291,7 +312,8 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
               <span>
                 <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
                 <small>
-                  {a.academia} · {idade(a.dataNascimento, hoje)} anos · campeonato {hoje.getFullYear()}: {anoCampeonato(a.dataNascimento, hoje)} anos
+                  {a.academia}
+                  {a.dataNascimento ? ` · ${idade(a.dataNascimento, hoje)} anos · campeonato ${hoje.getFullYear()}: ${anoCampeonato(a.dataNascimento, hoje)} anos` : ""}
                   {a.faixaDesde ? ` · na faixa desde ${dataBR(a.faixaDesde)}` : ""}
                 </small>
                 <small>Login: {semCel(a.login)}</small>
@@ -348,7 +370,7 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
               <span>
                 <strong>{a.apelido || a.nome}</strong>
                 <small>
-                  {dias === 0 ? "Hoje!" : dias === 1 ? "Amanhã" : `Em ${dias} dias`} · {dataBR(a.dataNascimento).slice(0, 5)} · faz {idade(a.dataNascimento, parseISO(hojeISO())) + 1} anos · {a.academia}
+                  {dias === 0 ? "Hoje!" : dias === 1 ? "Amanhã" : `Em ${dias} dias`} · {dataBR(a.dataNascimento as string).slice(0, 5)} · faz {idade(a.dataNascimento as string, parseISO(hojeISO())) + 1} anos · {a.academia}
                 </small>
               </span>
             </li>

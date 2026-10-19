@@ -4,6 +4,7 @@ import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { apagarCardKata, criarCardKata, enderecoOk, lerKatasDb, montarKatas, salvarMidiaKata, type Imagem, type Video } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
+import CampoImagem from "./CampoImagem";
 
 const VAZIO: Record<string, never> = {};
 
@@ -59,7 +60,7 @@ export default function AdminKatas() {
     const f = new FormData(form);
     const legenda = String(f.get("legenda") ?? "").trim();
     const url = String(f.get("url") ?? "").trim();
-    if (!enderecoOk(url)) return setMsg("O endereço da imagem precisa começar com https:// ou com / (arquivo da pasta public).");
+    if (!enderecoOk(url)) return setMsg("Escolha uma imagem do celular ou cole um link que comece com https://");
     if (atual.imagens.length >= 40) return setMsg("Limite de 40 imagens por card.");
     void rodar(() => salvarMidiaKata(atual.id, atual.videos, [...atual.imagens, { legenda, url }]), "Imagem adicionada.", () => form.reset());
   }
@@ -76,17 +77,22 @@ export default function AdminKatas() {
         </p>
       )}
 
-      <div className="field">
-        <label htmlFor="k-sel">Editar o kata</label>
-        <select id="k-sel" value={sel} onChange={(e) => setSel(e.target.value)}>
-          <option value="">Escolha…</option>
-          {katas.map((k) => (
-            <option key={k.id} value={k.id}>
-              {k.nome} ({k.videos.length} vídeos, {k.imagens.length} imagens)
-            </option>
-          ))}
-        </select>
-      </div>
+      <p className="lead">Toque em “Editar” no kata para acrescentar vídeos e imagens a ele. Os cards padrão (Nage, Katame, Ju, Kime e Goshin-jutsu) já trazem as técnicas por série.</p>
+      <ul className="manage">
+        {katas.map((k) => (
+          <li key={k.id} className={k.id === sel ? "novo-item" : undefined}>
+            <span>
+              <strong>{k.nome}</strong>
+              <small>
+                {k.videos.length} vídeos · {k.imagens.length} imagens{k.custom ? " · card criado por você" : ""}
+              </small>
+            </span>
+            <button className="btn btn-ghost" onClick={() => setSel(k.id === sel ? "" : k.id)}>
+              {k.id === sel ? "Fechar" : "Editar"}
+            </button>
+          </li>
+        ))}
+      </ul>
 
       {atual && (
         <>
@@ -139,11 +145,7 @@ export default function AdminKatas() {
               <label htmlFor="ki-l">Legenda</label>
               <input id="ki-l" name="legenda" type="text" maxLength={80} autoComplete="off" />
             </div>
-            <div className="field">
-              <label htmlFor="ki-u">Endereço da imagem</label>
-              <input id="ki-u" name="url" type="text" inputMode="url" placeholder="/img/katas/nage-no-kata.jpg ou https://…" />
-            </div>
-            <p className="form-help">Para usar uma imagem sua: coloque o arquivo na pasta public\img\katas do projeto, envie ao GitHub e escreva aqui /img/katas/nome-do-arquivo.jpg</p>
+            <CampoImagem name="url" rotulo="Imagem" />
             <button className="btn btn-primary" type="submit" disabled={ocupado}>
               Adicionar imagem
             </button>
@@ -162,7 +164,7 @@ export default function AdminKatas() {
       )}
 
       <details className="novo">
-        <summary>Criar um novo card de kata</summary>
+        <summary>Criar um card novo (outro kata, ou um aviso sobre um kata)</summary>
         <form className="form" onSubmit={novoCard}>
           <div className="field">
             <label htmlFor="kc-n">Nome</label>

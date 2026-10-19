@@ -5,7 +5,7 @@ export type Aluno = {
   uid: string;
   nome: string;
   apelido?: string;
-  dataNascimento: string; // AAAA-MM-DD
+  dataNascimento?: string; // AAAA-MM-DD (opcional)
   faixa: string;
   faixaDesde?: string; // AAAA-MM-DD
   academia?: string;

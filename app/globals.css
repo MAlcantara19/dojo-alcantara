@@ -472,3 +472,47 @@ html[data-movimento="off"] .tilt{transform:none!important}
 .tabs-scroll button:nth-child(7)::before{--pt:#5d6779}
 .btn-claro{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7)}
 .btn-claro:hover{background:rgba(255,255,255,.15)}
+
+/* Passos do cadastro */
+.passo{display:grid;gap:12px;margin:0;padding:14px;border:1.5px solid var(--line);border-radius:var(--r-md);background:color-mix(in srgb,var(--surface-2) 60%,transparent)}
+.passo legend{padding:0 8px;font-weight:700}
+.passo legend b{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;background:linear-gradient(160deg,var(--bright),var(--deep));color:#fff;font-size:.85rem}
+.manage li.coluna{display:grid;align-items:stretch}
+.manage li.coluna>.tlinks{justify-content:flex-start}
+.series{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.series summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.serie h4{font:700 1rem "Bricolage Grotesque",sans-serif;margin:12px 0 4px}
+.serie ol{margin:0;padding-left:1.3rem;display:grid;gap:2px}
+.serie small{color:var(--muted)}
+
+.resumo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.resumo-card{display:grid;gap:2px;padding:14px;border-radius:var(--r-md);border:1.5px solid var(--line);background:var(--surface);color:var(--text);font:inherit;text-align:left}
+button.resumo-card{cursor:pointer}
+button.resumo-card:hover{border-color:var(--bright)}
+.resumo-card b{font:800 1.9rem/1 "Bricolage Grotesque",sans-serif;color:var(--accent)}
+.resumo-card span{font-size:.85rem;color:var(--muted)}
+.confete{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.result{position:relative}
+.confete i{position:absolute;top:-10px;width:8px;height:14px;border-radius:2px;background:#f2d23c}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes cair{to{transform:translateY(420px) rotate(540deg);opacity:0}}
+  .confete i{animation:cair 2.4s ease-in both}
+}
+.confete i:nth-child(1){left:5%;background:#f08a24;animation-delay:0.12s}
+.confete i:nth-child(2){left:11%;background:#2f9e5b;animation-delay:0.24s}
+.confete i:nth-child(3){left:16%;background:#8a4bd6;animation-delay:0.36s}
+.confete i:nth-child(4){left:22%;background:#2b6cd8;animation-delay:0.48s}
+.confete i:nth-child(5){left:27%;background:#d9334a;animation-delay:0.60s}
+.confete i:nth-child(6){left:32%;background:#f2d23c;animation-delay:0.00s}
+.confete i:nth-child(7){left:38%;background:#f08a24;animation-delay:0.12s}
+.confete i:nth-child(8){left:43%;background:#2f9e5b;animation-delay:0.24s}
+.confete i:nth-child(9){left:49%;background:#8a4bd6;animation-delay:0.36s}
+.confete i:nth-child(10){left:54%;background:#2b6cd8;animation-delay:0.48s}
+.confete i:nth-child(11){left:59%;background:#d9334a;animation-delay:0.60s}
+.confete i:nth-child(12){left:65%;background:#f2d23c;animation-delay:0.00s}
+.confete i:nth-child(13){left:70%;background:#f08a24;animation-delay:0.12s}
+.confete i:nth-child(14){left:76%;background:#2f9e5b;animation-delay:0.24s}
+.confete i:nth-child(15){left:81%;background:#8a4bd6;animation-delay:0.36s}
+.confete i:nth-child(16){left:86%;background:#2b6cd8;animation-delay:0.48s}
+.confete i:nth-child(17){left:92%;background:#d9334a;animation-delay:0.60s}
+.confete i:nth-child(18){left:97%;background:#f2d23c;animation-delay:0.00s}

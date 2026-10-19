@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useConfigTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
-import { imagemDireta } from "../lib/links";
+import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
@@ -94,13 +94,10 @@ export default function Tecnicas() {
           <div className="tgrid">
             {b.itens.map((t) => {
               const cfg = mapa[t.id];
-              const img = cfg?.imagem ? imagemDireta(cfg.imagem, 600) : "";
+              const img = cfg?.imagem ?? "";
               return (
                 <TiltCard key={t.id} className="tcard3d" onClick={() => setAberta(t)} rotulo={`Abrir ${t.nome}`}>
-                  {img && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={img} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.style.display = "none")} />
-                  )}
+                  {img && <Img src={img} alt="" largura={600} />}
                   <span className="tcard-info">
                     <strong>{t.nome}</strong>
                     <small>
@@ -118,10 +115,7 @@ export default function Tecnicas() {
 
       {aberta && (
         <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>
-          {mapa[aberta.id]?.imagem && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="modal-img" src={imagemDireta(mapa[aberta.id].imagem as string, 1200)} alt={`Imagem da técnica ${aberta.nome}`} referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.style.display = "none")} />
-          )}
+          {mapa[aberta.id]?.imagem && <Img className="modal-img" src={mapa[aberta.id].imagem as string} alt={`Imagem da técnica ${aberta.nome}`} largura={1200} eager />}
           <h3 className="modal-titulo">{aberta.nome}</h3>
           <p className="tmeta">
             {aberta.familia ?? "Nage-waza"}

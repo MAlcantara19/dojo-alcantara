@@ -13,7 +13,7 @@ export default function KatasPage() {
 
         <Katas />
 
-        <p className="form-help">Confira sempre o regulamento de exames da sua federação, que pode variar entre as regiões.</p>
+        <p className="form-help">Listas de técnicas conforme o Kodokan, com traduções resumidas. Confira sempre o regulamento de exames da sua federação, que pode variar entre as regiões.</p>
         <Link href="/" className="back">
           Voltar ao início
         </Link>

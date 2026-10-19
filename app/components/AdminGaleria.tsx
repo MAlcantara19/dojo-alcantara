@@ -5,6 +5,7 @@ import { mensagemErro } from "../lib/auth";
 import { addFoto, apagarFoto, lerGaleria, salvarLegenda, type FotoDoc } from "../lib/galeriaDb";
 import { enderecoOk } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
+import CampoImagem from "./CampoImagem";
 
 const VAZIO: FotoDoc[] = [];
 
@@ -35,7 +36,7 @@ export default function AdminGaleria() {
     const url = String(f.get("url") ?? "").trim();
     if (!legenda) return setMsg("Escreva uma legenda para a foto.");
     if (/\/folders\//.test(url)) return setMsg("Esse link é de uma PASTA do Drive. Para ligar a pasta à galeria, use a aba Site (“Galeria ligada a uma pasta do Google Drive”). Aqui vai o link de UMA foto.");
-    if (!enderecoOk(url)) return setMsg("O endereço da foto precisa começar com https:// ou com / (arquivo da pasta public).");
+    if (!enderecoOk(url)) return setMsg("Escolha uma foto do celular ou cole um link que comece com https://");
     void rodar(() => addFoto(legenda, url), "Foto adicionada.", () => form.reset());
   }
 
@@ -53,11 +54,7 @@ export default function AdminGaleria() {
           <label htmlFor="g-l">Legenda</label>
           <input id="g-l" name="legenda" type="text" maxLength={80} autoComplete="off" />
         </div>
-        <div className="field">
-          <label htmlFor="g-u">Endereço da foto</label>
-          <input id="g-u" name="url" type="text" inputMode="url" placeholder="/img/galeria/treino.jpg ou https://…" />
-        </div>
-        <p className="form-help">Coloque o arquivo em public\img\galeria do projeto, envie ao GitHub e use /img/galeria/nome.jpg. O envio de fotos pelos alunos, com a sua aprovação, precisa de um local de armazenamento e fica para a próxima etapa.</p>
+        <CampoImagem name="url" rotulo="Foto" ajuda="Escolha uma foto do celular, ou cole o link de UMA foto (do Drive, por exemplo). Para ligar uma pasta inteira do Drive, use a aba Site." />
         <button className="btn btn-primary" type="submit" disabled={ocupado}>
           Adicionar foto
         </button>

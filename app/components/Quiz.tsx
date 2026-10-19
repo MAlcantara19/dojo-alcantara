@@ -65,6 +65,13 @@ export default function Quiz() {
     const pct = Math.round((acertos / sim.perguntas.length) * 100);
     return (
       <div className="card result">
+        {pct >= 70 && (
+          <div className="confete" aria-hidden="true">
+            {Array.from({ length: 18 }, (_, i) => (
+              <i key={i} />
+            ))}
+          </div>
+        )}
         <h3>
           Você acertou {acertos} de {sim.perguntas.length}
         </h3>

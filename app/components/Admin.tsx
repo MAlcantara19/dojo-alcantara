@@ -14,11 +14,12 @@ import AdminGaleria from "./AdminGaleria";
 import AdminKatas from "./AdminKatas";
 import AdminMural from "./AdminMural";
 import AdminResultados from "./AdminResultados";
+import AdminResumo from "./AdminResumo";
 import AdminSite from "./AdminSite";
 import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
-type Aba = "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
+type Aba = "resumo" | "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
 
 export default function Admin() {
   const { carregando, user, perfil } = useAuth();
@@ -52,10 +53,11 @@ export default function Admin() {
 
 function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehAdmin: boolean; turmas: string[] }) {
   const escopo = ehAdmin ? null : turmas;
-  const [aba, setAba] = useState<Aba>("mural");
+  const [aba, setAba] = useState<Aba>("resumo");
   const res = useResultadosEquipe(escopo);
 
   const abas: [Aba, string][] = [
+    ["resumo", "Resumo"],
     ["mural", "Mural"],
     ["alunos", "Alunos"],
     ["aulas", "Aulas"],
@@ -89,6 +91,7 @@ function Painel({ nome, uid, ehAdmin, turmas }: { nome: string; uid: string; ehA
       </div>
 
       <div className="aba" key={aba}>
+        {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} />}
         {aba === "mural" && <AdminMural />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}

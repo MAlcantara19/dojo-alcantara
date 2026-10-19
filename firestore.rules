@@ -123,7 +123,7 @@ service cloud.firestore {
         && (request.resource.data.video == '' || request.resource.data.video.matches('^https://.*'))
         && request.resource.data.nota is string && request.resource.data.nota.size() <= 200
         && request.resource.data.get('imagem', '') is string && request.resource.data.get('imagem', '').size() <= 300
-        && (request.resource.data.get('imagem', '') == '' || request.resource.data.get('imagem', '').matches('^(https://|/).*'))
+        && (request.resource.data.get('imagem', '') == '' || request.resource.data.get('imagem', '').matches('^(https://|/|db:).*'))
         && request.resource.data.get('links', []) is list && request.resource.data.get('links', []).size() <= 10;
       allow delete: if ehEquipe();
     }
@@ -131,7 +131,12 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if ehEquipe()
         && texto('termo', 60) && texto('significado', 200)
-        && request.resource.data.lista in ['basica', 'extra'];
+        && request.resource.data.get('listas', []) is list && request.resource.data.get('listas', []).size() <= 30;
+      allow delete: if ehEquipe();
+    }
+    match /listasPalavras/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('nome', 60);
       allow delete: if ehEquipe();
     }
     match /exercicios/{id} {
@@ -160,7 +165,18 @@ service cloud.firestore {
     match /galeria/{id} {
       allow read: if true;
       allow create, update: if ehEquipe() && texto('legenda', 80) && texto('url', 300)
-        && request.resource.data.url.matches('^(https://|/).*');
+        && request.resource.data.url.matches('^(https://|/|db:).*');
+      allow delete: if ehEquipe();
+    }
+
+    // Imagens enviadas pelo painel (já reduzidas no celular): todos veem; a equipe envia.
+    match /imagens/{id} {
+      allow read: if true;
+      allow create: if ehEquipe()
+        && request.resource.data.keys().hasOnly(['dados', 'ts'])
+        && request.resource.data.dados is string
+        && request.resource.data.dados.size() <= 800000
+        && request.resource.data.dados.matches('data:image/.*');
       allow delete: if ehEquipe();
     }
 

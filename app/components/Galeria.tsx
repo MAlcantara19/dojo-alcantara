@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { useFotos } from "../lib/fotos";
 import type { FotoSite } from "../lib/galeriaDb";
+import Img from "./Img";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
 
@@ -14,10 +15,7 @@ const agoraNoNavegador = () => Math.floor(Date.now() / 3600000) * 3600000;
 function Foto({ f }: { f: FotoSite }) {
   return (
     <>
-      {f.src && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={f.src} alt={f.legenda} loading="lazy" referrerPolicy="no-referrer" onError={(e) => (e.currentTarget.style.display = "none")} />
-      )}
+      {f.src && <Img src={f.src} alt={f.legenda} largura={700} />}
       <span className="tile-cap">{f.legenda}</span>
     </>
   );
@@ -26,16 +24,14 @@ function Foto({ f }: { f: FotoSite }) {
 function Ampliada({ f, onFechar }: { f: FotoSite; onFechar: () => void }) {
   return (
     <Modal titulo={f.legenda} onFechar={onFechar}>
-      {f.src && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="modal-img" src={f.src} alt={f.legenda} referrerPolicy="no-referrer" />
-      )}
+      {f.src && <Img className="modal-img" src={f.src} alt={f.legenda} largura={1400} eager />}
       <h3 className="modal-titulo">{f.legenda}</h3>
       {f.baixar && (
         <a className="btn btn-primary" href={f.baixar} target="_blank" rel="noopener noreferrer" download>
           Baixar a foto
         </a>
       )}
+      {!f.baixar && f.src?.startsWith("db:") && <p className="form-help">Foto do painel: para guardar, toque e segure na imagem.</p>}
     </Modal>
   );
 }

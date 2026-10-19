@@ -1,7 +1,8 @@
 "use client";
 
-import { descreverLink, imagemDireta } from "../lib/links";
-import { nageNoKata } from "../lib/katas";
+import { descreverLink } from "../lib/links";
+import Img from "./Img";
+import { katas as katasBase } from "../lib/katas";
 import { useFichas } from "../lib/fichas";
 import { enderecoOk, lerKatasDb, montarKatas, type KataDoc } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
@@ -27,8 +28,7 @@ function Midia({ k }: { k: KataDoc }) {
         <div className="kata-imgs">
           {imagens.map((im, i) => (
             <a key={i} href={im.url} target="_blank" rel="noopener noreferrer" title="Abrir a imagem inteira">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imagemDireta(im.url, 600)} referrerPolicy="no-referrer" alt={im.legenda || `${k.nome}, imagem ${i + 1}`} loading="lazy" />
+              <Img src={im.url} alt={im.legenda || `${k.nome}, imagem ${i + 1}`} largura={600} />
               {im.legenda && <small>{im.legenda}</small>}
             </a>
           ))}
@@ -47,35 +47,39 @@ export default function Katas() {
     if (!f) return k;
     return { ...k, imagens: [...k.imagens, ...(f.imagem ? [{ legenda: "Ficha", url: f.imagem }] : [])], videos: [...k.videos, ...(f.pdf ? [{ titulo: "Ficha em PDF", url: f.pdf }] : [])] };
   });
-  const nage = katas.find((k) => k.nome === "Nage-no-kata");
 
   return (
     <>
       <div className="stack full">
-        {katas.map((k) => (
-          <article className="card" key={k.id}>
-            <h3>{k.nome}</h3>
-            <p className="tmeta">{k.dan}</p>
-            <p>{k.resumo}</p>
-            <Midia k={k} />
-          </article>
-        ))}
-      </div>
-
-      <h2 className="kata-title">Nage-no-kata, série por série</h2>
-      <div className="stack full">
-        {nage && (nage.videos.length > 0 || nage.imagens.length > 0) && (
-          <article className="card">
-            <h3>Vídeos e imagens do Nage-no-kata</h3>
-            <Midia k={nage} />
-          </article>
-        )}
-        {nageNoKata.map((s) => (
-          <article className="card" key={s.serie}>
-            <h3>{s.serie}</h3>
-            <p>{s.tecnicas.join(" · ")}</p>
-          </article>
-        ))}
+        {katas.map((k) => {
+          const series = katasBase.find((b) => b.nome === k.nome)?.series ?? [];
+          return (
+            <article className="card" key={k.id}>
+              <h3>{k.nome}</h3>
+              <p className="tmeta">{k.dan}</p>
+              <p>{k.resumo}</p>
+              <Midia k={k} />
+              {series.length > 0 && (
+                <details className="series">
+                  <summary>Ver as técnicas, série por série</summary>
+                  {series.map((s) => (
+                    <div key={s.titulo} className="serie">
+                      <h4>{s.titulo}</h4>
+                      <ol>
+                        {s.tecnicas.map((t, i) => (
+                          <li key={i}>
+                            <strong>{t.nome}</strong>
+                            {t.desc && <small> · {t.desc}</small>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ))}
+                </details>
+              )}
+            </article>
+          );
+        })}
       </div>
     </>
   );
