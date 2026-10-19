@@ -32,19 +32,29 @@ export const grupos: Record<GrupoId, { titulo: string; cor: string }> = {
   "4": { titulo: "4º grupo · Dai-yonkyo", cor: "#8a4bd6" },
   "5": { titulo: "5º grupo · Dai-gokyo", cor: "#8b4a2b" },
   "6": { titulo: "6º grupo · Rokukyo", cor: "#111111" },
-  S: { titulo: "Shinmeisho-no-waza · novas técnicas aceitas", cor: "#d9334a" },
-  "-": { titulo: "Outras técnicas do Kodokan", cor: "#8c86a3" },
+  S: { titulo: "Golpes adicionais · Shinmeisho", cor: "#8c86a3" },
+  "-": { titulo: "Golpes adicionais", cor: "#8c86a3" },
 };
 
 export const familias: Record<Familia, { titulo: string; cor: string }> = {
-  "Te-waza": { titulo: "Te-waza · técnicas de braço", cor: "#5b8def" },
-  "Koshi-waza": { titulo: "Koshi-waza · técnicas de quadril", cor: "#e0793f" },
-  "Ashi-waza": { titulo: "Ashi-waza · técnicas de perna", cor: "#3aa876" },
-  "Ma-sutemi-waza": { titulo: "Ma-sutemi-waza · sacrifício para trás", cor: "#a05bd6" },
-  "Yoko-sutemi-waza": { titulo: "Yoko-sutemi-waza · sacrifício lateral", cor: "#c2417a" },
-  "Osaekomi-waza": { titulo: "Osaekomi-waza · imobilizações", cor: "#1f8a9e" },
-  "Shime-waza": { titulo: "Shime-waza · estrangulamentos", cor: "#d9534f" },
-  "Kansetsu-waza": { titulo: "Kansetsu-waza · chaves de articulação", cor: "#4d5bd0" },
+  "Te-waza": { titulo: "Te-waza · Técnicas de Mão", cor: "#12a39a" },
+  "Koshi-waza": { titulo: "Koshi-waza · Técnicas de Quadril", cor: "#cf3d9a" },
+  "Ashi-waza": { titulo: "Ashi-waza · Técnicas de Perna", cor: "#6e7a8c" },
+  "Ma-sutemi-waza": { titulo: "Ma-sutemi-waza · Sacrifício para Trás", cor: "#a8a29e" },
+  "Yoko-sutemi-waza": { titulo: "Yoko-sutemi-waza · Sacrifício Lateral", cor: "#d98ca3" },
+  "Osaekomi-waza": { titulo: "Osaekomi-waza · Imobilizações", cor: "#7a8699" },
+  "Shime-waza": { titulo: "Shime-waza · Estrangulamentos", cor: "#5d6779" },
+  "Kansetsu-waza": { titulo: "Kansetsu-waza · Chaves de Articulação", cor: "#929caf" },
+};
+
+/* Faixa sugerida pelo grupo do Gokyo (você pode trocar técnica por técnica no painel). */
+export const faixaPorGrupo: Partial<Record<GrupoId, string>> = {
+  "1": "Amarela",
+  "2": "Laranja",
+  "3": "Verde",
+  "4": "Roxa",
+  "5": "Marrom",
+  "6": "Preta",
 };
 
 const porFamilia: Record<Familia, string[]> = {
@@ -76,7 +86,9 @@ const faixaInicial: Record<string, { faixa: string; nota?: string }> = {
   "De-ashi-harai": { faixa: "Azul" },
   "O-soto-gari": { faixa: "Azul" },
   "Uki-goshi": { faixa: "Azul" },
+  "Seoi-nage": { faixa: "Azul" },
   "Kesa-gatame": { faixa: "Azul" },
+  "Kata-gatame": { faixa: "Azul" },
   "Kuzure-kesa-gatame": { faixa: "Azul" },
   "Ushiro-kesa-gatame": { faixa: "Azul", nota: "Nome em desuso no dojô; mantido porque os alunos já o conhecem." },
 };
@@ -128,4 +140,17 @@ export function rotuloGrupo(t: Tecnica): string {
 
 export function linkVideo(nome: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent("Kodokan " + nome)}`;
+}
+
+export type FaixaEfetiva = { faixa?: string; sugerida: boolean };
+
+/** Faixa que vale para a técnica: a salva no painel, senão a inicial, senão a sugerida pelo grupo. */
+export function faixaEfetiva(t: Tecnica, cfg?: { faixa?: string }): FaixaEfetiva {
+  if (cfg?.faixa) return { faixa: cfg.faixa, sugerida: false };
+  if (t.faixa) return { faixa: t.faixa, sugerida: false };
+  if (t.categoria === "Nage-waza") {
+    const f = faixaPorGrupo[t.grupo];
+    if (f) return { faixa: f, sugerida: true };
+  }
+  return { sugerida: false };
 }

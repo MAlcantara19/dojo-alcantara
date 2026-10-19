@@ -17,10 +17,125 @@ service cloud.firestore {
       return request.resource.data.data is string && request.resource.data.data.size() == 10;
     }
 
-    // Perfis: cada pessoa lê o próprio; só o admin cria ou altera.
+    function ehProprio(uid) { return logado() && request.auth.uid == uid; }
+    function numeroOuNulo(campo) {
+      return request.resource.data.get(campo, null) == null
+        || (request.resource.data[campo] is number && request.resource.data[campo] > 0 && request.resource.data[campo] < 400);
+    }
+
+    // Perfis: cada pessoa lê o próprio; a equipe lê todos; só o admin cria e altera.
+    // O aluno só pode marcar que já trocou a senha provisória.
     match /users/{uid} {
-      allow read: if logado() && (request.auth.uid == uid || ehAdmin());
-      allow write: if ehAdmin();
+      allow read: if ehProprio(uid) || ehEquipe();
+      allow create, delete: if ehAdmin();
+      allow update: if ehAdmin()
+        || (ehProprio(uid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha'])
+            && request.resource.data.precisaTrocarSenha == false);
+
+      // Peso e altura: o próprio aluno registra; a equipe consulta.
+      match /medidas/{id} {
+        allow read: if ehProprio(uid) || ehEquipe();
+        allow create: if ehProprio(uid)
+          && request.resource.data.keys().hasOnly(['data', 'peso', 'altura', 'criadoEm'])
+          && request.resource.data.data is string && request.resource.data.data.size() == 10
+          && numeroOuNulo('peso') && numeroOuNulo('altura');
+        allow delete: if ehProprio(uid);
+      }
+
+      // Anotações de aula: privadas, só o aluno lê e escreve.
+      match /notas/{id} {
+        allow read, delete: if ehProprio(uid);
+        allow create: if ehProprio(uid)
+          && request.resource.data.keys().hasOnly(['data', 'texto', 'criadoEm'])
+          && request.resource.data.data is string && request.resource.data.data.size() == 10
+          && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 1500;
+      }
+
+      // Resultados de simulados: o aluno grava; a equipe consulta.
+      match /simulados/{id} {
+        allow read: if ehProprio(uid) || ehEquipe();
+        allow create: if ehProprio(uid)
+          && request.resource.data.keys().hasOnly(['data', 'titulo', 'simuladoId', 'acertos', 'total', 'respostas', 'ts', 'criadoEm'])
+          && request.resource.data.titulo is string && request.resource.data.titulo.size() <= 80
+          && request.resource.data.get('respostas', []) is list && request.resource.data.get('respostas', []).size() <= 100
+          && request.resource.data.acertos is int && request.resource.data.total is int
+          && request.resource.data.acertos >= 0 && request.resource.data.acertos <= request.resource.data.total
+          && request.resource.data.total > 0 && request.resource.data.total <= 500;
+      }
+    }
+
+    // Apelido interno: só a equipe vê e edita (o aluno não enxerga).
+    match /usersInterno/{uid} {
+      allow read, write: if ehEquipe();
+    }
+
+    // Palavras da roleta e simulados: leitura pública; a equipe edita.
+    match /palavras/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe()
+        && texto('termo', 60) && texto('significado', 200)
+        && request.resource.data.lista in ['basica', 'extra'];
+      allow delete: if ehEquipe();
+    }
+    match /simulados/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe()
+        && texto('titulo', 80)
+        && request.resource.data.perguntas is list && request.resource.data.perguntas.size() <= 300;
+      allow delete: if ehEquipe();
+    }
+
+    // Resultados de simulados para a equipe acompanhar: o aluno envia o próprio; a equipe lê.
+    match /resultados/{id} {
+      allow read: if ehEquipe();
+      allow create: if logado()
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'apelido', 'academia', 'simuladoId', 'titulo', 'acertos', 'total', 'data', 'ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.acertos is int && request.resource.data.total is int
+        && request.resource.data.acertos >= 0 && request.resource.data.acertos <= request.resource.data.total
+        && request.resource.data.total > 0 && request.resource.data.total <= 500
+        && request.resource.data.titulo is string && request.resource.data.titulo.size() <= 80
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 100
+        && request.resource.data.ts is number;
+      allow delete: if ehAdmin();
+    }
+
+    // Exercícios da roleta de aula.
+    match /exercicios/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('nome', 60)
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 200;
+      allow delete: if ehEquipe();
+    }
+
+    // Katas: vídeos e imagens por card, e cards criados pelo professor.
+    match /katas/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe()
+        && request.resource.data.get('videos', []) is list && request.resource.data.get('videos', []).size() <= 20
+        && request.resource.data.get('imagens', []) is list && request.resource.data.get('imagens', []).size() <= 40
+        && request.resource.data.get('nome', '') is string && request.resource.data.get('nome', '').size() <= 60
+        && request.resource.data.get('dan', '') is string && request.resource.data.get('dan', '').size() <= 80
+        && request.resource.data.get('resumo', '') is string && request.resource.data.get('resumo', '').size() <= 300;
+      allow delete: if ehEquipe();
+    }
+
+    // Galeria de fotos (endereços de imagem).
+    match /galeria/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('legenda', 80) && texto('url', 300)
+        && request.resource.data.url.matches('^(https://|/).*');
+      allow delete: if ehEquipe();
+    }
+
+    // Planejamento de aulas: cada professor só vê e edita as próprias aulas.
+    match /aulas/{id} {
+      allow read, delete: if ehEquipe() && (resource.data.dono == request.auth.uid || ehAdmin());
+      allow create: if ehEquipe() && request.resource.data.dono == request.auth.uid
+        && texto('titulo', 80) && dataValida();
+      allow update: if ehEquipe() && resource.data.dono == request.auth.uid
+        && request.resource.data.dono == request.auth.uid && texto('titulo', 80) && dataValida();
     }
 
     // Avisos: qualquer pessoa lê; admin e professores publicam (com tamanhos limitados).
@@ -35,6 +150,20 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if ehEquipe() && texto('titulo', 80) && texto('hora', 30)
         && texto('local', 80) && texto('tipo', 30) && dataValida();
+      allow delete: if ehEquipe();
+    }
+
+    // Técnicas: leitura pública; admin e professores definem faixa, PDF, vídeo e observação.
+    match /tecnicas/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe()
+        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota'])
+        && request.resource.data.faixa is string && request.resource.data.faixa.size() <= 20
+        && request.resource.data.pdf is string && request.resource.data.pdf.size() <= 300
+        && (request.resource.data.pdf == '' || request.resource.data.pdf.matches('^https://.*'))
+        && request.resource.data.video is string && request.resource.data.video.size() <= 300
+        && (request.resource.data.video == '' || request.resource.data.video.matches('^https://.*'))
+        && request.resource.data.nota is string && request.resource.data.nota.size() <= 200;
       allow delete: if ehEquipe();
     }
 

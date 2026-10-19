@@ -4,7 +4,7 @@ import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { salvarConfigTecnica, useConfigTecnicas, type ConfigTecnica } from "../lib/conteudo";
 import { faixas } from "../lib/faixas";
-import { tecnicas, type Tecnica } from "../lib/tecnicas";
+import { faixaEfetiva, tecnicas, type Tecnica } from "../lib/tecnicas";
 
 const linkOk = (v: string) => v === "" || (/^https:\/\//.test(v) && v.length <= 300);
 
@@ -17,7 +17,7 @@ export default function AdminTecnicas() {
   const lista = termo ? tecnicas.filter((t) => t.nome.toLowerCase().includes(termo)).slice(0, 12) : [];
 
   return (
-    <section className="panel">
+    <section className="panel" id="tecnicas">
       <h2>Técnicas</h2>
       <p className="lead">Procure a técnica para definir a faixa, o PDF e o vídeo. Vale para todos os alunos na hora.</p>
       <div className="field">
@@ -61,14 +61,15 @@ function LinhaTecnica({ t, cfg, onMsg, onSalvou }: { t: Tecnica; cfg?: ConfigTec
     setOcupado(false);
   }
 
-  const faixaAtual = cfg?.faixa ?? t.faixa ?? "";
+  const faixaAtual = cfg?.faixa ?? "";
+  const padrao = faixaEfetiva(t).faixa;
   return (
     <form className="tedit" onSubmit={salvar} key={JSON.stringify(cfg ?? {})}>
       <strong>{t.nome}</strong>
       <div className="field">
         <label htmlFor={`f-${t.id}`}>Faixa</label>
         <select id={`f-${t.id}`} name="faixa" defaultValue={faixaAtual}>
-          <option value="">A definir</option>
+          <option value="">{padrao ? `Padrão (${padrao})` : "A definir"}</option>
           {faixas.map((f) => (
             <option key={f.nome}>{f.nome}</option>
           ))}

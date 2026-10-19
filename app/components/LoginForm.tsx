@@ -29,7 +29,7 @@ export default function LoginForm({ destino }: { destino?: string }) {
         return;
       }
       const perfil = await lerPerfil(cred.user.uid).catch(() => null);
-      router.push(ehEquipe(perfil) ? "/admin" : "/");
+      router.push(ehEquipe(perfil) ? "/admin" : "/perfil");
     } catch (err) {
       setAviso(mensagemErro(err));
       setEnviando(false);

@@ -1,10 +1,10 @@
-import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { deleteApp, getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
+import { createUserWithEmailAndPassword, getAuth, signOut, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 /* Estas chaves do app web NÃO são segredo (todo site que usa Firebase as mostra
    no navegador). Quem protege os dados são as regras do Firestore. */
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyBn0uDg1tn8jxZeW6Y0LNBX5FGgOqnqZ7w",
   authDomain: "dojo-alcantara.firebaseapp.com",
   projectId: "dojo-alcantara",
@@ -23,4 +23,18 @@ export function getDb(): Firestore {
 }
 export function getAuthInstance(): Auth {
   return getAuth(app());
+}
+
+/** Cria a conta de um aluno SEM tirar o professor da própria sessão (usa um app auxiliar temporário). */
+export async function criarContaSecundaria(email: string, senha: string): Promise<string> {
+  const aux = initializeApp(firebaseConfig, "aux-" + Date.now());
+  try {
+    const auth = getAuth(aux);
+    const cred = await createUserWithEmailAndPassword(auth, email, senha);
+    const uid = cred.user.uid;
+    await signOut(auth);
+    return uid;
+  } finally {
+    await deleteApp(aux);
+  }
 }

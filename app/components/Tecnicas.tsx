@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useConfigTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
-import { familias, grupos, linkVideo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { faixaEfetiva, familias, grupos, linkVideo, tecnicas, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
+type Item = Tecnica & { faixaFinal?: string; sugerida: boolean };
+type Bloco = { chave: string; titulo: string; cor: string; itens: Item[] };
 
-type Bloco = { chave: string; titulo: string; cor: string; itens: Tecnica[] };
-
-const ordemGrupos: (GrupoId | Familia)[] = ["1", "2", "3", "4", "5", "6", "S", "-", "Osaekomi-waza", "Shime-waza", "Kansetsu-waza"];
+const ordemGrupos: (GrupoId | Familia)[] = ["1", "2", "3", "4", "5", "6", "-", "Osaekomi-waza", "Shime-waza", "Kansetsu-waza"];
 const ordemFamilias = Object.keys(familias) as Familia[];
 
 export default function Tecnicas() {
@@ -20,14 +20,17 @@ export default function Tecnicas() {
   const { mapa } = useConfigTecnicas();
 
   const termo = busca.trim().toLowerCase();
-  const lista: Tecnica[] = tecnicas
-    .map((t) => ({ ...t, ...(mapa[t.id]?.faixa !== undefined ? { faixa: mapa[t.id].faixa || undefined } : {}), ...(mapa[t.id]?.nota !== undefined ? { nota: mapa[t.id].nota || undefined } : {}) }))
+  const lista: Item[] = tecnicas
+    .map((t) => {
+      const f = faixaEfetiva(t, mapa[t.id]);
+      return { ...t, nota: mapa[t.id]?.nota || t.nota, faixaFinal: f.faixa, sugerida: f.sugerida };
+    })
     .filter((t) => (aba === "todas" ? true : aba === "nage" ? t.categoria === "Nage-waza" : t.categoria === "Katame-waza"))
     .filter((t) => t.nome.toLowerCase().includes(termo));
 
   function blocos(): Bloco[] {
     if (modo === "grupo") {
-      const chaveDe = (t: Tecnica): string => (t.categoria === "Nage-waza" ? t.grupo : (t.familia as Familia));
+      const chaveDe = (t: Item): string => (t.categoria === "Nage-waza" ? (t.grupo === "S" ? "-" : t.grupo) : (t.familia as Familia));
       return ordemGrupos
         .map((k) => ({
           chave: k,
@@ -42,9 +45,9 @@ export default function Tecnicas() {
         .map((f) => ({ chave: f, titulo: familias[f].titulo, cor: familias[f].cor, itens: lista.filter((t) => t.familia === f) }))
         .filter((b) => b.itens.length);
     }
-    const porFaixa = faixas.map((f) => ({ chave: f.nome, titulo: `Faixa ${f.nome.toLowerCase()}`, cor: f.cor, itens: lista.filter((t) => t.faixa === f.nome) }));
-    const semFaixa = { chave: "sem", titulo: "Faixa a definir", cor: "#8c86a3", itens: lista.filter((t) => !t.faixa) };
-    return [...porFaixa, semFaixa].filter((b) => b.itens.length);
+    const porFaixa = faixas.map((f) => ({ chave: f.nome, titulo: `Faixa ${f.nome.toLowerCase()}`, cor: f.cor, itens: lista.filter((t) => t.faixaFinal === f.nome) }));
+    const sem = { chave: "sem", titulo: "Sem faixa definida (solo e golpes adicionais)", cor: "#8c86a3", itens: lista.filter((t) => !t.faixaFinal) };
+    return [...porFaixa, sem].filter((b) => b.itens.length);
   }
 
   const grupoBlocos = blocos();
@@ -92,14 +95,21 @@ export default function Tecnicas() {
                     <strong>{t.nome}</strong>
                     <span className="tmeta">
                       {t.familia ?? "Nage-waza"}
-                      {t.faixa && (
+                      {t.grupo === "S" && " · Shinmeisho"}
+                      {t.faixaFinal && (
                         <>
                           {" · "}
-                          <i className="dot" style={{ background: corDaFaixa(t.faixa) }} aria-hidden="true" />
-                          Faixa {t.faixa.toLowerCase()}
+                          <i className="dot" style={{ background: corDaFaixa(t.faixaFinal) }} aria-hidden="true" />
+                          Faixa {t.faixaFinal.toLowerCase()}
+                          {t.sugerida && " (padrão do grupo)"}
                         </>
                       )}
-                      {t.nota && <span className="asterisco" title={t.nota}> *</span>}
+                      {t.nota && (
+                        <span className="asterisco" title={t.nota}>
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </span>
                     {t.nota && <span className="tnota">* {t.nota}</span>}
                   </div>
@@ -120,7 +130,7 @@ export default function Tecnicas() {
         </section>
       ))}
 
-      <p className="form-help">Lista baseada nas 100 técnicas do Kodokan (2022). Faixa, PDF e vídeo são editados pelo professor.</p>
+      <p className="form-help">Lista baseada nas 100 técnicas do Kodokan (2022). A faixa “padrão do grupo” pode ser trocada pelo professor, técnica por técnica.</p>
     </div>
   );
 }

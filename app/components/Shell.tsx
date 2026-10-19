@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ehEquipe } from "../lib/auth";
+import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
 
@@ -29,7 +31,7 @@ const grupos = [
   },
   {
     titulo: "Área do aluno",
-    itens: [{ href: "/login", rotulo: "Entrar" }],
+    itens: [{ href: "/perfil", rotulo: "Meu perfil · Entrar" }],
   },
   {
     titulo: "Atalhos",
@@ -39,6 +41,7 @@ const grupos = [
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, perfil } = useAuth();
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [mostrarTopo, setMostrarTopo] = useState(false);
@@ -121,11 +124,33 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </svg>
         </button>
         <span className="topbar-title">Dojô Alcântara</span>
-        <button className="icon-btn" aria-label="Alternar tema claro e escuro" onClick={alternarTema}>
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" fill="currentColor" />
-          </svg>
-        </button>
+        <div className="top-actions">
+          {user ? (
+            ehEquipe(perfil) ? (
+              <Link className="pill" href="/admin">
+                Painel
+              </Link>
+            ) : (
+              <Link className="pill" href="/perfil">
+                Meu perfil
+              </Link>
+            )
+          ) : (
+            <>
+              <Link className="pill" href="/perfil">
+                Aluno
+              </Link>
+              <Link className="pill" href="/admin">
+                Professor
+              </Link>
+            </>
+          )}
+          <button className="icon-btn" aria-label="Alternar tema claro e escuro" onClick={alternarTema}>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {aberto && !desktop && <div className="scrim" onClick={() => setAberto(false)} />}
@@ -171,8 +196,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         ))}
 
-        <Link href="/login" className="drawer-cta" onClick={() => setAberto(false)}>
-          Entrar na área do aluno
+        <Link href="/perfil" className="drawer-cta" onClick={() => setAberto(false)}>
+          Meu perfil
         </Link>
       </nav>
 

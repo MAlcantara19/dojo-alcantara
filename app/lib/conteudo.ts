@@ -1,6 +1,6 @@
 "use client";
 
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
@@ -21,6 +21,12 @@ export async function criarAviso(a: Aviso) {
 }
 export async function criarEvento(e: Evento) {
   await addDoc(collection(getDb(), "eventos"), { ...e, criadoEm: serverTimestamp() });
+}
+export async function atualizarAviso(id: string, a: Aviso) {
+  await updateDoc(doc(getDb(), "avisos", id), { ...a });
+}
+export async function atualizarEvento(id: string, e: Evento) {
+  await updateDoc(doc(getDb(), "eventos", id), { ...e });
 }
 export async function apagar(nome: "avisos" | "eventos", id: string) {
   await deleteDoc(doc(getDb(), nome, id));

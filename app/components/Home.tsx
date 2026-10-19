@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { dojo, galeria, sobre } from "../lib/data";
+import { lerGaleria, type FotoDoc } from "../lib/galeriaDb";
+import { enderecoOk } from "../lib/katasDb";
+import { useCarga } from "../lib/useCarga";
 import { useAvisos, useEventos } from "../lib/conteudo";
 import { faixas, faixasAltas } from "../lib/faixas";
 import { linkGoogleAgenda } from "../lib/ics";
@@ -24,7 +27,11 @@ const hojeTexto = () => {
   return `${h.getFullYear()}-${h.getMonth() + 1}-${h.getDate()}`;
 };
 
+const VAZIO_FOTOS: FotoDoc[] = [];
+
 export default function Home() {
+  const fotosDb = useCarga(lerGaleria, VAZIO_FOTOS);
+  const fotos = fotosDb.dados.length ? fotosDb.dados.map((f) => ({ legenda: f.legenda, src: enderecoOk(f.url) ? f.url : undefined })) : galeria;
   // Vazio no servidor; no navegador vira a data de hoje (evita erro de hidratação)
   const hojeStr = useSyncExternalStore(semAssinatura, hojeTexto, () => "");
   const hoje = hojeStr ? parseData(hojeStr) : null;
@@ -85,7 +92,7 @@ export default function Home() {
       </section>
 
       <section className="block" id="estudo">
-        <h2>Estude judô</h2>
+        <h2>Estudo do judô</h2>
         <p className="lead">Ferramentas para treinar em casa e se preparar para a prova.</p>
         <div className="study">
           <Link href="/tecnicas" className="study-card">
@@ -157,8 +164,8 @@ export default function Home() {
         <h2>Galeria</h2>
         <p className="lead">Momentos dos treinos e eventos.</p>
         <div className="grid">
-          {galeria.map((f) => (
-            <figure className="tile" key={f.legenda}>
+          {fotos.map((f, i) => (
+            <figure className="tile" key={f.legenda + i}>
               {f.src && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={f.src} alt={f.legenda} loading="lazy" />
@@ -182,7 +189,7 @@ export default function Home() {
         <div className="login-card">
           <h2>Área do aluno</h2>
           <p>Materiais da sua faixa, treinos e simulados ficam aqui, com login e senha criados pelo professor.</p>
-          <Link href="/login" className="btn">
+          <Link href="/perfil" className="btn">
             Entrar
           </Link>
         </div>
