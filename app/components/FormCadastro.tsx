@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { hojeISO, senhaProvisoria } from "../lib/aluno";
-import { criarConta, type Turma } from "../lib/alunos";
+import { addMedida, criarConta, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { faixas } from "../lib/faixas";
 
@@ -36,7 +36,17 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       turmas: ehAluno ? [] : f.getAll("turmas").map(String),
     };
     const pw = senha.trim();
+    const numero = (k: string): number | null | "ruim" => {
+      const t = g(k).replace(",", ".");
+      if (!t) return null;
+      const n = Number(t);
+      return Number.isFinite(n) && n > 0 ? n : "ruim";
+    };
+    const peso = ehAluno ? numero("peso") : null;
+    const altura = ehAluno ? numero("altura") : null;
     const faltam: string[] = [];
+    if (peso === "ruim" || (typeof peso === "number" && (peso < 10 || peso > 300))) faltam.push("peso válido em kg (ou deixe em branco)");
+    if (altura === "ruim" || (typeof altura === "number" && (altura < 50 || altura > 250))) faltam.push("altura válida em cm (ou deixe em branco)");
     if (!dados.nome) faltam.push("nome completo");
     if (!dados.email && dados.celular.replace(/\D/g, "").length < 10) faltam.push("e-mail ou celular com DDD");
     if (pw.length < 6) faltam.push("senha provisória com 6 ou mais caracteres (use o botão “Gerar senha”)");
@@ -44,7 +54,10 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
     setOcupado(true);
     setMsg("Criando a conta…");
     try {
-      const { login } = await criarConta(dados, pw);
+      const { login, uid } = await criarConta(dados, pw);
+      if (typeof peso === "number" || typeof altura === "number") {
+        await addMedida(uid, { data: hojeISO(), peso: typeof peso === "number" ? peso : null, altura: typeof altura === "number" ? altura : null }).catch(() => undefined);
+      }
       setEntregue({ nome: dados.nome, login, senha: pw });
       setMsg("Conta criada. Anote o login e a senha abaixo.");
       form.reset();
@@ -125,6 +138,18 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
             </div>
           </div>
           <p className="form-help">Se deixar a data em branco, vale hoje. Se a pessoa já era dessa faixa, coloque quando começou.</p>
+          {ehAluno && (
+            <div className="two">
+              <div className="field">
+                <label htmlFor="c-peso">Peso hoje, em kg (opcional)</label>
+                <input id="c-peso" name="peso" type="text" inputMode="decimal" placeholder="Ex.: 32,5" />
+              </div>
+              <div className="field">
+                <label htmlFor="c-altura">Altura hoje, em cm (opcional)</label>
+                <input id="c-altura" name="altura" type="text" inputMode="decimal" placeholder="Ex.: 135" />
+              </div>
+            </div>
+          )}
           {ehAluno ? (
             <div className="field">
               <label htmlFor="c-turma">Turma</label>

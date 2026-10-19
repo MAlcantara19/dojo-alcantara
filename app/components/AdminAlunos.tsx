@@ -8,6 +8,7 @@ import { corDaFaixa, faixas } from "../lib/faixas";
 import { useCarga } from "../lib/useCarga";
 import AcoesConta from "./AcoesConta";
 import FormCadastro, { semCel } from "./FormCadastro";
+import MedidasAluno from "./MedidasAluno";
 
 const VAZIO_A: Aluno[] = [];
 const VAZIO_T: Turma[] = [];
@@ -20,6 +21,8 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
+  const [medidas, setMedidas] = useState<string | null>(null);
+  const [senhaDe, setSenhaDe] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [limite, setLimite] = useState(12);
 
@@ -179,7 +182,7 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                       Cancelar
                     </button>
                   </div>
-                  {ehAdmin && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} onApagada={() => (setEditando(null), alunos.recarregar())} />}
+                  {ehAdmin && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} onApagada={() => (setEditando(null), alunos.recarregar())} onEmail={alunos.recarregar} />}
                 </form>
               ) : (
                 <>
@@ -197,11 +200,22 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                     <small>Login: {semCel(a.login)}</small>
                     {ehAdmin && internos.dados[a.uid] && <small>Apelido interno: {internos.dados[a.uid]}</small>}
                   </span>
-                  {ehAdmin && (
-                    <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
-                      Editar
+                  <span className="tlinks">
+                    <button className="btn btn-ghost" onClick={() => setMedidas(medidas === a.uid ? null : a.uid)}>
+                      {medidas === a.uid ? "Fechar medidas" : "Peso e altura"}
                     </button>
-                  )}
+                    {ehAdmin ? (
+                      <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
+                        Editar
+                      </button>
+                    ) : (
+                      <button className="btn btn-ghost" onClick={() => setSenhaDe(senhaDe === a.uid ? null : a.uid)}>
+                        Senha
+                      </button>
+                    )}
+                  </span>
+                  {medidas === a.uid && <MedidasAluno uid={a.uid} />}
+                  {!ehAdmin && senhaDe === a.uid && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} completo={false} onApagada={alunos.recarregar} />}
                 </>
               )}
             </li>

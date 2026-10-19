@@ -21,7 +21,7 @@ export type NovaConta = {
   turmas: string[];
 };
 
-export async function criarConta(d: NovaConta, senha: string): Promise<{ login: string }> {
+export async function criarConta(d: NovaConta, senha: string): Promise<{ login: string; uid: string }> {
   const login = paraEmail(d.email || d.celular);
   if (!login) throw new Error("sem-contato");
   const uid = await criarContaSecundaria(login, senha);
@@ -42,7 +42,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
     criadoEm: serverTimestamp(),
   });
   if (d.apelidoInterno.trim()) await setDoc(doc(db, "usersInterno", uid), { apelidoInterno: d.apelidoInterno.trim() });
-  return { login };
+  return { login, uid };
 }
 
 export async function listarAlunos(escopo: Escopo): Promise<Aluno[]> {
@@ -207,6 +207,24 @@ export async function lerResultadosEquipe(escopo: Escopo): Promise<ResultadoEqui
 export async function apagarSub(uid: string, nome: "medidas" | "notas", id: string) {
   await deleteDoc(doc(getDb(), "users", uid, nome, id));
 }
+export type MeuCadastro = { apelido: string; email: string; celular: string; dataNascimento: string };
+export async function atualizarMeuCadastro(uid: string, d: MeuCadastro) {
+  await updateDoc(doc(getDb(), "users", uid), { ...d });
+}
+/** Equipe (ou o próprio aluno) registra uma medida. */
 export async function confirmarSenhaTrocada(uid: string) {
   await updateDoc(doc(getDb(), "users", uid), { precisaTrocarSenha: false });
+}
+
+/* ---------- Pedidos de nova senha (feitos na tela de entrada) ---------- */
+export type PedidoSenha = { id: string; identificador: string; ts: number };
+export async function lerPedidosSenha(): Promise<PedidoSenha[]> {
+  const snap = await getDocs(collection(getDb(), "pedidosSenha"));
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PedidoSenha, "id">) })).sort((a, b) => b.ts - a.ts);
+}
+export const apagarPedidoSenha = (id: string) => deleteDoc(doc(getDb(), "pedidosSenha", id));
+export async function acharPorLogin(login: string): Promise<Aluno | null> {
+  const snap = await getDocs(query(collection(getDb(), "users"), where("login", "==", login)));
+  const d = snap.docs[0];
+  return d ? { uid: d.id, ...(d.data() as Omit<Aluno, "uid">) } : null;
 }

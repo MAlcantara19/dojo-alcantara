@@ -40,16 +40,20 @@ service cloud.firestore {
       allow create, delete: if ehAdmin();
       allow update: if ehAdmin()
         || (ehProprio(uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha'])
-            && request.resource.data.precisaTrocarSenha == false);
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento'])
+            && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
+            && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 40
+            && request.resource.data.get('email', '') is string && request.resource.data.get('email', '').size() <= 120
+            && request.resource.data.get('celular', '') is string && request.resource.data.get('celular', '').size() <= 20
+            && request.resource.data.get('dataNascimento', '') is string && request.resource.data.get('dataNascimento', '').size() <= 10);
 
       match /medidas/{id} {
         allow read: if ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid);
-        allow create: if ehProprio(uid)
+        allow create: if (ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid))
           && request.resource.data.keys().hasOnly(['data', 'peso', 'altura', 'criadoEm'])
           && request.resource.data.data is string && request.resource.data.data.size() == 10
           && numeroOuNulo('peso') && numeroOuNulo('altura');
-        allow delete: if ehProprio(uid);
+        allow delete: if ehProprio(uid) || ehAdmin();
       }
 
       // Anotações de aula: privadas, só o aluno lê e escreve.
@@ -71,6 +75,14 @@ service cloud.firestore {
           && request.resource.data.acertos >= 0 && request.resource.data.acertos <= request.resource.data.total
           && request.resource.data.total > 0 && request.resource.data.total <= 500;
       }
+    }
+
+    // Pedidos de nova senha: qualquer pessoa pode deixar um (na tela de entrada); só o admin lê e apaga.
+    match /pedidosSenha/{id} {
+      allow read, delete: if ehAdmin();
+      allow create, update: if request.resource.data.keys().hasOnly(['identificador', 'ts'])
+        && request.resource.data.identificador is string && request.resource.data.identificador.size() > 2 && request.resource.data.identificador.size() <= 120
+        && request.resource.data.ts is number;
     }
 
     // Apelido interno: só o admin vê e edita.

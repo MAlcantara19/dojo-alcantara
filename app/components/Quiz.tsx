@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { hojeISO } from "../lib/aluno";
 import { addResultado, lerAluno, publicarResultado, type Resp } from "../lib/alunos";
 import { lerSimulados, simuladosOuPadrao, type SimuladoDoc } from "../lib/estudoDb";
@@ -9,6 +9,33 @@ import { useCarga } from "../lib/useCarga";
 
 const VAZIO_SIM: SimuladoDoc[] = [];
 const LETRAS = ["A", "B", "C", "D", "E"];
+
+/* ---------- Simulado em aberto: o progresso fica guardado neste aparelho ---------- */
+type Prog = { i: number; acertos: number; respostas: Resp[]; escolha: number | null };
+const CHAVE = "dojoSimulados";
+const ouvintes = new Set<() => void>();
+function assinar(cb: () => void) {
+  ouvintes.add(cb);
+  const f = (e: StorageEvent) => e.key === CHAVE && cb();
+  window.addEventListener("storage", f);
+  return () => {
+    ouvintes.delete(cb);
+    window.removeEventListener("storage", f);
+  };
+}
+const lerBruto = () => {
+  try {
+    return localStorage.getItem(CHAVE) ?? "";
+  } catch {
+    return "";
+  }
+};
+function gravar(mapa: Record<string, Prog>) {
+  try {
+    localStorage.setItem(CHAVE, JSON.stringify(mapa));
+  } catch {}
+  ouvintes.forEach((f) => f());
+}
 
 async function registrar(uid: string, s: SimuladoDoc, ac: number, det: Resp[]): Promise<string> {
   const data = hojeISO();
@@ -34,29 +61,80 @@ export default function Quiz() {
   const [escolha, setEscolha] = useState<number | null>(null);
   const [acertos, setAcertos] = useState(0);
   const [fim, setFim] = useState(false);
+  const [aviso, setAviso] = useState("");
+
+  const bruto = useSyncExternalStore(assinar, lerBruto, () => "");
+  const progressos = useMemo<Record<string, Prog>>(() => {
+    try {
+      return bruto ? (JSON.parse(bruto) as Record<string, Prog>) : {};
+    } catch {
+      return {};
+    }
+  }, [bruto]);
 
   const sim = simulados.find((s) => s.id === simId) ?? null;
 
-  function iniciar(id: string) {
+  function iniciar(id: string, retomar: boolean) {
+    const p = retomar ? progressos[id] : undefined;
     setSimId(id);
-    setI(0);
-    setEscolha(null);
-    setAcertos(0);
+    setI(p?.i ?? 0);
+    setEscolha(p?.escolha ?? null);
+    setAcertos(p?.acertos ?? 0);
+    setRespostas(p?.respostas ?? []);
     setFim(false);
     setSalvo("");
-    setRespostas([]);
+    setAviso("");
+    if (!retomar && progressos[id]) {
+      const { [id]: _descartado, ...resto } = progressos;
+      void _descartado;
+      gravar(resto);
+    }
+  }
+
+  function sair() {
+    if (!sim) return;
+    const andou = i > 0 || escolha !== null;
+    if (andou && !window.confirm(`Tem certeza que quer sair? O simulado “${sim.titulo}” vai ficar em aberto: quando você voltar, ele continua da pergunta ${i + 1}.`)) return;
+    setAviso(andou ? `O simulado “${sim.titulo}” ficou em aberto. Você pode continuar de onde parou.` : "");
+    setSimId(null);
   }
 
   if (!sim) {
     return (
       <div className="stack">
-        {simulados.map((s) => (
-          <button className="card card-btn" key={s.id} onClick={() => iniciar(s.id)}>
-            <h3>{s.titulo}</h3>
-            <p>{s.descricao}</p>
-            <span className="tag">{s.perguntas.length} perguntas</span>
-          </button>
-        ))}
+        {aviso && (
+          <p className="form-note" role="status">
+            {aviso}
+          </p>
+        )}
+        {simulados.map((s) => {
+          const p = progressos[s.id];
+          const aberto = p && p.i < s.perguntas.length ? p : null;
+          return (
+            <article className="card" key={s.id}>
+              <h3>{s.titulo}</h3>
+              <p>{s.descricao}</p>
+              <span className="tag">{s.perguntas.length} perguntas</span>
+              {aberto && <span className="tag tag-aberto">em aberto: parou na pergunta {aberto.i + 1} de {s.perguntas.length}</span>}
+              <div className="tool-actions" style={{ marginTop: 10 }}>
+                {aberto ? (
+                  <>
+                    <button className="btn btn-primary" onClick={() => iniciar(s.id, true)}>
+                      Continuar de onde parei
+                    </button>
+                    <button className="btn btn-ghost" onClick={() => window.confirm("Recomeçar do zero? O que você já respondeu neste simulado será descartado.") && iniciar(s.id, false)}>
+                      Recomeçar
+                    </button>
+                  </>
+                ) : (
+                  <button className="btn btn-primary" onClick={() => iniciar(s.id, false)}>
+                    Começar
+                  </button>
+                )}
+              </div>
+            </article>
+          );
+        })}
       </div>
     );
   }
@@ -67,8 +145,8 @@ export default function Quiz() {
       <div className="card result">
         {pct >= 70 && (
           <div className="confete" aria-hidden="true">
-            {Array.from({ length: 18 }, (_, i) => (
-              <i key={i} />
+            {Array.from({ length: 18 }, (_, k) => (
+              <i key={k} />
             ))}
           </div>
         )}
@@ -78,7 +156,7 @@ export default function Quiz() {
         <p>{pct >= 70 ? "Muito bem! Continue treinando." : "Vale revisar o conteúdo e tentar de novo."}</p>
         <p className="form-help">{salvo || (user ? "Salvando o resultado…" : "Entre na sua conta para guardar o resultado no perfil.")}</p>
         <div className="tool-actions">
-          <button className="btn btn-primary" onClick={() => iniciar(sim.id)}>
+          <button className="btn btn-primary" onClick={() => iniciar(sim.id, false)}>
             Refazer
           </button>
           <button className="btn btn-ghost" onClick={() => setSimId(null)}>
@@ -93,27 +171,40 @@ export default function Quiz() {
   const respondeu = escolha !== null;
 
   function responder(idx: number) {
-    if (respondeu) return;
+    if (respondeu || !sim) return;
+    const novasResp = [...respostas, { pergunta: q.pergunta, marcada: q.opcoes[idx], correta: q.opcoes[q.correta], acertou: idx === q.correta }];
+    const novosAcertos = acertos + (idx === q.correta ? 1 : 0);
     setEscolha(idx);
-    setRespostas((r) => [...r, { pergunta: q.pergunta, marcada: q.opcoes[idx], correta: q.opcoes[q.correta], acertou: idx === q.correta }]);
-    if (idx === q.correta) setAcertos((a) => a + 1);
+    setRespostas(novasResp);
+    setAcertos(novosAcertos);
+    gravar({ ...progressos, [sim.id]: { i, acertos: novosAcertos, respostas: novasResp, escolha: idx } });
   }
 
   function avancar() {
-    if (i + 1 >= sim!.perguntas.length) {
+    if (!sim) return;
+    if (i + 1 >= sim.perguntas.length) {
       setFim(true);
-      if (user) void registrar(user.uid, sim!, acertos, respostas).then(setSalvo);
+      const { [sim.id]: _fim, ...resto } = progressos;
+      void _fim;
+      gravar(resto);
+      if (user) void registrar(user.uid, sim, acertos, respostas).then(setSalvo);
     } else {
       setI(i + 1);
       setEscolha(null);
+      gravar({ ...progressos, [sim.id]: { i: i + 1, acertos, respostas, escolha: null } });
     }
   }
 
   return (
     <div className="card quiz">
-      <p className="quiz-count">
-        Pergunta {i + 1} de {sim.perguntas.length}
-      </p>
+      <div className="quiz-topo">
+        <p className="quiz-count">
+          {sim.titulo} · pergunta {i + 1} de {sim.perguntas.length}
+        </p>
+        <button className="link-btn" onClick={sair}>
+          Sair ou trocar de simulado
+        </button>
+      </div>
       <h3>{q.pergunta}</h3>
       <div className="options">
         {q.opcoes.map((o, idx) => {

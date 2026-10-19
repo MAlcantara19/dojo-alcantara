@@ -3,7 +3,7 @@ import { getAuthInstance } from "./firebase";
 export type RespostaAdmin = { ok: boolean; mensagem: string };
 
 /** Chama o servidor do site para o que o navegador não pode fazer sozinho (trocar senha, apagar conta). */
-export async function chamarAdmin(acao: "senha" | "apagar", dados: Record<string, string>): Promise<RespostaAdmin> {
+export async function chamarAdmin(acao: "senha" | "apagar" | "email", dados: Record<string, string>): Promise<RespostaAdmin> {
   const u = getAuthInstance().currentUser;
   if (!u) return { ok: false, mensagem: "Entre de novo para continuar." };
   try {

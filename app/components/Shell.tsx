@@ -33,15 +33,8 @@ const gruposBase = [
 ];
 
 function gruposDe(logado: boolean, equipe: boolean) {
-  const conta = !logado
-    ? [
-        { href: "/perfil", rotulo: "Entrar como aluno" },
-        { href: "/admin", rotulo: "Entrar como professor" },
-      ]
-    : equipe
-      ? [{ href: "/admin", rotulo: "Painel do professor" }]
-      : [{ href: "/perfil", rotulo: "Meu perfil" }];
-  return [...gruposBase, { titulo: logado ? "Minha conta" : "Entrar", itens: conta }];
+  const conta = !logado ? [{ href: "/entrar", rotulo: "Entrar" }] : equipe ? [{ href: "/admin", rotulo: "Área do professor" }] : [{ href: "/perfil", rotulo: "Área do aluno" }];
+  return [...gruposBase, { titulo: logado ? "Minha conta" : "Acesso", itens: conta }];
 }
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -145,17 +138,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <Link className="pill pill-conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email && !user.email.endsWith("@celular.dojoalcantara.app") ? user.email : ""}`.trim()}>
               <span className="pill-nome">{(perfil?.nome ?? "Minha conta").split(" ")[0]}</span>
               {user.email && !user.email.endsWith("@celular.dojoalcantara.app") && <small className="pill-email">{user.email}</small>}
-              <small className="pill-papel">{perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"} · {equipe ? "Painel" : "Meu perfil"}</small>
+              <small className="pill-papel">{perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"} · {equipe ? "Área do professor" : "Área do aluno"}</small>
             </Link>
           ) : (
-            <>
-              <Link className="pill" href="/perfil">
-                Aluno
-              </Link>
-              <Link className="pill" href="/admin">
-                Professor
-              </Link>
-            </>
+            <Link className="pill pill-entrar" href="/entrar">
+              Entrar
+            </Link>
           )}
           <button className="icon-btn" aria-label="Alternar tema claro e escuro" onClick={alternarTema}>
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
@@ -208,8 +196,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         ))}
 
-        <Link href={user ? (equipe ? "/admin" : "/perfil") : "/perfil"} className="drawer-cta" onClick={() => setAberto(false)}>
-          {user ? (equipe ? "Abrir o painel" : "Meu perfil") : "Entrar"}
+        <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
+          {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}
         </Link>
       </nav>
 

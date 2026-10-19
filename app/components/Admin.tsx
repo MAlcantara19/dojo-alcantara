@@ -99,7 +99,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
       </div>
 
       <div className="aba" key={aba}>
-        {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} />}
+        {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} ehAdmin={ehAdmin} />}
         {aba === "mural" && <AdminMural />}
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}

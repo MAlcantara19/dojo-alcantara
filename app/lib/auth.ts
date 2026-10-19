@@ -1,5 +1,6 @@
-import { doc, getDoc } from "firebase/firestore";
-import { getDb } from "./firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuthInstance, getDb } from "./firebase";
 
 export type Papel = "admin" | "professor" | "aluno";
 export type Perfil = { papel: Papel; nome?: string; faixa?: string; academia?: string; turmas?: string[] };
@@ -33,4 +34,17 @@ export function mensagemErro(e: unknown): string {
   if (code === "auth/network-request-failed") return "Sem conexão com a internet. Tente de novo.";
   if (code === "permission-denied" || code === "firestore/permission-denied") return "Sem permissão para isso. Se você acabou de atualizar o site, publique as regras novas (arquivo firestore.rules) em Firebase → Firestore → Regras.";
   return "Algo deu errado. Tente de novo.";
+}
+
+/** Manda o link de nova senha para o e-mail (só funciona para contas que entram com e-mail de verdade). */
+export async function enviarLinkSenha(email: string) {
+  await sendPasswordResetEmail(getAuthInstance(), email.trim().toLowerCase());
+}
+
+/** Deixa um pedido de nova senha para o administrador ver no painel. */
+export async function pedirNovaSenha(entrada: string): Promise<void> {
+  const login = paraEmail(entrada);
+  if (!login) throw new Error("sem-contato");
+  const id = login.replace(/[^a-z0-9]/g, "_").slice(0, 100);
+  await setDoc(doc(getDb(), "pedidosSenha", id), { identificador: login, ts: Date.now() });
 }

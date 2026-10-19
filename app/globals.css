@@ -551,3 +551,31 @@ button.resumo-card:hover{border-color:var(--bright)}
 @media (min-width:1000px){.aba{max-width:none}.solo.wide .solo-card{width:min(100%,980px)}}
 .check-linha{display:flex;align-items:center;gap:8px;font-weight:600}
 .check-linha input{width:auto}
+
+/* Entrada */
+.entrar{width:100%;display:grid;gap:14px;justify-items:stretch}
+.entrar-marca{display:grid;justify-items:center;gap:6px;text-align:center;padding:10px 0 4px}
+.entrar-marca .logo{margin:0}
+.entrar-nome{font:800 1.9rem/1.1 "Bricolage Grotesque",sans-serif}
+.entrar-marca small{color:var(--muted)}
+.senha-wrap{position:relative}
+.senha-wrap input{padding-right:3rem}
+.olho{position:absolute;right:6px;top:50%;translate:0 -50%;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.olho:hover{color:var(--accent);background:var(--surface-2)}
+.aviso-caps{margin:6px 0 0;padding:.5rem .8rem;border-radius:var(--r-md);background:rgba(242,210,60,.18);border:1px solid #d9a441;font-size:.9rem}
+.btn-entrar{padding:.9rem 2.2rem;background:#fff;color:var(--deep);font-size:1.1rem;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.btn-entrar:hover{background:#efe9fa}
+.pill-entrar{background:#fff;color:var(--deep);border-color:#fff}
+.pill-entrar:hover{background:#efe9fa}
+
+.chart-sel{margin:4px 0 0;font-size:.95rem}
+.chart-sel .sobe{color:#2f9e5b;font-weight:600}
+.chart-sel .desce{color:#d9534f;font-weight:600}
+.chart-tabela summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.9rem}
+.chart-tabela table{width:100%;border-collapse:collapse;margin-top:6px;font-size:.92rem}
+.chart-tabela td{padding:4px 6px;border-bottom:1px solid var(--line)}
+.chart-tabela td:last-child{text-align:right;font-weight:600}
+.chart svg{cursor:crosshair}
+.tag-aberto{background:rgba(242,210,60,.25);border-color:#d9a441;color:var(--text);margin-left:6px}
+.quiz-topo{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.quiz-topo .quiz-count{margin:0}

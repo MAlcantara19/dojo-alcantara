@@ -3,8 +3,8 @@
 import { signOut, updatePassword } from "firebase/auth";
 import Link from "next/link";
 import { useState } from "react";
-import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre } from "../lib/aluno";
-import { addMedida, addNota, apagarSub, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
+import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Aluno } from "../lib/aluno";
+import { addMedida, addNota, apagarSub, atualizarMeuCadastro, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useTecnicas } from "../lib/conteudo";
 import { corDaFaixa, faixas } from "../lib/faixas";
@@ -12,6 +12,7 @@ import { getAuthInstance } from "../lib/firebase";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
+import CampoSenha from "./CampoSenha";
 import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
 import LoginForm from "./LoginForm";
@@ -123,8 +124,8 @@ function Conteudo({ uid }: { uid: string }) {
   }
 
   const idx = indiceFaixa(p.faixa);
-  const pesos = medidas.dados.filter((m) => typeof m.peso === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.peso as number }));
-  const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), valor: m.altura as number }));
+  const pesos = medidas.dados.filter((m) => typeof m.peso === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), completo: dataBR(m.data), valor: m.peso as number }));
+  const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), completo: dataBR(m.data), valor: m.altura as number }));
 
   const paraTreinar = catalogo
     .map((t) => ({ ...t, faixa: faixaEfetiva(t, mapa[t.id]).faixa, nota: mapa[t.id]?.nota || t.nota, cfg: mapa[t.id] }))
@@ -379,6 +380,7 @@ function Conteudo({ uid }: { uid: string }) {
         </ul>
       </section>
 
+      <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
       <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} />
     </>
   );
@@ -387,6 +389,70 @@ function Conteudo({ uid }: { uid: string }) {
 function usePerfil(uid: string) {
   const perfilCompleto = useCarga(() => lerAluno(uid), null);
   return { perfilCompleto };
+}
+
+function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () => void }) {
+  const [msg, setMsg] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+
+  async function salvar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const g = (k: string) => String(f.get(k) ?? "").trim();
+    const email = g("email").toLowerCase();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setMsg("Esse e-mail não parece certo. Confira.");
+    setOcupado(true);
+    setMsg("Salvando…");
+    try {
+      await atualizarMeuCadastro(uid, { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") });
+      setMsg("Cadastro atualizado.");
+      onFeito();
+    } catch (err) {
+      setMsg(mensagemErro(err));
+    }
+    setOcupado(false);
+  }
+
+  return (
+    <section className="panel">
+      <h2>Meu cadastro</h2>
+      <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}`}>
+        <div className="field">
+          <label>Nome completo</label>
+          <input type="text" value={p.nome} readOnly aria-readonly="true" />
+        </div>
+        <div className="field">
+          <label htmlFor="mc-ap">Apelido</label>
+          <input id="mc-ap" name="apelido" type="text" maxLength={40} defaultValue={p.apelido ?? ""} autoComplete="off" />
+        </div>
+        <div className="two">
+          <div className="field">
+            <label htmlFor="mc-em">E-mail para contato</label>
+            <input id="mc-em" name="email" type="email" defaultValue={p.email ?? ""} autoComplete="email" />
+          </div>
+          <div className="field">
+            <label htmlFor="mc-cel">Celular com DDD</label>
+            <input id="mc-cel" name="celular" type="tel" inputMode="tel" defaultValue={p.celular ?? ""} autoComplete="tel" />
+          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="mc-nasc">Data de nascimento</label>
+          <input id="mc-nasc" name="nasc" type="date" max={hojeISO()} defaultValue={p.dataNascimento ?? ""} />
+        </div>
+        <button className="btn btn-primary" type="submit" disabled={ocupado}>
+          Salvar cadastro
+        </button>
+        {msg && (
+          <p className="form-note" role="status">
+            {msg}
+          </p>
+        )}
+        <p className="form-help">
+          Para entrar você usa: <b>{p.login?.endsWith("@celular.dojoalcantara.app") ? `${p.login.split("@")[0]} (celular)` : p.login}</b>. Para trocar o e-mail ou o celular de entrada, peça ao seu professor. O nome, a faixa e a turma também são o professor que muda.
+        </p>
+      </form>
+    </section>
+  );
 }
 
 function TrocarSenha({ uid, obrigatoria, onFeito }: { uid: string; obrigatoria?: boolean; onFeito: () => void }) {
@@ -422,14 +488,8 @@ function TrocarSenha({ uid, obrigatoria, onFeito }: { uid: string; obrigatoria?:
       <h2>{obrigatoria ? "Troque a sua senha provisória" : "Trocar senha"}</h2>
       {obrigatoria && <p className="lead">Sua senha foi criada pelo professor. Escolha uma nova, só sua.</p>}
       <form className="form" onSubmit={trocar}>
-        <div className="field">
-          <label htmlFor="s-nova">Nova senha</label>
-          <input id="s-nova" name="nova" type="password" autoComplete="new-password" />
-        </div>
-        <div className="field">
-          <label htmlFor="s-rep">Repita a nova senha</label>
-          <input id="s-rep" name="rep" type="password" autoComplete="new-password" />
-        </div>
+        <CampoSenha id="s-nova" name="nova" rotulo="Nova senha" autoComplete="new-password" />
+        <CampoSenha id="s-rep" name="rep" rotulo="Repita a nova senha" autoComplete="new-password" />
         <button className="btn btn-primary" type="submit" disabled={ocupado}>
           Trocar senha
         </button>

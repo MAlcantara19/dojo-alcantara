@@ -85,6 +85,9 @@ export default function Home() {
             </div>
           )}
 
+          <Link className="btn btn-entrar" href={user ? (ehEquipe(perfil) ? "/admin" : "/perfil") : "/entrar"}>
+            {user ? (ehEquipe(perfil) ? "Abrir a área do professor" : "Abrir a minha área") : "Entrar"}
+          </Link>
           <div className="shortcuts">
             <Link href="/#avisos">Avisos</Link>
             <Link href="/#calendario">Calendário</Link>
@@ -191,25 +194,20 @@ export default function Home() {
 
       <section className="block" id="entrar">
         <div className="login-card">
-          <h2>{user ? "Sua conta" : "Área do aluno"}</h2>
+          <h2>{user ? "Sua conta" : "Entrar"}</h2>
           {user ? (
             <>
               <p>Você já está conectado.</p>
               <Link href={ehEquipe(perfil) ? "/admin" : "/perfil"} className="btn">
-                {ehEquipe(perfil) ? "Ir para o painel" : "Ver meu perfil"}
+                {ehEquipe(perfil) ? "Abrir a área do professor" : "Abrir a minha área"}
               </Link>
             </>
           ) : (
             <>
-              <p>Materiais da sua faixa, treinos e simulados ficam aqui, com login e senha criados pelo professor.</p>
-              <div className="tool-actions">
-                <Link href="/perfil" className="btn">
-                  Entrar como aluno
-                </Link>
-                <Link href="/admin" className="btn btn-claro">
-                  Entrar como professor
-                </Link>
-              </div>
+              <p>Materiais da sua faixa, treinos, simulados e avisos da turma. Alunos e professores entram pelo mesmo lugar.</p>
+              <Link href="/entrar" className="btn">
+                Entrar
+              </Link>
             </>
           )}
         </div>

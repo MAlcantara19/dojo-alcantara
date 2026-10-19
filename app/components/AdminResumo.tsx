@@ -5,6 +5,7 @@ import { listarAlunos, type Escopo } from "../lib/alunos";
 import { lerAulas, type Aula } from "../lib/aulas";
 import { useEventos } from "../lib/conteudo";
 import { useCarga } from "../lib/useCarga";
+import AdminPedidos from "./AdminPedidos";
 
 const VAZIO_A: Aluno[] = [];
 const VAZIO_AU: Aula[] = [];
@@ -12,7 +13,7 @@ const VAZIO_AU: Aula[] = [];
 type Aba = "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
 
 /** Visão rápida do dia: o que olhar primeiro ao abrir o painel. */
-export default function AdminResumo({ uid, escopo, novosResultados, ir }: { uid: string; escopo: Escopo; novosResultados: number; ir: (a: Aba) => void }) {
+export default function AdminResumo({ uid, escopo, novosResultados, ir, ehAdmin = false }: { uid: string; escopo: Escopo; novosResultados: number; ir: (a: Aba) => void; ehAdmin?: boolean }) {
   const alunos = useCarga(() => listarAlunos(escopo), VAZIO_A);
   const aulas = useCarga(() => lerAulas(uid), VAZIO_AU);
   const ev = useEventos();
@@ -26,6 +27,8 @@ export default function AdminResumo({ uid, escopo, novosResultados, ir }: { uid:
   const eventos = ev.itens.filter((e) => e.data >= hojeStr).slice(0, 3);
 
   return (
+    <>
+    {ehAdmin && <AdminPedidos />}
     <section className="panel" id="resumo">
       <h2>Resumo de hoje</h2>
       <div className="resumo-grid">
@@ -78,5 +81,6 @@ export default function AdminResumo({ uid, escopo, novosResultados, ir }: { uid:
         </>
       )}
     </section>
+    </>
   );
 }
