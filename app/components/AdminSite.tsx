@@ -37,6 +37,7 @@ export default function AdminSite() {
       bannerUrl: g("banner"),
       instagram: g("instagram").replace(/^@/, "").replace(/[^A-Za-z0-9_.]/g, ""),
       whatsapp: g("whatsapp").replace(/\D/g, ""),
+      emailContato: g("emailContato").toLowerCase(),
       sobre: g("sobre").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).slice(0, 12),
       efeitos: {
         movimento: f.get("movimento") === "on",
@@ -97,6 +98,10 @@ export default function AdminSite() {
             <label htmlFor="s-wa">WhatsApp (com 55 e DDD)</label>
             <input id="s-wa" name="whatsapp" type="text" inputMode="numeric" maxLength={20} placeholder="5524999999999" defaultValue={atual.whatsapp} />
           </div>
+        </div>
+        <div className="field">
+          <label htmlFor="s-email">E-mail de contato (aparece no rodapé)</label>
+          <input id="s-email" name="emailContato" type="email" maxLength={120} defaultValue={atual.emailContato} autoComplete="off" />
         </div>
         <div className="field">
           <label htmlFor="s-sobre">Texto “Sobre nós” (separe os parágrafos com uma linha em branco)</label>

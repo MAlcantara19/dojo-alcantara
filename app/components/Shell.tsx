@@ -4,8 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ehEquipe } from "../lib/auth";
+import { corDaFaixa } from "../lib/faixas";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import Abertura from "./Abertura";
+import Rodape from "./Rodape";
+import Sino from "./Sino";
 import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
@@ -16,14 +19,15 @@ const gruposBase = [
     itens: [
       { href: "/", rotulo: "Início" },
       { href: "/#avisos", rotulo: "Avisos" },
-      { href: "/#calendario", rotulo: "Calendário" },
-      { href: "/#galeria", rotulo: "Galeria" },
+      { href: "/calendario", rotulo: "Calendário" },
+      { href: "/galeria", rotulo: "Galeria" },
       { href: "/#sobre", rotulo: "Sobre nós" },
     ],
   },
   {
     titulo: "Estudo",
     itens: [
+      { href: "/estudo", rotulo: "Estudo do Judô" },
       { href: "/tecnicas", rotulo: "Técnicas" },
       { href: "/simulados", rotulo: "Simulados" },
       { href: "/roleta", rotulo: "Roleta" },
@@ -155,14 +159,25 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
           </svg>
         </button>
-        <span className="topbar-title">{site.nome}</span>
+        <Link href="/" className="topbar-title" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>{site.nome}</Link>
         <div className="top-actions">
+          <Sino />
           {user ? (
-            <Link className="pill pill-conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email && !user.email.endsWith("@celular.dojoalcantara.app") ? user.email : ""}`.trim()}>
-              <span className="pill-nome">{(perfil?.nome ?? "Minha conta").split(" ")[0]}</span>
-              {user.email && !user.email.endsWith("@celular.dojoalcantara.app") && <small className="pill-email">{user.email}</small>}
-              <small className="pill-papel">{perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"} · {equipe ? "Área do professor" : "Área do aluno"}</small>
-            </Link>
+            <>
+              <Link className="conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email ?? ""}`.trim()}>
+                <span className="conta-avatar" style={perfil?.faixa ? { background: corDaFaixa(perfil.faixa), color: ["Branca", "Amarela"].includes(perfil.faixa) ? "#1a1030" : "#fff" } : undefined} aria-hidden="true">
+                  {(perfil?.nome ?? "?").slice(0, 1).toUpperCase()}
+                </span>
+                <span className="conta-textos">
+                  <strong>{(perfil?.nome ?? "Minha conta").split(" ")[0]}</strong>
+                  <small>
+                    {perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"}
+                    {perfil?.faixa ? ` · faixa ${perfil.faixa.toLowerCase()}` : ""}
+                  </small>
+                </span>
+              </Link>
+              {user.email && !user.email.endsWith("@celular.dojoalcantara.app") && <span className="conta-email">{user.email}</span>}
+            </>
           ) : (
             <Link className="pill pill-entrar" href="/entrar">
               Entrar
@@ -185,10 +200,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         aria-hidden={!gavetaVisivel}
       >
         <div className="drawer-head">
-          <span className="logo-mini" aria-hidden="true">
-            {siglaDe(site.nome)}
-          </span>
-          <strong>{site.nome}</strong>
+          <Link href="/" className="drawer-marca" onClick={() => (setAberto(false), window.scrollTo({ top: 0, behavior: "smooth" }))} aria-label={`${site.nome}: ir para o topo do início`}>
+            <span className="logo-mini" aria-hidden="true">
+              {siglaDe(site.nome)}
+            </span>
+            <strong>{site.nome}</strong>
+          </Link>
           <button ref={fecharBtn} className="icon-btn close-btn" aria-label="Fechar menu" onClick={() => setAberto(false)}>
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
@@ -226,6 +243,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="page page-anim" key={pathname}>
         {children}
+        <Rodape />
       </div>
 
       <button

@@ -134,19 +134,27 @@ service cloud.firestore {
     // ---------- Conteúdo público (a equipe edita) ----------
     match /avisos/{id} {
       allow read: if true;
-      allow create, update: if ehEquipe() && texto('titulo', 80) && texto('texto', 600) && dataValida();
+      allow create, update: if ehEquipe() && texto('titulo', 80) && texto('texto', 600) && dataValida()
+        && request.resource.data.get('autor', '') is string && request.resource.data.get('autor', '').size() <= 100
+        && request.resource.data.get('imagem', '') is string && request.resource.data.get('imagem', '').size() <= 300
+        && request.resource.data.get('video', '') is string && request.resource.data.get('video', '').size() <= 300;
       allow delete: if ehEquipe();
     }
     match /eventos/{id} {
       allow read: if true;
       allow create, update: if ehEquipe() && texto('titulo', 80) && texto('hora', 30)
-        && texto('local', 80) && texto('tipo', 30) && dataValida();
+        && texto('local', 80) && texto('tipo', 30) && dataValida()
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 400
+        && request.resource.data.get('autor', '') is string && request.resource.data.get('autor', '').size() <= 100
+        && request.resource.data.get('imagem', '') is string && request.resource.data.get('imagem', '').size() <= 300
+        && request.resource.data.get('video', '') is string && request.resource.data.get('video', '').size() <= 300
+        && request.resource.data.get('pastaDrive', '') is string && request.resource.data.get('pastaDrive', '').size() <= 300;
       allow delete: if ehEquipe();
     }
     match /tecnicas/{id} {
       allow read: if true;
       allow create, update: if ehEquipe()
-        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'ocultar', 'custom', 'categoria', 'familia', 'grupo'])
+        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'proibida', 'ocultar', 'custom', 'categoria', 'familia', 'grupo'])
         && request.resource.data.faixa is string && request.resource.data.faixa.size() <= 20
         && request.resource.data.pdf is string && request.resource.data.pdf.size() <= 300
         && (request.resource.data.pdf == '' || request.resource.data.pdf.matches('^https://.*'))
@@ -158,6 +166,7 @@ service cloud.firestore {
         && request.resource.data.get('links', []) is list && request.resource.data.get('links', []).size() <= 10
         && request.resource.data.get('nome', '') is string && request.resource.data.get('nome', '').size() <= 60
         && request.resource.data.get('ocultar', false) is bool && request.resource.data.get('custom', false) is bool
+        && request.resource.data.get('proibida', false) is bool
         && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 30
         && request.resource.data.get('familia', '') is string && request.resource.data.get('familia', '').size() <= 30
         && request.resource.data.get('grupo', '') is string && request.resource.data.get('grupo', '').size() <= 30;
@@ -215,6 +224,43 @@ service cloud.firestore {
         && request.resource.data.dados.size() <= 800000
         && request.resource.data.dados.matches('data:image/.*');
       allow delete: if ehEquipe();
+    }
+
+    // Desempenho na roleta de palavras: o aluno grava o dele; o professor lê só a turma dele; o admin lê tudo.
+    match /desempenhoPalavras/{id} {
+      allow read: if ehProprio(resource.data.get('uid', '')) || ehAdmin() || daMinhaTurma(resource.data.get('turma', ''));
+      allow create, update: if logado()
+        && request.resource.data.keys().hasOnly(['uid', 'turma', 'termo', 'acertos', 'erros', 'ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.termo is string && request.resource.data.termo.size() > 0 && request.resource.data.termo.size() <= 60
+        && request.resource.data.turma is string && request.resource.data.turma.size() <= 60
+        && request.resource.data.acertos is int && request.resource.data.acertos >= 0
+        && request.resource.data.erros is int && request.resource.data.erros >= 0
+        && request.resource.data.ts is number;
+      allow delete: if ehAdmin();
+    }
+
+    // Feriados locais, calendários oficiais (imagem ou PDF) e parcerias.
+    match /feriados/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('nome', 60) && request.resource.data.data is string && request.resource.data.data.size() == 10;
+      allow delete: if ehEquipe();
+    }
+    match /calendariosOficiais/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('titulo', 80) && texto('url', 300)
+        && request.resource.data.tipo in ['imagem', 'pdf']
+        && request.resource.data.url.matches('^(https://|/|db:).*');
+      allow delete: if ehEquipe();
+    }
+    match /parcerias/{id} {
+      allow read: if true;
+      allow create, update: if ehAdmin() && texto('nome', 60)
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 160
+        && request.resource.data.get('url', '') is string && request.resource.data.get('url', '').size() <= 300
+        && (request.resource.data.get('url', '') == '' || request.resource.data.get('url', '').matches('^https://.*'))
+        && request.resource.data.get('logo', '') is string && request.resource.data.get('logo', '').size() <= 300;
+      allow delete: if ehAdmin();
     }
 
     // Configurações do site (textos da página inicial, banner, logo, efeitos): só o admin edita.

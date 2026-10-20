@@ -2,18 +2,22 @@
 
 import { signOut } from "firebase/auth";
 import { useState } from "react";
+import { lerTurmas, type Turma } from "../lib/alunos";
 import { ehEquipe } from "../lib/auth";
+import { useCarga } from "../lib/useCarga";
 import { getAuthInstance } from "../lib/firebase";
 import { useResultadosEquipe } from "../lib/resultados";
 import { useAuth } from "../lib/useAuth";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
+import AdminDificuldades from "./AdminDificuldades";
 import AdminEquipe from "./AdminEquipe";
 import AdminEstudo from "./AdminEstudo";
 import AdminFichas from "./AdminFichas";
 import AdminGaleria from "./AdminGaleria";
 import AdminKatas from "./AdminKatas";
 import AdminMural from "./AdminMural";
+import AdminParcerias from "./AdminParcerias";
 import AdminResultados from "./AdminResultados";
 import AdminResumo from "./AdminResumo";
 import AdminSite from "./AdminSite";
@@ -21,6 +25,7 @@ import AdminTurmas from "./AdminTurmas";
 import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
+const VAZIO_TURMAS: Turma[] = [];
 type Aba = "resumo" | "mural" | "turmas" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "equipe" | "site";
 
 export default function Admin() {
@@ -57,6 +62,8 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
   const escopo = ehAdmin ? null : turmas;
   const [aba, setAba] = useState<Aba>("resumo");
   const res = useResultadosEquipe(escopo);
+  const todasTurmas = useCarga(lerTurmas, VAZIO_TURMAS);
+  const minhasTurmas = escopo === null ? todasTurmas.dados : todasTurmas.dados.filter((t) => escopo.includes(t.nome));
 
   const abas: [Aba, string][] = [
     ["resumo", "Resumo"],
@@ -100,7 +107,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
 
       <div className="aba" key={aba}>
         {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} ehAdmin={ehAdmin} />}
-        {aba === "mural" && <AdminMural />}
+        {aba === "mural" && <AdminMural turmas={minhasTurmas} autor={nome} ehAdmin={ehAdmin} />}
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
@@ -114,7 +121,13 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         )}
         {aba === "estudo" && <AdminEstudo />}
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
-        {aba === "site" && ehAdmin && <AdminSite />}
+        {aba === "site" && ehAdmin && (
+          <>
+            <AdminSite />
+            <AdminParcerias />
+          </>
+        )}
+        {aba === "resultados" && <AdminDificuldades escopo={escopo} />}
         {aba === "resultados" && <AdminResultados itens={res.dados} carregando={res.carregando} erro={res.erro} visto={res.visto} marcarVisto={res.marcarVisto} />}
       </div>
     </>

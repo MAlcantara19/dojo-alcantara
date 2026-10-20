@@ -4,16 +4,16 @@
    editados pelo painel admin. Datas no formato AAAA-MM-DD.
    ============================================================ */
 
-export type Aviso = { titulo: string; data: string; texto: string };
-export type Evento = { titulo: string; data: string; hora: string; local: string; tipo: string };
+export type Aviso = { titulo: string; data: string; texto: string; autor?: string; imagem?: string; video?: string; ts?: number };
+export type Evento = { titulo: string; data: string; hora: string; local: string; tipo: string; autor?: string; imagem?: string; video?: string; pastaDrive?: string; descricao?: string };
 export type Foto = { legenda: string; src?: string };
 
 export const dojo = {
   nome: "Dojô Alcântara",
   slogan: "Judô para todas as idades",
   contato: {
-    instagram: "", // ex.: "@dojoalcantara"
-    whatsapp: "", // ex.: "5524992924519"
+    instagram: "", // ex.: "dojoalcantara"
+    whatsapp: "", // ex.: "5524999999999"
   },
 };
 

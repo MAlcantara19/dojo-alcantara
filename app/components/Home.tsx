@@ -7,6 +7,8 @@ import { useAuth } from "../lib/useAuth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import Img, { useImagemUrl } from "./Img";
+import Midia from "./Midia";
+import Parcerias from "./Parcerias";
 import { enderecoOk } from "../lib/katasDb";
 import { useAvisos, useEventos } from "../lib/conteudo";
 import { faixas, faixasAltas } from "../lib/faixas";
@@ -106,7 +108,7 @@ export default function Home() {
       <DestaqueFotos />
 
       <section className="block" id="estudo">
-        <h2>Estudo do judô</h2>
+        <h2>Estudo do Judô</h2>
         <p className="lead">Ferramentas para treinar em casa e se preparar para a prova.</p>
         <div className="study">
           <Link href="/tecnicas" className="study-card">
@@ -120,6 +122,10 @@ export default function Home() {
           <Link href="/roleta" className="study-card">
             <h3>Roleta</h3>
             <p>Gire e diga o que a palavra do judô significa.</p>
+          </Link>
+          <Link href="/katas" className="study-card">
+            <h3>Katas</h3>
+            <p>As formas de cada graduação, série por série.</p>
           </Link>
         </div>
       </section>
@@ -135,7 +141,9 @@ export default function Home() {
             <article className="card" key={a.id}>
               <h3>{a.titulo}</h3>
               <time dateTime={a.data}>{dataLonga(parseData(a.data))}</time>
-              <p>{a.texto}</p>
+              <p className="pre">{a.texto}</p>
+              <Midia imagem={a.imagem} video={a.video} alt={a.titulo} />
+              {a.autor && <p className="form-help">Publicado por {a.autor}</p>}
             </article>
           ))}
         </div>
@@ -150,6 +158,11 @@ export default function Home() {
           </a>
           <a href="webcal://dojo-alcantara.vercel.app/calendario.ics">Assinar no iPhone</a>
         </div>
+        <p className="tool-actions">
+          <Link href="/calendario" className="btn btn-primary">
+            Abrir o calendário completo
+          </Link>
+        </p>
         <ol className="events">
           {ev.carregando && <li className="empty">Carregando eventos…</li>}
           {!ev.carregando && futuros.length === 0 && <li className="empty">Nenhum evento marcado. Volte em breve.</li>}
@@ -180,7 +193,14 @@ export default function Home() {
         <h2>Galeria</h2>
         <p className="lead">Momentos dos treinos e eventos.</p>
         <GaleriaGrid />
+        <p className="tool-actions">
+          <Link href="/galeria" className="btn btn-primary">
+            Ver a galeria completa
+          </Link>
+        </p>
       </section>
+
+      <Parcerias />
 
       <div className="duo">
       <section className="block" id="sobre">
@@ -197,7 +217,7 @@ export default function Home() {
           <h2>{user ? "Sua conta" : "Entrar"}</h2>
           {user ? (
             <>
-              <p>Você já está conectado.</p>
+              <p>Você está conectado como {perfil?.papel === "admin" ? "administrador" : perfil?.papel === "professor" ? "professor" : "aluno"}{perfil?.nome ? `: ${perfil.nome}` : ""}.</p>
               <Link href={ehEquipe(perfil) ? "/admin" : "/perfil"} className="btn">
                 {ehEquipe(perfil) ? "Abrir a área do professor" : "Abrir a minha área"}
               </Link>
@@ -214,22 +234,6 @@ export default function Home() {
       </section>
       </div>
 
-      <footer className="foot">
-        <p>© {hoje ? hoje.getFullYear() : 2026} {site.nome}</p>
-        <p className="foot-links">
-          <Link href="/privacidade">Privacidade</Link>
-          {site.instagram && (
-            <a href={`https://instagram.com/${site.instagram}`} target="_blank" rel="noopener noreferrer">
-              Instagram
-            </a>
-          )}
-          {site.whatsapp && (
-            <a href={`https://wa.me/${site.whatsapp}`} target="_blank" rel="noopener noreferrer">
-              WhatsApp
-            </a>
-          )}
-        </p>
-      </footer>
     </main>
   );
 }

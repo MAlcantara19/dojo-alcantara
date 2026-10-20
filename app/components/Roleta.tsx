@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
+import { lerMeuDesempenho, registrarPalavra, type Desempenho } from "../lib/desempenho";
+import { useAuth } from "../lib/useAuth";
 import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
-import { corDe, faixaEfetiva, familias, grupos, rotuloGrupo, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { corDe, ehProibida, faixaEfetiva, familias, grupos, rotuloGrupo, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
+import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
 
@@ -14,6 +17,7 @@ type Jogo = "falar" | "escolher";
 const VAZIO_PAL: PalavraDoc[] = [];
 const VAZIO_EXE: ExercicioDoc[] = [];
 const VAZIO_LISTAS: ListaPalavras[] = [];
+const VAZIO_DESEMP: Desempenho[] = [];
 const PALETA = ["#6a35c9", "#2b0f57", "#8b5be0", "#3d1a82"];
 const PALETA_EXE = ["#12a39a", "#cf3d9a", "#6a35c9", "#e0793f", "#3c8dbc", "#7d6fa8", "#c2417a", "#2f9e5b"];
 const LETRAS = ["A", "B", "C", "D", "E"];
@@ -53,7 +57,11 @@ export default function Roleta() {
   const [mostrar, setMostrar] = useState(false);
   const [escolhas, setEscolhas] = useState<{ texto: string; certa: boolean }[]>([]);
   const [marcada, setMarcada] = useState<number | null>(null);
-  const [placar, setPlacar] = useState({ acertos: 0, jogadas: 0 });
+  const [placarSessao, setPlacarSessao] = useState({ acertos: 0, jogadas: 0 });
+  const { user, perfil } = useAuth();
+  const meu = useCarga(() => lerMeuDesempenho(user?.uid ?? ""), VAZIO_DESEMP, Boolean(user));
+  const totalGuardado = meu.dados.reduce((s, x) => ({ acertos: s.acertos + x.acertos, jogadas: s.jogadas + x.acertos + x.erros }), { acertos: 0, jogadas: 0 });
+  const placar = user ? { acertos: totalGuardado.acertos + placarSessao.acertos, jogadas: totalGuardado.jogadas + placarSessao.jogadas } : placarSessao;
   const { mapa, lista: catalogo } = useTecnicas();
   const dbPalavras = useCarga(lerPalavras, VAZIO_PAL);
   const dbExe = useCarga(lerExercicios, VAZIO_EXE);
@@ -95,7 +103,8 @@ export default function Roleta() {
   function responder(k: number) {
     if (marcada !== null) return;
     setMarcada(k);
-    setPlacar((p) => ({ acertos: p.acertos + (escolhas[k].certa ? 1 : 0), jogadas: p.jogadas + 1 }));
+    setPlacarSessao((p) => ({ acertos: p.acertos + (escolhas[k].certa ? 1 : 0), jogadas: p.jogadas + 1 }));
+    if (user && pal) void registrarPalavra(user.uid, perfil?.academia ?? "", pal.termo, escolhas[k].certa).catch(() => undefined);
   }
 
   return (
@@ -172,12 +181,8 @@ export default function Roleta() {
                   </p>
                 )}
                 <p className="form-help">
-                  Placar: {placar.acertos} de {placar.jogadas}{" "}
-                  {placar.jogadas > 0 && (
-                    <button className="link-btn" onClick={() => setPlacar({ acertos: 0, jogadas: 0 })}>
-                      zerar
-                    </button>
-                  )}
+                  Placar {user ? "guardado" : "desta visita"}: {placar.acertos} de {placar.jogadas}
+                  {user ? ". Suas respostas ficam registradas para o professor acompanhar." : ". Entre na sua conta para guardar o placar e o professor acompanhar."}
                 </p>
               </>
             ) : (
@@ -196,6 +201,8 @@ export default function Roleta() {
         ) : tec ? (
           <>
             <strong className="result-word">{tec.nome}</strong>
+            {ehProibida(tec, cfg) && <span className="aviso-proibida">⛔ Proibida em competições</span>}
+            {cfg?.imagem && <Img className="result-img" src={cfg.imagem} alt={`Imagem da técnica ${tec.nome}`} largura={700} />}
             <span className="chip" style={{ background: corDe(tec), color: ["6", "5", "S", "-"].includes(tec.grupo) || tec.categoria === "Katame-waza" ? "#fff" : "#1a1030" }}>
               {rotuloGrupo(tec)}
             </span>

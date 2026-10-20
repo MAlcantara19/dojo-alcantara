@@ -2,6 +2,10 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { useFotos } from "../lib/fotos";
+import { idDaPastaDrive } from "../lib/links";
+import { lerPastaDrive } from "../lib/galeriaDb";
+import { useSite } from "../lib/siteConfig";
+import { useCarga } from "../lib/useCarga";
 import type { FotoSite } from "../lib/galeriaDb";
 import Img from "./Img";
 import Modal from "./Modal";
@@ -74,6 +78,45 @@ export function GaleriaGrid() {
         ))}
       </div>
       {erroDrive && <p className="form-help">Não consegui carregar a pasta do Drive agora.</p>}
+      {aberta && <Ampliada f={aberta} onFechar={() => setAberta(null)} />}
+    </>
+  );
+}
+
+const VAZIO_F: FotoSite[] = [];
+const cachePasta = new Map<string, Promise<FotoSite[]>>();
+function fotosDaPasta(pasta: string, chave: string) {
+  const k = pasta + "|" + chave;
+  let p = cachePasta.get(k);
+  if (!p) {
+    p = lerPastaDrive(pasta, chave);
+    p.catch(() => cachePasta.delete(k));
+    cachePasta.set(k, p);
+  }
+  return p;
+}
+
+/** Fotos de uma pasta do Drive (por exemplo, o álbum de uma aula ou de um campeonato). */
+export function FotosDaPasta({ pasta, vazio = "Ainda não há fotos nesta pasta." }: { pasta: string; vazio?: string }) {
+  const site = useSite();
+  const id = idDaPastaDrive(pasta);
+  const usa = Boolean(id && site.driveChave);
+  const c = useCarga(() => fotosDaPasta(id, site.driveChave), VAZIO_F, usa);
+  const [aberta, setAberta] = useState<FotoSite | null>(null);
+  if (!id) return null;
+  if (!site.driveChave) return <p className="form-help">As fotos aparecem aqui quando o administrador ligar o Google Drive na aba Site.</p>;
+  return (
+    <>
+      {c.carregando && <p className="form-help">Carregando fotos…</p>}
+      {c.erro && <p className="form-help">Não consegui carregar as fotos agora.</p>}
+      {!c.carregando && !c.erro && c.dados.length === 0 && <p className="form-help">{vazio}</p>}
+      <div className="grid">
+        {c.dados.map((f) => (
+          <TiltCard key={f.id} className="foto-card" onClick={() => setAberta(f)} rotulo={`Abrir a foto ${f.legenda}`}>
+            <Foto f={f} />
+          </TiltCard>
+        ))}
+      </div>
       {aberta && <Ampliada f={aberta} onFechar={() => setAberta(null)} />}
     </>
   );

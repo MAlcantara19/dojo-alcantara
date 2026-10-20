@@ -83,12 +83,14 @@ export async function criarSimulado(titulo: string, descricao: string) {
 }
 export const apagarSimulado = (id: string) => deleteDoc(doc(getDb(), "simulados", id));
 export const atualizarSimulado = (id: string, titulo: string, descricao: string) => updateDoc(doc(getDb(), "simulados", id), { titulo, descricao });
-export const salvarPerguntas = (id: string, perguntas: Pergunta[]) => updateDoc(doc(getDb(), "simulados", id), { perguntas });
+/** O Firestore não aceita campos “undefined”: a cópia por JSON tira esses campos. */
+const limpar = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+export const salvarPerguntas = (id: string, perguntas: Pergunta[]) => updateDoc(doc(getDb(), "simulados", id), { perguntas: limpar(perguntas) });
 
 export async function importarSimuladoPadrao() {
   const db = getDb();
   for (const s of simuladosPadraoCompletos()) {
-    await setDoc(doc(db, "simulados", s.id), { titulo: s.titulo, descricao: s.descricao, perguntas: s.perguntas, criadoEm: serverTimestamp() });
+    await setDoc(doc(db, "simulados", s.id), { titulo: s.titulo, descricao: s.descricao, perguntas: limpar(s.perguntas), criadoEm: serverTimestamp() });
   }
 }
 

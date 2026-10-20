@@ -32,3 +32,14 @@ export async function lerPastaDrive(pasta: string, chave: string): Promise<FotoS
     ts: Date.parse(a.createdTime) || 0,
   }));
 }
+
+/** Subpastas da pasta da galeria: cada uma vira um álbum (ex.: “Aula 24-10-2026”). */
+export type Album = { id: string; nome: string; ts: number };
+export async function lerSubpastas(pasta: string, chave: string): Promise<Album[]> {
+  const q = `'${pasta}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+  const params = new URLSearchParams({ q, orderBy: "createdTime desc", pageSize: "60", fields: "files(id,name,createdTime)", key: chave });
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`);
+  if (!r.ok) throw new Error(String(r.status));
+  const j = (await r.json()) as { files?: { id: string; name: string; createdTime: string }[] };
+  return (j.files ?? []).map((a) => ({ id: a.id, nome: a.name, ts: Date.parse(a.createdTime) || 0 }));
+}

@@ -10,7 +10,7 @@ type Entregue = { nome: string; login: string; senha: string };
 export const semCel = (l?: string) => (l?.endsWith("@celular.dojoalcantara.app") ? l.split("@")[0] + " (celular)" : l);
 
 /** Cadastro de aluno ou de professor, em 3 passos. */
-export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno" | "professor"; turmas: Turma[]; onCriado: () => void }) {
+export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno" | "professor" | "admin"; turmas: Turma[]; onCriado: () => void }) {
   const [senha, setSenha] = useState("");
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -33,7 +33,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       email: g("email"),
       celular: g("celular"),
       papel: tipo,
-      turmas: ehAluno ? [] : f.getAll("turmas").map(String),
+      turmas: tipo === "professor" ? f.getAll("turmas").map(String) : [],
     };
     const pw = senha.trim();
     const numero = (k: string): number | null | "ruim" => {
@@ -162,6 +162,8 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
                 ))}
               </select>
             </div>
+          ) : tipo === "admin" ? (
+            <p className="form-help">O administrador vê e edita tudo. Ele também tem a área do professor.</p>
           ) : (
             <div className="checks">
               <strong>Turmas que este professor pode ver</strong>
@@ -202,7 +204,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
         </fieldset>
 
         <button className="btn btn-primary" type="submit" disabled={ocupado}>
-          {ocupado ? "Criando…" : ehAluno ? "Criar conta do aluno" : "Criar conta do professor"}
+          {ocupado ? "Criando…" : ehAluno ? "Criar conta do aluno" : tipo === "admin" ? "Criar conta do administrador" : "Criar conta do professor"}
         </button>
       </form>
     </>

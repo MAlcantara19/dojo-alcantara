@@ -6,7 +6,7 @@ import { apagarConfigTecnica, salvarConfigTecnica, useConfigTecnicas, type Confi
 import { faixas } from "../lib/faixas";
 import { enderecoOk } from "../lib/katasDb";
 import { lerLinksDoTexto, linksParaTexto } from "../lib/links";
-import { faixaEfetiva, familias, grupos, montarCatalogo, tecnicas as tecnicasBase, type Categoria, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { ehProibida, faixaEfetiva, familias, grupos, montarCatalogo, tecnicas as tecnicasBase, type Categoria, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import CampoImagem from "./CampoImagem";
 
 const linkOk = (v: string) => v === "" || (/^https:\/\//.test(v) && v.length <= 300);
@@ -146,7 +146,7 @@ function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; c
     if (!linkOk(pdf) || !linkOk(video) || links.some((l) => !linkOk(l.url) || l.url === "" || l.titulo.length > 60)) return onMsg("Os links precisam começar com https:// (e o título de cada link, se houver, até 60 letras).");
     if (imagem && !enderecoOk(imagem)) return onMsg("Escolha uma imagem do celular ou cole um link que comece com https://");
     const original = tecnicasBase.find((x) => x.id === t.id)?.nome ?? t.nome;
-    const dados: ConfigTecnica = { faixa: g("faixa"), pdf, video, nota: g("nota").slice(0, 200), imagem, links, nome: custom ? g("nome").slice(0, 60) : g("nome") === original ? "" : g("nome").slice(0, 60), ocultar: f.get("ocultar") === "on" };
+    const dados: ConfigTecnica = { faixa: g("faixa"), pdf, video, nota: g("nota").slice(0, 200), imagem, links, nome: custom ? g("nome").slice(0, 60) : g("nome") === original ? "" : g("nome").slice(0, 60), ocultar: f.get("ocultar") === "on", proibida: f.get("proibida") === "on" };
     if (custom) Object.assign(dados, { custom: true, nome: g("nome").slice(0, 60) || t.nome, categoria: cfg?.categoria ?? t.categoria, familia: g("familia") || cfg?.familia || "", grupo: g("grupo") || cfg?.grupo || "-" });
     setOcupado(true);
     try {
@@ -238,6 +238,9 @@ function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; c
         <label>Observação (aparece com asterisco)</label>
         <input name="nota" type="text" maxLength={200} defaultValue={cfg?.nota ?? t.nota ?? ""} />
       </div>
+      <label className="check-linha">
+        <input type="checkbox" name="proibida" defaultChecked={ehProibida(t, cfg)} /> Técnica proibida em competições (aparece um aviso vermelho)
+      </label>
       <label className="check-linha">
         <input type="checkbox" name="ocultar" defaultChecked={Boolean(cfg?.ocultar)} /> Esconder esta técnica do site
       </label>

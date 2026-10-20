@@ -321,7 +321,8 @@ function FormPergunta({ inicial, rotuloBotao, ocupado, onSalvar, onCancelar, onE
         if (brutas.slice(0, opcoes.length).some((o) => !o)) return onErro("Preencha as alternativas em ordem, sem pular letras.");
         if (new Set(opcoes).size < opcoes.length) return onErro("As alternativas precisam ser diferentes.");
         if (!(escolhida >= 0 && escolhida < opcoes.length)) return onErro("A resposta correta precisa ser uma das alternativas preenchidas.");
-        onSalvar({ pergunta, opcoes, correta: escolhida, explicacao: explicacao || "—" }, () => form.reset());
+        const porque = [1, 2, 3, 4, 5].slice(0, opcoes.length).map((i) => String(f.get("pq" + i) ?? "").trim());
+        onSalvar({ pergunta, opcoes, correta: escolhida, explicacao: explicacao || "—", porque: porque.some(Boolean) ? porque : undefined }, () => form.reset());
       }}
     >
       <div className="field">
@@ -335,6 +336,7 @@ function FormPergunta({ inicial, rotuloBotao, ocupado, onSalvar, onCancelar, onE
             {i > 2 ? " (opcional)" : ""}
           </label>
           <input name={`op${i}`} type="text" maxLength={150} autoComplete="off" defaultValue={inicial?.opcoes[i - 1] ?? ""} />
+          <input name={`pq${i}`} type="text" maxLength={300} autoComplete="off" placeholder="Se alguém marcar esta: por que está errada? (opcional)" defaultValue={inicial?.porque?.[i - 1] ?? ""} className="mini" />
         </div>
       ))}
       <div className="field">

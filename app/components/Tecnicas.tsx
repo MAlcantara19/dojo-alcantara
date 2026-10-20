@@ -7,7 +7,7 @@ import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
-import { faixaEfetiva, familias, grupos, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { ehProibida, faixaEfetiva, familias, grupos, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
@@ -97,7 +97,8 @@ export default function Tecnicas() {
               const cfg = mapa[t.id];
               const img = cfg?.imagem ?? "";
               return (
-                <TiltCard key={t.id} className="tcard3d" onClick={() => setAberta(t)} rotulo={`Abrir ${t.nome}`}>
+                <TiltCard key={t.id} className="tcard3d" onClick={() => setAberta(t)} rotulo={`Abrir ${t.nome}${ehProibida(t, cfg) ? " (proibida em competição)" : ""}`}>
+                  {ehProibida(t, cfg) && <span className="selo-proibida">Proibida</span>}
                   {img && <Img src={img} alt="" largura={600} />}
                   <span className="tcard-info">
                     <strong>{t.nome}</strong>
@@ -119,6 +120,7 @@ export default function Tecnicas() {
         <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>
           {mapa[aberta.id]?.imagem && <Img className="modal-img" src={mapa[aberta.id].imagem as string} alt={`Imagem da técnica ${aberta.nome}`} largura={1200} eager />}
           <h3 className="modal-titulo">{aberta.nome}</h3>
+          {ehProibida(aberta, mapa[aberta.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
           <p className="tmeta">
             {aberta.familia ?? "Nage-waza"}
             {aberta.grupo === "S" && " · Shinmeisho"}

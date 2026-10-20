@@ -19,6 +19,7 @@ export type SiteConfig = {
   bannerUrl: string;
   instagram: string;
   whatsapp: string;
+  emailContato: string;
   sobre: string[];
   efeitos: Efeitos;
   drivePasta: string;
@@ -34,6 +35,7 @@ export const siteBase: SiteConfig = {
   bannerUrl: "",
   instagram: dojo.contato.instagram,
   whatsapp: dojo.contato.whatsapp,
+  emailContato: "",
   sobre,
   efeitos: { movimento: true, kanji: true, brilho: true, intro: true, ondinha: true, tilt: true, rolagem: true, transicao: "subir" },
   drivePasta: "",
@@ -68,6 +70,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     bannerUrl: str(p.bannerUrl, ""),
     instagram: str(p.instagram, siteBase.instagram),
     whatsapp: str(p.whatsapp, siteBase.whatsapp),
+    emailContato: str(p.emailContato, ""),
     sobre: Array.isArray(p.sobre) && p.sobre.length ? p.sobre.filter((x): x is string => typeof x === "string") : siteBase.sobre,
     efeitos: {
       movimento: p.efeitos?.movimento !== false,

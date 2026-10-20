@@ -4,15 +4,21 @@ import { useMemo, useState } from "react";
 import { dataBR, hojeISO } from "../lib/aluno";
 import { addAula, apagarAula, focos, lerAulas, type Aula } from "../lib/aulas";
 import { mensagemErro } from "../lib/auth";
+import { lerFeriadosLocais, type FeriadoLocal } from "../lib/calendarioDb";
+import { useEventos } from "../lib/conteudo";
+import { feriadosNacionais, type Feriado } from "../lib/feriados";
 import { useCarga } from "../lib/useCarga";
 
 const VAZIO: Aula[] = [];
+const VAZIO_FER: FeriadoLocal[] = [];
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const DIAS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const iso = (a: number, m: number, d: number) => `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 export default function AdminAulas({ uid }: { uid: string }) {
   const aulas = useCarga(() => lerAulas(uid), VAZIO);
+  const ev = useEventos();
+  const locais = useCarga(lerFeriadosLocais, VAZIO_FER);
   const inicio = new Date();
   const [ano, setAno] = useState(inicio.getFullYear());
   const [mes, setMes] = useState(inicio.getMonth());
@@ -25,6 +31,17 @@ export default function AdminAulas({ uid }: { uid: string }) {
     aulas.dados.forEach((a) => m.set(a.data, [...(m.get(a.data) ?? []), a]));
     return m;
   }, [aulas.dados]);
+
+  const feriados = useMemo(() => {
+    const m = new Map<string, Feriado[]>();
+    [...feriadosNacionais(ano - 1), ...feriadosNacionais(ano), ...feriadosNacionais(ano + 1), ...locais.dados].forEach((f) => m.set(f.data, [...(m.get(f.data) ?? []), f]));
+    return m;
+  }, [ano, locais.dados]);
+  const eventosPorDia = useMemo(() => {
+    const m = new Map<string, string[]>();
+    ev.itens.forEach((e) => m.set(e.data, [...(m.get(e.data) ?? []), e.titulo]));
+    return m;
+  }, [ev.itens]);
 
   const primeiro = new Date(ano, mes, 1).getDay();
   const total = new Date(ano, mes + 1, 0).getDate();
@@ -72,7 +89,7 @@ export default function AdminAulas({ uid }: { uid: string }) {
   return (
     <section className="panel" id="aulas">
       <h2>Planejamento de aulas</h2>
-      <p className="lead">Este calendário é só seu: cada professor vê apenas as próprias aulas.</p>
+      <p className="lead">Este calendário é só seu: cada professor vê apenas as próprias aulas. Os pontinhos mostram feriados (vermelho) e eventos do site (roxo), para você não marcar aula em cima deles.</p>
 
       <div className="cal-nav">
         <button className="btn btn-ghost" onClick={() => mover(-1)} aria-label="Mês anterior">
@@ -104,12 +121,24 @@ export default function AdminAulas({ uid }: { uid: string }) {
             >
               {d}
               {porDia.has(iso(ano, mes, d)) && <i aria-hidden="true" />}
+              {feriados.has(iso(ano, mes, d)) && <u className="m-fer" aria-hidden="true" />}
+              {eventosPorDia.has(iso(ano, mes, d)) && <s className="m-ev" aria-hidden="true" />}
             </button>
           ),
         )}
       </div>
 
       <h3 className="dia-titulo">{dataBR(dia)}</h3>
+      {(feriados.get(dia) || eventosPorDia.get(dia)) && (
+        <div className="aviso-dia" role="note">
+          {feriados.get(dia)?.map((f, i) => (
+            <p key={i}>🗓 {f.nome}{f.local ? " (feriado local)" : ""}: pense bem antes de marcar aula neste dia.</p>
+          ))}
+          {eventosPorDia.get(dia)?.map((t, i) => (
+            <p key={i}>📌 Evento no calendário: {t}</p>
+          ))}
+        </div>
+      )}
       {msg && (
         <p className="form-note" role="status">
           {msg}

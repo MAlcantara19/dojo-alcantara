@@ -1,22 +1,39 @@
-ATUALIZAÇÃO 3 — Login real + painel (avisos e eventos) ligados ao Firebase
+ATUALIZAÇÃO 16 (inclui tudo das anteriores — instale só esta)
 
-A) No projeto (C:\projetos\dojo-alcantara)
- 1. Pare o servidor (Ctrl+C).
- 2. npm install firebase   (se já instalou, não tem problema repetir)
- 3. Copie a pasta "app" deste zip para o projeto e SUBSTITUA os arquivos.
- 4. npm run dev
+ATENÇÃO a dois arquivos que ESTE zip substitui:
+ - app\lib\simulados.ts  (novo simulado "História do judô", com a explicação de cada alternativa).
+   Se você editou esse arquivo à mão, guarde uma cópia antes. As perguntas que você mudou pelo painel
+   (banco de dados) NÃO são afetadas.
+ - app\lib\data.ts  (ganhou campos novos para avisos e eventos). Se você mudou o WhatsApp nele,
+   confira depois: whatsapp: "5524992924519".
 
-B) No console do Firebase (console.firebase.google.com -> dojo-alcantara)
- 1. Authentication -> Método de login -> E-mail/senha: ativado.
- 2. Authentication -> Users -> Adicionar usuário: SEU e-mail + uma senha forte.
-    Copie o "UID do usuário" dele.
- 3. Firestore Database -> Dados -> Iniciar coleção:
-      ID da coleção: users
-      ID do documento: (cole o UID)
-      Campos:  papel (string) = admin     nome (string) = Matheus
- 4. Firestore Database -> Regras: apague o que está lá, cole o conteúdo do arquivo
-    firestore.rules deste zip e clique em PUBLICAR.
+1. Pare o servidor (Ctrl+C).
+2. Copie a pasta "app" e o arquivo firestore.rules deste zip para C:\projetos\dojo-alcantara,
+   substituindo tudo. (palavras.ts não vai neste zip.)
+3. npm run dev  e teste.
+4. IMPORTANTE: Firebase > Firestore > Regras: apague tudo, cole firestore.rules, PUBLICAR.
+   Sem isso não funcionam: feriados locais, calendários oficiais, parcerias, desempenho da roleta,
+   avisos por turma com imagem/vídeo e técnica proibida.
+5. Publicar o site: git add . / git commit -m "atualizacao 16" / git push.
 
-C) Testar
- - Abra http://localhost:3000/admin, entre com o e-mail e a senha do passo B2.
- - Publique um aviso. Ele deve aparecer na página inicial.
+NOVIDADES
+ SIMULADOS: botão "Sair ou trocar" fora do quadro; ao errar mostra por que a alternativa que você
+   marcou está errada; escolha de 3, 4 ou 5 alternativas; um simulado por faixa (monta sozinho com as
+   técnicas de cada faixa); simulado de história do judô com explicações. Para corrigir os simulados
+   já importados no banco: Painel > Estudo > Simulados > Editar pergunta (há um campo "por que está
+   errada" em cada alternativa).
+ ROLETA: sem botão de zerar; o placar de quem está logado fica guardado e o professor vê as
+   dificuldades (Painel > Resultados). A roleta de técnicas mostra a imagem/ficha da técnica.
+ TÉCNICA PROIBIDA: aviso vermelho (Kani-basami já vem marcada). Marque outras em Painel > Conteúdo > Técnicas.
+ CONTA NO TOPO: avatar com a cor da faixa, nome maior, papel e faixa; e-mail em cartão separado.
+ CALENDÁRIO (/calendario): calendário de verdade, com feriados nacionais calculados sozinhos,
+   feriados locais, eventos (com imagem, vídeo e fotos da pasta do Drive), calendários oficiais
+   em imagem/PDF e assinatura no celular. No planejamento de aulas aparecem feriados e eventos.
+ GALERIA (/galeria): álbuns = subpastas da pasta da galeria no Drive (ex.: "Aula 24-10-2026").
+ ESTUDO DO JUDÔ (/estudo): página com técnicas, katas, simulados e roleta.
+ AVISOS: com imagem e vídeo, "publicado por", e podem ir só para algumas turmas. Sininho no topo
+   avisa de avisos novos.
+ PARCERIAS (Painel > Site) e RODAPÉ completo em todas as páginas. "Sobre nós" fica no fim.
+ ADMINISTRADORES (Painel > Equipe): cadastrar outro administrador e editar o nome que aparece nas
+   publicações. Administrador e professor agora têm perfil pessoal (peso, altura, anotações).
+ Clicar na logo/nome do menu leva ao topo do início. Layout mais largo no computador.

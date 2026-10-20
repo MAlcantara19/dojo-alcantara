@@ -15,6 +15,7 @@ import { useCarga } from "../lib/useCarga";
 import CampoSenha from "./CampoSenha";
 import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
+import Midia from "./Midia";
 import LoginForm from "./LoginForm";
 
 const VAZIO_AV: AvisoTurma[] = [];
@@ -105,25 +106,9 @@ function Conteudo({ uid }: { uid: string }) {
   if (perfilCompleto.carregando) return <p className="form-help">Carregando seu perfil…</p>;
   if (!p) return <p className="notice">Não consegui ler o seu perfil. Tente de novo em instantes.</p>;
 
-  if (p.papel !== "aluno") {
-    return (
-      <>
-        <p className="notice" role="note">
-          Você entrou como {p.papel === "admin" ? "administrador" : "professor"}. A área do aluno é para quem é aluno. Para editar o site, use o painel.
-        </p>
-        <div className="tool-actions">
-          <Link className="btn btn-primary" href="/admin">
-            Ir para o painel
-          </Link>
-          <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
-            Sair
-          </button>
-        </div>
-      </>
-    );
-  }
+  const equipe = p.papel !== "aluno";
 
-  const idx = indiceFaixa(p.faixa);
+  const idx = indiceFaixa(p.faixa ?? "");
   const pesos = medidas.dados.filter((m) => typeof m.peso === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), completo: dataBR(m.data), valor: m.peso as number }));
   const alturas = medidas.dados.filter((m) => typeof m.altura === "number").map((m) => ({ rotulo: dataBR(m.data).slice(0, 5), completo: dataBR(m.data), valor: m.altura as number }));
 
@@ -134,7 +119,7 @@ function Conteudo({ uid }: { uid: string }) {
   return (
     <>
       <div className="perfil-head">
-        <span className="perfil-faixa" style={{ background: corDaFaixa(p.faixa) }} aria-hidden="true" />
+        <span className="perfil-faixa" style={{ background: corDaFaixa(p.faixa) ?? "var(--bright)" }} aria-hidden="true" />
         <div>
           <h2>{p.apelido || p.nome}</h2>
           <p className="tmeta">
@@ -142,13 +127,24 @@ function Conteudo({ uid }: { uid: string }) {
             {p.academia ? ` · ${p.academia}` : ""}
           </p>
           <p className="tmeta">
-            Faixa {(p.faixa ?? "").toLowerCase()}{p.dataNascimento ? ` · ${idade(p.dataNascimento, hoje)} anos · idade de campeonato em ${hoje.getFullYear()}: ${anoCampeonato(p.dataNascimento, hoje)}` : ""}
+            {p.faixa ? `Faixa ${p.faixa.toLowerCase()}` : ""}{p.dataNascimento ? ` · ${idade(p.dataNascimento, hoje)} anos · idade de campeonato em ${hoje.getFullYear()}: ${anoCampeonato(p.dataNascimento, hoje)}` : ""}
           </p>
         </div>
         <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
           Sair
         </button>
       </div>
+
+      {equipe && (
+        <div className="aviso-dia" role="note">
+          <p>
+            Este é o seu perfil pessoal (peso, altura, anotações e cadastro). Para editar o site, vá para a área do professor.
+          </p>
+          <Link className="btn btn-primary" href="/admin">
+            Abrir a área do professor
+          </Link>
+        </div>
+      )}
 
       {p.precisaTrocarSenha && <TrocarSenha uid={uid} obrigatoria onFeito={perfilCompleto.recarregar} />}
 
@@ -206,6 +202,8 @@ function Conteudo({ uid }: { uid: string }) {
                   <strong>{a.titulo}</strong>
                   <small>{dataBR(a.data)}</small>
                   <small className="pre">{a.texto}</small>
+                  <Midia imagem={a.imagem} video={a.video} alt={a.titulo} />
+                  {a.autor && <small>Publicado por {a.autor}</small>}
                 </span>
               </li>
             ))}
@@ -216,10 +214,12 @@ function Conteudo({ uid }: { uid: string }) {
       <section className="panel">
         <h2>Meu progresso</h2>
         <div className="resumo-grid">
-          <div className="resumo-card">
-            <b>{p.faixa}</b>
-            <span>faixa atual{p.faixaDesde ? `, desde ${dataBR(p.faixaDesde)}` : ""}</span>
-          </div>
+          {p.faixa && (
+            <div className="resumo-card">
+              <b>{p.faixa}</b>
+              <span>faixa atual{p.faixaDesde ? `, desde ${dataBR(p.faixaDesde)}` : ""}</span>
+            </div>
+          )}
           {p.faixaDesde && (
             <div className="resumo-card">
               <b>{mesesEntre(p.faixaDesde, hoje)}</b>
@@ -237,9 +237,10 @@ function Conteudo({ uid }: { uid: string }) {
             </div>
           )}
         </div>
-        {idx >= 0 && idx < faixas.length - 1 && <p className="form-help">Próxima faixa: {faixas[idx + 1].nome.toLowerCase()}. Continue treinando e perguntando ao seu professor.</p>}
+        {p.faixa && idx >= 0 && idx < faixas.length - 1 && <p className="form-help">Próxima faixa: {faixas[idx + 1].nome.toLowerCase()}. Continue treinando e perguntando ao seu professor.</p>}
       </section>
 
+      {p.faixa && (
       <section className="panel">
         <h2>Para treinar</h2>
         {paraTreinar.length === 0 ? (
@@ -273,6 +274,7 @@ function Conteudo({ uid }: { uid: string }) {
           </>
         )}
       </section>
+      )}
 
       <section className="panel">
         <h2>Peso e altura</h2>

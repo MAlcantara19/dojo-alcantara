@@ -2,22 +2,28 @@
 
 import { useState } from "react";
 import { hojeISO } from "../lib/aluno";
+import { addAvisoTurma, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { apagar, atualizarAviso, atualizarEvento, criarAviso, criarEvento, useAvisos, useEventos, type AvisoDoc, type EventoDoc } from "../lib/conteudo";
+import { enderecoOk } from "../lib/katasDb";
+import AdminCalendarios from "./AdminCalendarios";
+import AdminFeriados from "./AdminFeriados";
+import CampoImagem from "./CampoImagem";
 
-const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Outro"];
+const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Aula", "Outro"];
 
-export default function AdminMural() {
+export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]; autor: string; ehAdmin: boolean }) {
   const av = useAvisos();
   const ev = useEventos();
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [editAviso, setEditAviso] = useState<AvisoDoc | null>(null);
   const [editEvento, setEditEvento] = useState<EventoDoc | null>(null);
+  const [destino, setDestino] = useState<"publico" | "turmas">("publico");
 
   async function rodar(acao: () => Promise<void>, ok: string, depois: () => void) {
     setOcupado(true);
-    setMsg("");
+    setMsg("Salvando…");
     try {
       await acao();
       setMsg(ok);
@@ -32,10 +38,25 @@ export default function AdminMural() {
     e.preventDefault();
     const form = e.currentTarget;
     const f = new FormData(form);
-    const a = { titulo: String(f.get("titulo") ?? "").trim(), texto: String(f.get("texto") ?? "").trim(), data: String(f.get("data") ?? "") };
+    const g = (k: string) => String(f.get(k) ?? "").trim();
+    const video = g("video");
+    const imagem = g("imagem");
+    const a = { titulo: g("titulo"), texto: g("texto"), data: g("data"), autor, imagem, video };
     if (!a.titulo || !a.texto || !a.data) return setMsg("Preencha título, texto e data do aviso.");
+    if ((video && !/^https:\/\//.test(video)) || (imagem && !enderecoOk(imagem))) return setMsg("O link do vídeo precisa começar com https:// e a imagem deve ser enviada do celular ou ser um link https://.");
     const alvo = editAviso;
-    void rodar(() => (alvo ? atualizarAviso(alvo.id, a) : criarAviso(a)), alvo ? "Aviso atualizado." : "Aviso publicado.", () => {
+    if (!alvo && destino === "turmas") {
+      const escolhidas = f.getAll("turmas").map(String);
+      if (escolhidas.length === 0) return setMsg("Marque pelo menos uma turma, ou escolha “Todos”.");
+      return void rodar(
+        async () => {
+          for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video });
+        },
+        `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}. Os alunos veem na área deles.`,
+        () => form.reset(),
+      );
+    }
+    void rodar(() => (alvo ? atualizarAviso(alvo.id, { ...a, autor: alvo.autor ?? autor }) : criarAviso(a)), alvo ? "Aviso atualizado." : "Aviso publicado no site.", () => {
       form.reset();
       setEditAviso(null);
       av.recarregar();
@@ -46,16 +67,23 @@ export default function AdminMural() {
     e.preventDefault();
     const form = e.currentTarget;
     const f = new FormData(form);
-    const ev0 = {
-      titulo: String(f.get("titulo") ?? "").trim(),
-      data: String(f.get("data") ?? ""),
-      hora: String(f.get("hora") ?? "").trim() || "A confirmar",
-      local: String(f.get("local") ?? "").trim() || "A definir",
-      tipo: String(f.get("tipo") ?? "Outro"),
+    const g = (k: string) => String(f.get(k) ?? "").trim();
+    const dados = {
+      titulo: g("titulo"),
+      data: g("data"),
+      hora: g("hora") || "A confirmar",
+      local: g("local") || "A definir",
+      tipo: g("tipo") || "Outro",
+      descricao: g("descricao"),
+      imagem: g("imagem"),
+      video: g("video"),
+      pastaDrive: g("pasta"),
+      autor,
     };
-    if (!ev0.titulo || !ev0.data) return setMsg("Preencha o título e a data do evento.");
+    if (!dados.titulo || !dados.data) return setMsg("Preencha o título e a data do evento.");
+    if ((dados.video && !/^https:\/\//.test(dados.video)) || (dados.pastaDrive && !/^https:\/\/|^[\w-]{10,}$/.test(dados.pastaDrive)) || (dados.imagem && !enderecoOk(dados.imagem))) return setMsg("Confira os links: vídeo e pasta do Drive precisam começar com https://");
     const alvo = editEvento;
-    void rodar(() => (alvo ? atualizarEvento(alvo.id, ev0) : criarEvento(ev0)), alvo ? "Evento atualizado." : "Evento publicado.", () => {
+    void rodar(() => (alvo ? atualizarEvento(alvo.id, { ...dados, autor: alvo.autor ?? autor }) : criarEvento(dados)), alvo ? "Evento atualizado." : "Evento publicado.", () => {
       form.reset();
       setEditEvento(null);
       ev.recarregar();
@@ -91,6 +119,32 @@ export default function AdminMural() {
             <label htmlFor="a-data">Data</label>
             <input id="a-data" name="data" type="date" defaultValue={editAviso?.data ?? hojeISO()} />
           </div>
+          <CampoImagem name="imagem" rotulo="Imagem (opcional)" valorInicial={editAviso?.imagem ?? ""} />
+          <div className="field">
+            <label htmlFor="a-video">Vídeo (opcional): link do YouTube ou do Drive</label>
+            <input id="a-video" name="video" type="url" inputMode="url" placeholder="https://…" defaultValue={editAviso?.video ?? ""} />
+          </div>
+          {!editAviso && (
+            <fieldset className="passo">
+              <legend>Quem recebe</legend>
+              <label className="check-linha">
+                <input type="radio" name="destino" checked={destino === "publico"} onChange={() => setDestino("publico")} /> Todos (aparece na página inicial do site)
+              </label>
+              <label className="check-linha">
+                <input type="radio" name="destino" checked={destino === "turmas"} onChange={() => setDestino("turmas")} /> Só algumas turmas (aparece na área dos alunos delas)
+              </label>
+              {destino === "turmas" && (
+                <div className="checks">
+                  {turmas.length === 0 && <small>Você ainda não tem turmas disponíveis.</small>}
+                  {turmas.map((t) => (
+                    <label key={t.id}>
+                      <input type="checkbox" name="turmas" value={t.nome} /> {t.apelido || t.nome}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
           <div className="tool-actions">
             <button className="btn btn-primary" type="submit" disabled={ocupado}>
               {editAviso ? "Salvar alterações" : "Publicar aviso"}
@@ -110,7 +164,10 @@ export default function AdminMural() {
             <li key={a.id}>
               <span>
                 <strong>{a.titulo}</strong>
-                <small>{a.data}</small>
+                <small>
+                  {a.data}
+                  {a.autor ? ` · por ${a.autor}` : ""}
+                </small>
               </span>
               {!av.erro && (
                 <span className="tlinks">
@@ -128,32 +185,50 @@ export default function AdminMural() {
       </section>
 
       <section className="panel" id="eventos">
-        <h2>Eventos</h2>
+        <h2>Eventos do calendário</h2>
         <form className="form" onSubmit={salvarEvento} key={editEvento?.id ?? "novo-evento"}>
           {editEvento && <p className="form-note">Editando “{editEvento.titulo}”.</p>}
           <div className="field">
             <label htmlFor="e-titulo">Título</label>
             <input id="e-titulo" name="titulo" type="text" maxLength={80} defaultValue={editEvento?.titulo ?? ""} />
           </div>
-          <div className="field">
-            <label htmlFor="e-data">Data</label>
-            <input id="e-data" name="data" type="date" defaultValue={editEvento?.data ?? hojeISO()} />
+          <div className="two">
+            <div className="field">
+              <label htmlFor="e-data">Data</label>
+              <input id="e-data" name="data" type="date" defaultValue={editEvento?.data ?? hojeISO()} />
+            </div>
+            <div className="field">
+              <label htmlFor="e-tipo">Tipo</label>
+              <select id="e-tipo" name="tipo" defaultValue={editEvento?.tipo ?? "Campeonato"}>
+                {TIPOS.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="two">
+            <div className="field">
+              <label htmlFor="e-hora">Horário</label>
+              <input id="e-hora" name="hora" type="text" placeholder="Ex.: 9h" maxLength={30} defaultValue={editEvento && editEvento.hora !== "A confirmar" ? editEvento.hora : ""} />
+            </div>
+            <div className="field">
+              <label htmlFor="e-local">Local</label>
+              <input id="e-local" name="local" type="text" maxLength={80} defaultValue={editEvento && editEvento.local !== "A definir" ? editEvento.local : ""} />
+            </div>
           </div>
           <div className="field">
-            <label htmlFor="e-hora">Horário</label>
-            <input id="e-hora" name="hora" type="text" placeholder="Ex.: 9h" maxLength={30} defaultValue={editEvento && editEvento.hora !== "A confirmar" ? editEvento.hora : ""} />
+            <label htmlFor="e-desc">Descrição (opcional)</label>
+            <textarea id="e-desc" name="descricao" rows={2} maxLength={400} defaultValue={editEvento?.descricao ?? ""} />
+          </div>
+          <CampoImagem name="imagem" rotulo="Imagem do evento (opcional)" valorInicial={editEvento?.imagem ?? ""} />
+          <div className="field">
+            <label htmlFor="e-video">Vídeo (opcional): link do YouTube ou do Drive</label>
+            <input id="e-video" name="video" type="url" inputMode="url" placeholder="https://…" defaultValue={editEvento?.video ?? ""} />
           </div>
           <div className="field">
-            <label htmlFor="e-local">Local</label>
-            <input id="e-local" name="local" type="text" maxLength={80} defaultValue={editEvento && editEvento.local !== "A definir" ? editEvento.local : ""} />
-          </div>
-          <div className="field">
-            <label htmlFor="e-tipo">Tipo</label>
-            <select id="e-tipo" name="tipo" defaultValue={editEvento?.tipo ?? "Campeonato"}>
-              {TIPOS.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
+            <label htmlFor="e-pasta">Pasta do Drive com as fotos do evento (opcional)</label>
+            <input id="e-pasta" name="pasta" type="text" inputMode="url" placeholder="https://drive.google.com/drive/folders/…" defaultValue={editEvento?.pastaDrive ?? ""} />
+            <p className="form-help">As fotos dessa pasta aparecem dentro do evento, no calendário. A pasta precisa estar compartilhada como “Qualquer pessoa com o link”.</p>
           </div>
           <div className="tool-actions">
             <button className="btn btn-primary" type="submit" disabled={ocupado}>
@@ -176,6 +251,7 @@ export default function AdminMural() {
                 <strong>{e.titulo}</strong>
                 <small>
                   {e.data} · {e.tipo}
+                  {e.autor ? ` · por ${e.autor}` : ""}
                 </small>
               </span>
               {!ev.erro && (
@@ -192,6 +268,9 @@ export default function AdminMural() {
           ))}
         </ul>
       </section>
+
+      <AdminFeriados />
+      {ehAdmin && <AdminCalendarios />}
     </>
   );
 }

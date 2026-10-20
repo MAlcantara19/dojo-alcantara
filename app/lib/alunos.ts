@@ -60,6 +60,13 @@ export async function listarProfessores(): Promise<Aluno[]> {
   const snap = await getDocs(query(collection(getDb(), "users"), where("papel", "==", "professor")));
   return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as Omit<Aluno, "uid">) })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
+export async function listarAdmins(): Promise<Aluno[]> {
+  const snap = await getDocs(query(collection(getDb(), "users"), where("papel", "==", "admin")));
+  return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as Omit<Aluno, "uid">) })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+export async function atualizarNomeConta(uid: string, nome: string) {
+  await updateDoc(doc(getDb(), "users", uid), { nome });
+}
 export async function salvarTurmasProfessor(uid: string, turmas: string[]) {
   await updateDoc(doc(getDb(), "users", uid), { turmas });
 }
@@ -116,7 +123,7 @@ export async function renomearTurma(id: string, antigo: string, novo: string) {
 }
 
 /* ---------- Avisos de cada turma ---------- */
-export type AvisoTurma = { id: string; turma: string; titulo: string; texto: string; data: string };
+export type AvisoTurma = { id: string; turma: string; titulo: string; texto: string; data: string; autor?: string; imagem?: string; video?: string; ts?: number };
 
 /** null = admin (todos); lista = só as turmas dadas (professor ou aluno). */
 export async function lerAvisosTurma(turmas: string[] | null): Promise<AvisoTurma[]> {
@@ -126,7 +133,7 @@ export async function lerAvisosTurma(turmas: string[] | null): Promise<AvisoTurm
   return todos.sort((a, b) => b.data.localeCompare(a.data));
 }
 export async function addAvisoTurma(a: Omit<AvisoTurma, "id">) {
-  await addDoc(collection(getDb(), "avisosTurma"), { ...a, criadoEm: serverTimestamp() });
+  await addDoc(collection(getDb(), "avisosTurma"), { ...a, ts: Date.now(), criadoEm: serverTimestamp() });
 }
 export const apagarAvisoTurma = (id: string) => deleteDoc(doc(getDb(), "avisosTurma", id));
 

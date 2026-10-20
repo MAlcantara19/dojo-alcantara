@@ -156,7 +156,7 @@ export function faixaEfetiva(t: Tecnica, cfg?: { faixa?: string }): FaixaEfetiva
 }
 
 /* ---------- Catálogo editável pelo painel ---------- */
-export type AjusteTecnica = { nome?: string; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
+export type AjusteTecnica = { nome?: string; proibida?: boolean; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
 
 const categoriaOk = (v?: string): v is Categoria => v === "Nage-waza" || v === "Katame-waza";
 const familiaOk = (v?: string): v is Familia => Boolean(v && v in familias);
@@ -176,3 +176,7 @@ export function montarCatalogo(ajustes: Record<string, AjusteTecnica>, incluirEs
     .sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
   return [...base, ...extras];
 }
+
+/* Técnicas hoje proibidas em campeonatos (você pode marcar outras no painel). */
+const proibidasInicial = new Set(["kani-basami"]);
+export const ehProibida = (t: Tecnica, ajuste?: { proibida?: boolean }): boolean => (typeof ajuste?.proibida === "boolean" ? ajuste.proibida : proibidasInicial.has(t.id));

@@ -19,7 +19,7 @@ export const lerAvisos = () => ler<Aviso>("avisos", "data", "desc");
 export const lerEventos = () => ler<Evento>("eventos", "data", "asc");
 
 export async function criarAviso(a: Aviso) {
-  await addDoc(collection(getDb(), "avisos"), { ...a, criadoEm: serverTimestamp() });
+  await addDoc(collection(getDb(), "avisos"), { ...a, ts: Date.now(), criadoEm: serverTimestamp() });
 }
 export async function criarEvento(e: Evento) {
   await addDoc(collection(getDb(), "eventos"), { ...e, criadoEm: serverTimestamp() });
@@ -71,7 +71,7 @@ export const useAvisos = () => useColecao<AvisoDoc>(lerAvisos, avisosPadrao.map(
 export const useEventos = () => useColecao<EventoDoc>(lerEventos, eventosPadrao.map((e, i) => ({ ...e, id: "p" + i })));
 
 /* ---------- Técnicas: faixa, PDF e vídeo editados pelo painel ---------- */
-export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[]; nome?: string; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
+export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[]; nome?: string; proibida?: boolean; ocultar?: boolean; custom?: boolean; categoria?: string; familia?: string; grupo?: string };
 export type MapaConfig = Record<string, ConfigTecnica>;
 
 export async function lerConfigTecnicas(): Promise<MapaConfig> {
