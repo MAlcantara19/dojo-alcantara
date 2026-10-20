@@ -740,3 +740,66 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
 .sino-lista a{display:grid;padding:.5rem .6rem;border-radius:10px;text-decoration:none;color:var(--text)}
 .sino-lista a:hover{background:var(--surface-2)}
 .sino-lista small{color:var(--muted)}
+
+/* Lista do sininho: no celular, ocupa a largura da tela em vez de sair pela esquerda */
+@media (max-width:700px){
+  .sino-lista{position:fixed;left:12px;right:12px;top:calc(66px + var(--top));width:auto}
+}
+
+/* Menu lateral: Estudo do Judô e Minha área abrem as subcategorias */
+.drawer-pai{margin:6px 0}
+.drawer-pai summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:.75rem 1rem;border-radius:14px;cursor:pointer;font-weight:700;font-size:1.05rem;color:#fff}
+.drawer-pai summary::-webkit-details-marker{display:none}
+.drawer-pai summary:hover{background:rgba(255,255,255,.08)}
+.drawer-pai summary svg{transition:transform .2s}
+.drawer-pai[open] summary svg{transform:rotate(180deg)}
+.drawer-pai>a,.drawer-pai>.drawer-soon{margin-left:14px;border-left:2px solid rgba(255,255,255,.15);border-radius:0 12px 12px 0}
+/* abas da área do aluno */
+.perfil-abas{margin:10px 0 4px}
+.perfil-abas a{flex:none;white-space:nowrap;padding:.55rem 1rem;border-radius:999px;text-decoration:none;color:var(--text);font-weight:600}
+.perfil-abas a.ativa{background:linear-gradient(160deg,var(--bright),var(--deep));color:#fff}
+/* sininho no celular: a lista ocupa a largura da tela, sem cortar */
+@media (max-width:700px){.sino-lista{position:fixed;left:12px;right:12px;width:auto;top:calc(var(--top,0px) + 72px);max-height:70vh;overflow:auto}}
+/* campeonatos e galeria do aluno */
+.campeonatos,.galeria-aluno{display:grid;gap:14px;width:100%}
+.camp-card{display:grid;gap:10px;padding:16px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--surface-2)}
+.camp-card header{display:flex;gap:12px;align-items:center}
+.camp-card h3{font-size:1.2rem;font-weight:800}
+.camp-medalha{font-size:2rem}
+.camp-info{display:flex;flex-wrap:wrap;gap:6px}
+.tag-forte{background:linear-gradient(160deg,var(--bright),var(--deep));color:#fff;border-color:transparent}
+.lutas{display:grid;gap:8px;margin:0;padding-left:1.2rem}
+.lutas li{display:grid;gap:2px;padding:.5rem .7rem;border-radius:10px;border-left:4px solid}
+.lutas li.vitoria{border-color:#2f9e5b;background:rgba(47,158,91,.1)}
+.lutas li.derrota{border-color:#d9334a;background:rgba(217,51,74,.08)}
+.lutas small{color:var(--muted)}
+.camp-chave summary{cursor:pointer;color:var(--accent);font-weight:700}
+.camp-midias,.galeria-aluno-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.camp-foto,.galeria-aluno-grade img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px}
+.galeria-aluno-grade figure{margin:0;display:grid;gap:4px}
+.galeria-aluno-grade figcaption{display:grid;font-size:.85rem}
+.galeria-aluno-grade small{color:var(--muted)}
+.luta-form{display:grid;gap:10px;border:1.5px solid var(--line);border-radius:var(--r-md);padding:12px}
+.luta-form.vitoria{border-color:#2f9e5b}
+.luta-form.derrota{border-color:#d9334a}
+.luta-form legend{font-weight:800;padding:0 6px}
+.pontos{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pontos>strong{width:100%;font-size:.9rem}
+.contador{display:inline-flex;align-items:center;gap:6px;padding:.25rem .5rem;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.contador small{font-weight:700}
+.contador button{width:28px;height:28px;border-radius:50%;border:0;background:var(--surface-2);color:var(--text);font-size:1.1rem;cursor:pointer}
+.contador b{min-width:1ch;text-align:center}
+.tedit h4{font-size:1rem;font-weight:800;margin-top:6px}
+
+.parceiro-desconto{display:inline-block;padding:.2rem .6rem;border-radius:999px;background:rgba(47,158,91,.15);border:1px solid #2f9e5b;color:var(--text);font-size:.82rem;font-weight:700}
+.parceiro-cat{text-transform:uppercase;letter-spacing:.06em;font-size:.7rem!important}
+.parc-grupo{display:grid;gap:10px;width:100%}
+.parc-lado{display:none}
+@media (min-width:1400px){
+  .parc-lado{display:grid;align-content:start;gap:10px;position:fixed;right:16px;top:90px;width:250px;max-height:calc(100vh - 110px);overflow:auto;padding:14px;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--line);z-index:5}
+  .parc-lado>strong{font-weight:800}
+  .parceiro.compacto{grid-template-columns:48px 1fr;justify-items:start;text-align:left;align-items:center;column-gap:10px;padding:10px}
+  .parceiro.compacto .parceiro-logo,.parceiro.compacto .parceiro-sigla{width:48px;height:48px;grid-row:span 2;font-size:1rem}
+  .parceiro.compacto .parceiro-desconto{grid-column:2;font-size:.72rem}
+  .page.com-lado{margin-right:270px}
+}

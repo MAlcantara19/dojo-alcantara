@@ -20,6 +20,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
   const [editAviso, setEditAviso] = useState<AvisoDoc | null>(null);
   const [editEvento, setEditEvento] = useState<EventoDoc | null>(null);
   const [destino, setDestino] = useState<"publico" | "turmas">("publico");
+  const [noCalendario, setNoCalendario] = useState(false);
 
   async function rodar(acao: () => Promise<void>, ok: string, depois: () => void) {
     setOcupado(true);
@@ -45,22 +46,36 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
     if (!a.titulo || !a.texto || !a.data) return setMsg("Preencha título, texto e data do aviso.");
     if ((video && !/^https:\/\//.test(video)) || (imagem && !enderecoOk(imagem))) return setMsg("O link do vídeo precisa começar com https:// e a imagem deve ser enviada do celular ou ser um link https://.");
     const alvo = editAviso;
+    const evento = !alvo && noCalendario ? { titulo: a.titulo, data: g("ev-data") || a.data, hora: g("ev-hora") || "A confirmar", local: g("ev-local") || "A definir", tipo: g("ev-tipo") || "Outro", descricao: a.texto.slice(0, 400), imagem, video, pastaDrive: "", autor } : null;
     if (!alvo && destino === "turmas") {
       const escolhidas = f.getAll("turmas").map(String);
       if (escolhidas.length === 0) return setMsg("Marque pelo menos uma turma, ou escolha “Todos”.");
       return void rodar(
         async () => {
           for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video });
+          if (evento) await criarEvento(evento);
         },
-        `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}. Os alunos veem na área deles.`,
-        () => form.reset(),
+        `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}${evento ? " e marcado no calendário" : ""}.`,
+        () => (form.reset(), setNoCalendario(false), ev.recarregar()),
       );
     }
-    void rodar(() => (alvo ? atualizarAviso(alvo.id, { ...a, autor: alvo.autor ?? autor }) : criarAviso(a)), alvo ? "Aviso atualizado." : "Aviso publicado no site.", () => {
-      form.reset();
-      setEditAviso(null);
-      av.recarregar();
-    });
+    void rodar(
+      async () => {
+        if (alvo) await atualizarAviso(alvo.id, { ...a, autor: alvo.autor ?? autor });
+        else {
+          await criarAviso(a);
+          if (evento) await criarEvento(evento);
+        }
+      },
+      alvo ? "Aviso atualizado." : evento ? "Aviso publicado e marcado no calendário." : "Aviso publicado no site.",
+      () => {
+        form.reset();
+        setEditAviso(null);
+        setNoCalendario(false);
+        av.recarregar();
+        ev.recarregar();
+      },
+    );
   }
 
   function salvarEvento(e: React.FormEvent<HTMLFormElement>) {
@@ -124,6 +139,42 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
             <label htmlFor="a-video">Vídeo (opcional): link do YouTube ou do Drive</label>
             <input id="a-video" name="video" type="url" inputMode="url" placeholder="https://…" defaultValue={editAviso?.video ?? ""} />
           </div>
+          {!editAviso && (
+            <fieldset className="passo">
+              <legend>Calendário</legend>
+              <label className="check-linha">
+                <input type="checkbox" checked={noCalendario} onChange={(e) => setNoCalendario(e.target.checked)} /> Marcar também no calendário (vira evento, sem precisar cadastrar duas vezes)
+              </label>
+              {noCalendario && (
+                <>
+                  <div className="two">
+                    <div className="field">
+                      <label htmlFor="ev-data">Data no calendário</label>
+                      <input id="ev-data" name="ev-data" type="date" defaultValue={hojeISO()} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="ev-tipo">Tipo</label>
+                      <select id="ev-tipo" name="ev-tipo" defaultValue="Outro">
+                        {TIPOS.map((t) => (
+                          <option key={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="two">
+                    <div className="field">
+                      <label htmlFor="ev-hora">Horário (opcional)</label>
+                      <input id="ev-hora" name="ev-hora" type="text" maxLength={30} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="ev-local">Local (opcional)</label>
+                      <input id="ev-local" name="ev-local" type="text" maxLength={80} />
+                    </div>
+                  </div>
+                </>
+              )}
+            </fieldset>
+          )}
           {!editAviso && (
             <fieldset className="passo">
               <legend>Quem recebe</legend>

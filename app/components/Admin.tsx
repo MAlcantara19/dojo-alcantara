@@ -109,7 +109,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} ehAdmin={ehAdmin} />}
         {aba === "mural" && <AdminMural turmas={minhasTurmas} autor={nome} ehAdmin={ehAdmin} />}
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
-        {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} />}
+        {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} autor={nome} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
         {aba === "conteudo" && (
           <>

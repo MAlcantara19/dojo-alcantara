@@ -8,13 +8,15 @@ import { corDaFaixa, faixas } from "../lib/faixas";
 import { useCarga } from "../lib/useCarga";
 import AcoesConta from "./AcoesConta";
 import FormCadastro, { semCel } from "./FormCadastro";
+import CampeonatosAluno from "./CampeonatosAluno";
+import GaleriaAluno from "./GaleriaAluno";
 import MedidasAluno from "./MedidasAluno";
 
 const VAZIO_A: Aluno[] = [];
 const VAZIO_T: Turma[] = [];
 const VAZIO_I: Record<string, string> = {};
 
-export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; escopo: Escopo }) {
+export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { ehAdmin: boolean; escopo: Escopo; autor?: string }) {
   const alunos = useCarga(() => listarAlunos(escopo), VAZIO_A);
   const turmas = useCarga(lerTurmas, VAZIO_T);
   const internos = useCarga(lerInternos, VAZIO_I, ehAdmin);
@@ -22,6 +24,7 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
   const [filtro, setFiltro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
   const [medidas, setMedidas] = useState<string | null>(null);
+  const [painel, setPainel] = useState<{ uid: string; tipo: "camp" | "gal" } | null>(null);
   const [senhaDe, setSenhaDe] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [limite, setLimite] = useState(12);
@@ -214,7 +217,17 @@ export default function AdminAlunos({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                       </button>
                     )}
                   </span>
+                  <span className="tlinks">
+                    <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "camp" ? null : { uid: a.uid, tipo: "camp" })}>
+                      Campeonatos
+                    </button>
+                    <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "gal" ? null : { uid: a.uid, tipo: "gal" })}>
+                      Galeria
+                    </button>
+                  </span>
                   {medidas === a.uid && <MedidasAluno uid={a.uid} />}
+                  {painel?.uid === a.uid && painel.tipo === "camp" && <CampeonatosAluno uid={a.uid} editavel nome={a.apelido || a.nome} />}
+                  {painel?.uid === a.uid && painel.tipo === "gal" && <GaleriaAluno uid={a.uid} autor={autor} avisarAdmin={false} />}
                   {!ehAdmin && senhaDe === a.uid && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} completo={false} onApagada={alunos.recarregar} />}
                 </>
               )}

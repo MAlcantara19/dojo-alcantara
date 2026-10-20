@@ -1,53 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { ehEquipe } from "../lib/auth";
 import { corDaFaixa } from "../lib/faixas";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import Abertura from "./Abertura";
+import { ParceriasLado } from "./Parcerias";
 import Rodape from "./Rodape";
 import Sino from "./Sino";
 import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
 
-const gruposBase = [
-  {
-    titulo: "Dojô",
-    itens: [
-      { href: "/", rotulo: "Início" },
-      { href: "/#avisos", rotulo: "Avisos" },
-      { href: "/calendario", rotulo: "Calendário" },
-      { href: "/galeria", rotulo: "Galeria" },
-      { href: "/#sobre", rotulo: "Sobre nós" },
-    ],
-  },
-  {
-    titulo: "Estudo",
-    itens: [
-      { href: "/estudo", rotulo: "Estudo do Judô" },
-      { href: "/tecnicas", rotulo: "Técnicas" },
-      { href: "/simulados", rotulo: "Simulados" },
-      { href: "/roleta", rotulo: "Roleta" },
-      { href: "/katas", rotulo: "Katas" },
-      { href: "", rotulo: "Apostilas" },
-    ],
-  },
-];
+type ItemMenu = { href: string; rotulo: string; filhos?: ItemMenu[] };
 
-function gruposDe(logado: boolean, equipe: boolean) {
-  const conta = !logado ? [{ href: "/entrar", rotulo: "Entrar" }] : equipe ? [{ href: "/admin", rotulo: "Área do professor" }] : [{ href: "/perfil", rotulo: "Área do aluno" }];
-  return [...gruposBase, { titulo: logado ? "Minha conta" : "Acesso", itens: conta }];
-}
+const dojo: ItemMenu[] = [
+  { href: "/", rotulo: "Início" },
+  { href: "/#avisos", rotulo: "Avisos" },
+  { href: "/calendario", rotulo: "Calendário" },
+  { href: "/galeria", rotulo: "Galeria" },
+  { href: "/parcerias", rotulo: "Parcerias e descontos" },
+  { href: "/#sobre", rotulo: "Sobre nós" },
+];
+const estudo: ItemMenu = {
+  href: "/estudo",
+  rotulo: "Estudo do Judô",
+  filhos: [
+    { href: "/tecnicas", rotulo: "Técnicas" },
+    { href: "/simulados", rotulo: "Simulados" },
+    { href: "/roleta", rotulo: "Roleta" },
+    { href: "/katas", rotulo: "Katas" },
+    { href: "", rotulo: "Apostilas" },
+  ],
+};
+const minhaArea: ItemMenu = { href: "/perfil", rotulo: "Minha área", filhos: ABAS_PERFIL.map(([id, r]) => ({ href: `/perfil#${id}`, rotulo: r })) };
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, perfil } = useAuth();
   const site = useSite();
   const equipe = ehEquipe(perfil);
-  const grupos = gruposDe(Boolean(user), equipe);
+  const pais: ItemMenu[] = user ? [estudo, minhaArea] : [estudo];
+  const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const [mostrarTopo, setMostrarTopo] = useState(false);
@@ -213,35 +210,67 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {grupos.map((g) => (
-          <div className="drawer-group" key={g.titulo}>
-            <p className="drawer-title">{g.titulo}</p>
-            {g.itens.map((i) =>
-              i.href ? (
-                <Link
-                  key={i.rotulo}
-                  href={i.href}
-                  aria-current={i.href === pathname ? "page" : undefined}
-                  onClick={() => setAberto(false)}
-                >
-                  {i.rotulo}
+        <div className="drawer-group">
+          <p className="drawer-title">Dojô</p>
+          {dojo.map((i) => (
+            <Link key={i.rotulo} href={i.href} aria-current={i.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
+              {i.rotulo}
+            </Link>
+          ))}
+        </div>
+
+        {pais.map((pai) => {
+          const ativo = pathname === pai.href || (pai.filhos ?? []).some((f) => f.href && f.href.split("#")[0] === pathname);
+          return (
+            <details className="drawer-pai" key={pai.rotulo} open={ativo || undefined}>
+              <summary>
+                {pai.rotulo}
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </svg>
+              </summary>
+              {pai.href !== "/perfil" && (
+                <Link href={pai.href} aria-current={pai.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
+                  Visão geral
                 </Link>
-              ) : (
-                <span key={i.rotulo} className="drawer-soon">
-                  {i.rotulo}
-                  <small>em breve</small>
-                </span>
-              ),
-            )}
-          </div>
-        ))}
+              )}
+              {(pai.filhos ?? []).map((f) =>
+                !f.href ? (
+                  <span key={f.rotulo} className="drawer-soon">
+                    {f.rotulo}
+                    <small>em breve</small>
+                  </span>
+                ) : f.href.includes("#") ? (
+                  <a
+                    key={f.rotulo}
+                    href={f.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setAberto(false);
+                      const [rota, hash] = f.href.split("#");
+                      if (pathname === rota) window.location.hash = hash;
+                      else router.push(f.href);
+                    }}
+                  >
+                    {f.rotulo}
+                  </a>
+                ) : (
+                  <Link key={f.rotulo} href={f.href} aria-current={f.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
+                    {f.rotulo}
+                  </Link>
+                ),
+              )}
+            </details>
+          );
+        })}
 
         <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
           {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}
         </Link>
       </nav>
 
-      <div className="page page-anim" key={pathname}>
+      {!pathname.startsWith("/admin") && pathname !== "/entrar" && <ParceriasLado />}
+      <div className={"page page-anim" + (!pathname.startsWith("/admin") && pathname !== "/entrar" ? " com-lado" : "")} key={pathname}>
         {children}
         <Rodape />
       </div>

@@ -6,8 +6,12 @@ import { enderecoOk } from "../lib/katasDb";
 import Img from "./Img";
 
 /** Campo de imagem do painel: escolher da galeria/câmera do celular, ou colar um link. */
-export default function CampoImagem({ name, rotulo, valorInicial = "", ajuda }: { name: string; rotulo: string; valorInicial?: string; ajuda?: string }) {
-  const [valor, setValor] = useState(valorInicial);
+export default function CampoImagem({ name, rotulo, valorInicial = "", ajuda, onMudar }: { name: string; rotulo: string; valorInicial?: string; ajuda?: string; onMudar?: (v: string) => void }) {
+  const [valor, setValorInterno] = useState(valorInicial);
+  const setValor = (v: string) => {
+    setValorInterno(v);
+    onMudar?.(v);
+  };
   const [estado, setEstado] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const arquivo = useRef<HTMLInputElement>(null);

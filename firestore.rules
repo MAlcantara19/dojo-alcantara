@@ -56,6 +56,28 @@ service cloud.firestore {
         allow delete: if ehProprio(uid) || ehAdmin();
       }
 
+      // Campeonatos: o professor da turma (ou o admin) registra; o aluno só vê.
+      match /campeonatos/{id} {
+        allow read: if ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid);
+        allow create, update: if (ehAdmin() || alunoDaMinhaTurma(uid))
+          && texto('nome', 100) && request.resource.data.data is string && request.resource.data.data.size() == 10
+          && request.resource.data.get('lutas', []) is list && request.resource.data.get('lutas', []).size() <= 20
+          && request.resource.data.get('chave', []) is list && request.resource.data.get('chave', []).size() <= 64
+          && request.resource.data.get('midias', []) is list && request.resource.data.get('midias', []).size() <= 30;
+        allow delete: if ehAdmin() || alunoDaMinhaTurma(uid);
+      }
+
+      // Galeria pessoal: o próprio aluno, o professor da turma e o admin colocam e tiram.
+      match /galeria/{id} {
+        allow read, delete: if ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid);
+        allow create: if (ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid))
+          && request.resource.data.keys().hasOnly(['url', 'legenda', 'autor', 'ts'])
+          && request.resource.data.url is string && request.resource.data.url.size() <= 300
+          && request.resource.data.url.matches('^(https://|db:).*')
+          && request.resource.data.legenda is string && request.resource.data.legenda.size() <= 120
+          && request.resource.data.autor is string && request.resource.data.autor.size() <= 100;
+      }
+
       // Anotações de aula: privadas, só o aluno lê e escreve.
       match /notas/{id} {
         allow read, delete: if ehProprio(uid);
@@ -218,7 +240,8 @@ service cloud.firestore {
     // Imagens enviadas pelo painel (já reduzidas no celular): todos veem; a equipe envia.
     match /imagens/{id} {
       allow read: if true;
-      allow create: if ehEquipe()
+      // Qualquer pessoa cadastrada (inclusive aluno, para a galeria dele) pode enviar imagens já reduzidas.
+      allow create: if temPerfil()
         && request.resource.data.keys().hasOnly(['dados', 'ts'])
         && request.resource.data.dados is string
         && request.resource.data.dados.size() <= 800000
@@ -259,8 +282,21 @@ service cloud.firestore {
         && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 160
         && request.resource.data.get('url', '') is string && request.resource.data.get('url', '').size() <= 300
         && (request.resource.data.get('url', '') == '' || request.resource.data.get('url', '').matches('^https://.*'))
-        && request.resource.data.get('logo', '') is string && request.resource.data.get('logo', '').size() <= 300;
+        && request.resource.data.get('logo', '') is string && request.resource.data.get('logo', '').size() <= 300
+        && request.resource.data.get('desconto', '') is string && request.resource.data.get('desconto', '').size() <= 100
+        && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 40;
       allow delete: if ehAdmin();
+    }
+
+    // Atividades: cada pessoa registra o que ela mesma mudou; só o admin lê e apaga.
+    match /atividades/{id} {
+      allow read, delete: if ehAdmin();
+      allow create: if logado()
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'texto', 'ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 100
+        && request.resource.data.texto is string && request.resource.data.texto.size() <= 300
+        && request.resource.data.ts is number;
     }
 
     // Configurações do site (textos da página inicial, banner, logo, efeitos): só o admin edita.

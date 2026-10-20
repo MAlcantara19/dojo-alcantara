@@ -2,7 +2,7 @@
 
 import { signOut, updatePassword } from "firebase/auth";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Aluno } from "../lib/aluno";
 import { addMedida, addNota, apagarSub, atualizarMeuCadastro, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
@@ -12,7 +12,11 @@ import { getAuthInstance } from "../lib/firebase";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
+import { ABAS_PERFIL } from "../lib/abasPerfil";
+import { registrarAtividade } from "../lib/atividades";
+import CampeonatosAluno from "./CampeonatosAluno";
 import CampoSenha from "./CampoSenha";
+import GaleriaAluno from "./GaleriaAluno";
 import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
 import Midia from "./Midia";
@@ -50,7 +54,17 @@ export default function Perfil() {
   return <Conteudo uid={user.uid} />;
 }
 
+const assinarHash = (cb: () => void) => {
+  window.addEventListener("hashchange", cb);
+  return () => window.removeEventListener("hashchange", cb);
+};
+function useAba() {
+  const h = useSyncExternalStore(assinarHash, () => window.location.hash.slice(1), () => "");
+  return ABAS_PERFIL.some(([id]) => id === h) ? h : "resumo";
+}
+
 function Conteudo({ uid }: { uid: string }) {
+  const aba = useAba();
   const { perfilCompleto } = usePerfil(uid);
   const medidas = useCarga(() => lerMedidas(uid), VAZIO_M);
   const notas = useCarga(() => lerNotas(uid), VAZIO_N);
@@ -135,7 +149,15 @@ function Conteudo({ uid }: { uid: string }) {
         </button>
       </div>
 
-      {equipe && (
+      <nav className="tabs tabs-scroll perfil-abas" aria-label="Páginas da minha área">
+        {ABAS_PERFIL.map(([id, rotulo]) => (
+          <a key={id} href={"#" + id} aria-current={aba === id ? "page" : undefined} className={aba === id ? "ativa" : undefined}>
+            {rotulo}
+          </a>
+        ))}
+      </nav>
+
+      {aba === "resumo" && equipe && (
         <div className="aviso-dia" role="note">
           <p>
             Este é o seu perfil pessoal (peso, altura, anotações e cadastro). Para editar o site, vá para a área do professor.
@@ -154,7 +176,7 @@ function Conteudo({ uid }: { uid: string }) {
         </p>
       )}
 
-      {academia && (
+      {aba === "resumo" && academia && (
         <section className="panel">
           <h2>Minha turma{minhaTurma.dados ? `: ${minhaTurma.dados.apelido || minhaTurma.dados.nome}` : ""}</h2>
           {minhaTurma.dados?.descricao && <p>{minhaTurma.dados.descricao}</p>}
@@ -211,6 +233,7 @@ function Conteudo({ uid }: { uid: string }) {
         </section>
       )}
 
+      {aba === "resumo" && (
       <section className="panel">
         <h2>Meu progresso</h2>
         <div className="resumo-grid">
@@ -239,8 +262,10 @@ function Conteudo({ uid }: { uid: string }) {
         </div>
         {p.faixa && idx >= 0 && idx < faixas.length - 1 && <p className="form-help">Próxima faixa: {faixas[idx + 1].nome.toLowerCase()}. Continue treinando e perguntando ao seu professor.</p>}
       </section>
+      )}
 
-      {p.faixa && (
+      {aba === "treinar" && !p.faixa && <p className="empty">Sem faixa cadastrada.</p>}
+      {aba === "treinar" && p.faixa && (
       <section className="panel">
         <h2>Para treinar</h2>
         {paraTreinar.length === 0 ? (
@@ -276,6 +301,7 @@ function Conteudo({ uid }: { uid: string }) {
       </section>
       )}
 
+      {aba === "corpo" && (
       <section className="panel">
         <h2>Peso e altura</h2>
         <form className="form" onSubmit={novaMedida}>
@@ -315,7 +341,9 @@ function Conteudo({ uid }: { uid: string }) {
           </ul>
         )}
       </section>
+      )}
 
+      {aba === "anotacoes" && (
       <section className="panel">
         <h2>Minhas anotações de aula</h2>
         <p className="lead">Só você vê o que escreve aqui.</p>
@@ -347,7 +375,9 @@ function Conteudo({ uid }: { uid: string }) {
           ))}
         </ul>
       </section>
+      )}
 
+      {aba === "simulados" && (
       <section className="panel">
         <h2>Meus simulados</h2>
         <ul className="manage">
@@ -381,9 +411,28 @@ function Conteudo({ uid }: { uid: string }) {
           ))}
         </ul>
       </section>
+      )}
 
-      <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
-      <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} />
+      {aba === "campeonatos" && (
+        <section className="panel">
+          <h2>Meus campeonatos</h2>
+          <p className="lead">O professor registra aqui cada campeonato: categoria, chave, lutas e resultado.</p>
+          <CampeonatosAluno uid={uid} editavel={equipe} />
+        </section>
+      )}
+      {aba === "galeria" && (
+        <section className="panel">
+          <h2>Minha galeria</h2>
+          <p className="lead">Fotos e vídeos seus: treinos, campeonatos, conquistas. Você e o professor podem colocar.</p>
+          <GaleriaAluno uid={uid} autor={p.apelido || p.nome} avisarAdmin={!equipe} />
+        </section>
+      )}
+      {aba === "conta" && (
+        <>
+          <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
+          <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} aluno={!equipe} nome={p.apelido || p.nome} />
+        </>
+      )}
     </>
   );
 }
@@ -406,7 +455,11 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
     setOcupado(true);
     setMsg("Salvando…");
     try {
-      await atualizarMeuCadastro(uid, { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") });
+      const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") };
+      await atualizarMeuCadastro(uid, novo);
+      const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento" };
+      const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
+      if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`);
       setMsg("Cadastro atualizado.");
       onFeito();
     } catch (err) {
@@ -457,7 +510,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
   );
 }
 
-function TrocarSenha({ uid, obrigatoria, onFeito }: { uid: string; obrigatoria?: boolean; onFeito: () => void }) {
+function TrocarSenha({ uid, obrigatoria, onFeito, aluno, nome }: { uid: string; obrigatoria?: boolean; onFeito: () => void; aluno?: boolean; nome?: string }) {
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
 
@@ -475,6 +528,7 @@ function TrocarSenha({ uid, obrigatoria, onFeito }: { uid: string; obrigatoria?:
     try {
       await updatePassword(u, nova);
       await confirmarSenhaTrocada(uid).catch(() => undefined);
+      if (aluno) void registrarAtividade(uid, nome ?? "Aluno", "trocou a senha");
       setMsg("Senha trocada.");
       form.reset();
       onFeito();

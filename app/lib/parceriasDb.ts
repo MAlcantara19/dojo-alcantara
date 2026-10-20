@@ -1,7 +1,8 @@
 import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getDb } from "./firebase";
 
-export type Parceria = { id: string; nome: string; descricao: string; url: string; logo: string; ts: number };
+export const CATEGORIAS_PARCERIA = ["Loja", "Academia", "Escola", "Saúde", "Serviço", "Outro"];
+export type Parceria = { id: string; nome: string; descricao: string; url: string; logo: string; desconto: string; categoria: string; ts: number };
 export type DadosParceria = Omit<Parceria, "id" | "ts">;
 
 export async function lerParcerias(): Promise<Parceria[]> {

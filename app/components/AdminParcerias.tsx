@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { enderecoOk } from "../lib/katasDb";
-import { addParceria, apagarParceria, atualizarParceria, lerParcerias, type Parceria } from "../lib/parceriasDb";
+import { addParceria, apagarParceria, atualizarParceria, CATEGORIAS_PARCERIA, lerParcerias, type Parceria } from "../lib/parceriasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
 
@@ -20,7 +20,7 @@ export default function AdminParcerias() {
     const form = e.currentTarget;
     const f = new FormData(form);
     const g = (k: string) => String(f.get(k) ?? "").trim();
-    const d = { nome: g("nome"), descricao: g("descricao"), url: g("url"), logo: g("logo") };
+    const d = { nome: g("nome"), descricao: g("descricao"), url: g("url"), logo: g("logo"), desconto: g("desconto"), categoria: g("categoria") || "Outro" };
     if (!d.nome) return setMsg("Dê um nome ao parceiro.");
     if ((d.url && !/^https:\/\//.test(d.url)) || (d.logo && !enderecoOk(d.logo))) return setMsg("O site do parceiro precisa começar com https:// e a logo deve ser enviada do celular ou ser um link https://");
     setMsg("Salvando…");
@@ -39,7 +39,7 @@ export default function AdminParcerias() {
   return (
     <section className="panel" id="parcerias-admin">
       <h2>Parcerias</h2>
-      <p className="lead">Os parceiros aparecem em uma seção na página inicial, antes do “Sobre nós”.</p>
+      <p className="lead">Os parceiros aparecem na página “Parcerias e descontos”, na página inicial (antes do “Sobre nós”) e, no computador, numa barra à direita.</p>
       {msg && (
         <p className="form-note" role="status">
           {msg}
@@ -54,6 +54,20 @@ export default function AdminParcerias() {
         <div className="field">
           <label htmlFor="pc-desc">Descrição curta (opcional)</label>
           <input id="pc-desc" name="descricao" type="text" maxLength={160} defaultValue={editando?.descricao ?? ""} autoComplete="off" />
+        </div>
+        <div className="two">
+          <div className="field">
+            <label htmlFor="pc-cat">Tipo</label>
+            <select id="pc-cat" name="categoria" defaultValue={editando?.categoria ?? "Loja"}>
+              {CATEGORIAS_PARCERIA.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="pc-desc2">Desconto ou vantagem (opcional)</label>
+            <input id="pc-desc2" name="desconto" type="text" maxLength={100} placeholder="Ex.: 5% para alunos do dojô" defaultValue={editando?.desconto ?? ""} autoComplete="off" />
+          </div>
         </div>
         <div className="field">
           <label htmlFor="pc-url">Site ou Instagram do parceiro (opcional)</label>
@@ -77,7 +91,7 @@ export default function AdminParcerias() {
           <li key={x.id}>
             <span>
               <strong>{x.nome}</strong>
-              {x.descricao && <small>{x.descricao}</small>}
+              <small>{[x.categoria, x.desconto].filter(Boolean).join(" · ") || x.descricao}</small>
             </span>
             <span className="tlinks">
               <button className="btn btn-ghost" onClick={() => setEditando(x)}>

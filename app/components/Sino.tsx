@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { lerAvisosTurma, type AvisoTurma } from "../lib/alunos";
+import { lerAtividades, type Atividade } from "../lib/atividades";
 import { useAvisos } from "../lib/conteudo";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
@@ -27,6 +28,7 @@ const marcar = () => {
   ouvintes.forEach((f) => f());
 };
 const VAZIO: AvisoTurma[] = [];
+const VAZIO_AT: Atividade[] = [];
 const quando = (a: { ts?: number; data: string }) => a.ts ?? (Date.parse(a.data + "T12:00:00") || 0);
 
 /** Sininho: mostra quantos avisos novos (do site e da turma) saíram desde a última vez que você olhou. */
@@ -35,6 +37,7 @@ export default function Sino() {
   const av = useAvisos();
   const turma = perfil?.academia ?? "";
   const daTurma = useCarga(() => lerAvisosTurma([turma]), VAZIO, Boolean(user && turma && perfil?.papel === "aluno"));
+  const atividades = useCarga(lerAtividades, VAZIO_AT, perfil?.papel === "admin");
   const bruto = useSyncExternalStore(assinar, lerBruto, () => "x");
   const [aberto, setAberto] = useState(false);
 
@@ -47,6 +50,7 @@ export default function Sino() {
   const itens = [
     ...(av.erro ? [] : av.itens.map((a) => ({ id: "s" + a.id, titulo: a.titulo, origem: "Aviso do site", ts: quando(a), href: "/#avisos" }))),
     ...daTurma.dados.map((a) => ({ id: "t" + a.id, titulo: a.titulo, origem: "Aviso da sua turma", ts: quando(a), href: "/perfil" })),
+    ...atividades.dados.map((a) => ({ id: "a" + a.id, titulo: `${a.nome} ${a.texto}`, origem: "Atividade de aluno", ts: a.ts, href: "/admin" })),
   ].sort((x, y) => y.ts - x.ts);
   const novos = itens.filter((i) => i.ts > visto);
 
