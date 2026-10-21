@@ -288,6 +288,18 @@ service cloud.firestore {
       allow delete: if ehAdmin();
     }
 
+    // Materiais de estudo (PDFs, apostilas, vídeos e links): todos leem; a equipe publica.
+    match /materiais/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('titulo', 100) && texto('url', 300)
+        && request.resource.data.url.matches('^https://.*')
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 200
+        && request.resource.data.get('tipo', '') is string && request.resource.data.get('tipo', '').size() <= 20
+        && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 40
+        && request.resource.data.get('faixa', '') is string && request.resource.data.get('faixa', '').size() <= 30;
+      allow delete: if ehEquipe();
+    }
+
     // Atividades: cada pessoa registra o que ela mesma mudou; só o admin lê e apaga.
     match /atividades/{id} {
       allow read, delete: if ehAdmin();

@@ -1,25 +1,14 @@
-ATUALIZAÇÃO 17 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 18 (inclui tudo das anteriores — instale só esta)
 
-1. Pare o servidor (Ctrl+C).
-2. Copie a pasta "app" e o arquivo firestore.rules deste zip para C:\projetos\dojo-alcantara,
-   substituindo tudo. (Não vão neste zip: app\lib\data.ts, palavras.ts e simulados.ts — os da
-   atualização 16 continuam valendo.)
-3. npm run dev  e teste.
-4. IMPORTANTE: Firebase > Firestore > Regras: apague tudo, cole firestore.rules, PUBLICAR.
-   Sem isso não funcionam: campeonatos, galeria do aluno, atividades e desconto das parcerias.
-5. Publicar o site: git add . / git commit -m "atualizacao 17" / git push.
+1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
+2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e clique em PUBLICAR.
+3. npm run build
+4. git add .
+   git commit -m "Menu lateral corrigido e pagina Materiais e PDFs"
+   git push
 
 NOVIDADES
- - Menu lateral: sem "Minha conta" repetida; "Estudo do Judô" e "Minha área" abrem as subcategorias.
- - Sininho: no celular a lista ocupa a largura da tela e não corta mais.
- - Aviso com "Marcar também no calendário": um cadastro só vira aviso e evento.
- - Área do aluno em páginas (abas no topo e no menu): Resumo, Para treinar, Corpo e medidas,
-   Campeonatos, Minha galeria, Anotações, Meus simulados, Cadastro e senha.
- - Campeonatos (Painel > Alunos > Campeonatos): categoria, pesagem, colocação, chave (nomes e foto),
-   lutas com adversário, academia, resultado, como terminou e pontos a favor e contra
-   (Ippon, Waza-ari, Yuko, Shido), fotos e vídeos. O aluno vê na área dele.
- - Galeria do aluno: o aluno e o professor colocam fotos e vídeos no perfil.
- - Atividades (só administrador): o que os alunos mudam (apelido, cadastro, senha, fotos) aparece
-   no Resumo e no sininho.
- - Parcerias e descontos: página própria, tipo (loja, academia, escola...), campo de desconto e,
-   no computador grande, barra à direita.
+ - Menu lateral: as subcategorias de "Estudo do Judô" e "Minha área" ficam uma embaixo da outra.
+ - "Materiais e PDFs" (no lugar de "Apostilas em breve"): página com busca e filtro por faixa,
+   separada por categoria (Apostilas, Regras e arbitragem, Programa de faixas, Katas...).
+   Cadastro em Painel > Conteúdo > Materiais e PDFs (cole o link do PDF no Drive).

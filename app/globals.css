@@ -753,7 +753,8 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
 .drawer-pai summary:hover{background:rgba(255,255,255,.08)}
 .drawer-pai summary svg{transition:transform .2s}
 .drawer-pai[open] summary svg{transform:rotate(180deg)}
-.drawer-pai>a,.drawer-pai>.drawer-soon{margin-left:14px;border-left:2px solid rgba(255,255,255,.15);border-radius:0 12px 12px 0}
+.drawer-sub{display:flex;flex-direction:column;margin-left:14px;padding-left:6px;border-left:2px solid rgba(255,255,255,.15)}
+.drawer-sub>a,.drawer-sub>.drawer-soon{display:flex;align-items:center;white-space:normal;border-radius:12px}
 /* abas da área do aluno */
 .perfil-abas{margin:10px 0 4px}
 .perfil-abas a{flex:none;white-space:nowrap;padding:.55rem 1rem;border-radius:999px;text-decoration:none;color:var(--text);font-weight:600}
@@ -803,3 +804,14 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
   .parceiro.compacto .parceiro-desconto{grid-column:2;font-size:.72rem}
   .page.com-lado{margin-right:270px}
 }
+
+.materiais{display:grid;gap:16px;width:100%}
+.mat-grupo{display:grid;gap:8px}
+.mat-lista{display:grid;gap:10px}
+@media (min-width:760px){.mat-lista{grid-template-columns:repeat(2,1fr)}}
+.mat-card{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:var(--r-md);border:1.5px solid var(--line);background:var(--surface);color:var(--text);text-decoration:none}
+.mat-card:hover{border-color:var(--bright);translate:0 -2px}
+.mat-icone{font-size:1.8rem;line-height:1}
+.mat-texto{display:grid;gap:2px;min-width:0}
+.mat-texto small{color:var(--muted)}
+.mat-meta{display:flex;align-items:center;gap:4px}

@@ -8,6 +8,7 @@ const itens = [
   { href: "/katas", titulo: "Katas", texto: "As formas de cada graduação, com as técnicas de cada série." },
   { href: "/simulados", titulo: "Simulados", texto: "Perguntas para treinar para a prova, com explicação de cada resposta." },
   { href: "/roleta", titulo: "Roleta", texto: "Palavras, técnicas e exercícios para treinar de um jeito divertido." },
+  { href: "/materiais", titulo: "Materiais e PDFs", texto: "Apostilas, regras, programa de faixas, vídeos e links para estudar." },
 ];
 
 export default function EstudoPage() {

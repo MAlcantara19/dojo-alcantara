@@ -33,7 +33,7 @@ const estudo: ItemMenu = {
     { href: "/simulados", rotulo: "Simulados" },
     { href: "/roleta", rotulo: "Roleta" },
     { href: "/katas", rotulo: "Katas" },
-    { href: "", rotulo: "Apostilas" },
+    { href: "/materiais", rotulo: "Materiais e PDFs" },
   ],
 };
 const minhaArea: ItemMenu = { href: "/perfil", rotulo: "Minha área", filhos: ABAS_PERFIL.map(([id, r]) => ({ href: `/perfil#${id}`, rotulo: r })) };
@@ -229,6 +229,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
                 </svg>
               </summary>
+              <div className="drawer-sub">
               {pai.href !== "/perfil" && (
                 <Link href={pai.href} aria-current={pai.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
                   Visão geral
@@ -260,6 +261,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ),
               )}
+              </div>
             </details>
           );
         })}
