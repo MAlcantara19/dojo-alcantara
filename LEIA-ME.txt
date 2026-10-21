@@ -1,17 +1,15 @@
-ATUALIZAÇÃO 19 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 20 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
 2. npm run build
 3. git add .
-   git commit -m "Menu lateral configuravel, fichas por faixa e busca de videos nos katas"
+   git commit -m "Galeria em grade sem titulos e visualizador em tela cheia"
    git push
-(As regras do Firestore não mudaram nesta atualização.)
+(As regras do Firestore não mudaram.)
 
 NOVIDADES
- - Painel > Site > Menu lateral: renomear, reordenar, esconder ou deixar "em breve" cada item,
-   criar seções e itens com link, voltar ao padrão. A página Estudo do Judô, o início, Materiais
-   e Parcerias seguem o que estiver configurado.
- - Fichas por faixa: arquivos na pasta de fichas do Drive com "faixa" + cor no nome
-   (ex.: "Fichas - Faixa Azul.pdf") abrem no detalhe das técnicas daquela faixa e aparecem em
-   Materiais e PDFs.
- - Katas: botão "Buscar vídeo no YouTube" ao lado dos vídeos cadastrados.
+ - Galeria: miniaturas quadradas que ocupam a largura da tela (3 por linha no celular, 4 no tablet,
+   5 no computador), sem os nomes dos arquivos, com "Ver mais fotos".
+ - Visualizador em tela cheia: contador (3 de 40), setas, deslizar o dedo, botão de baixar e fechar.
+ - Vale para a galeria, os álbuns, as fotos dos eventos e as fotos novas do início.
+ - Início: mostra 9 fotos e o botão para a galeria completa.

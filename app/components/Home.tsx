@@ -176,7 +176,7 @@ export default function Home() {
       <section className="block alt" id="galeria">
         <h2>Galeria</h2>
         <p className="lead">Momentos dos treinos e eventos.</p>
-        <GaleriaGrid />
+        <GaleriaGrid porVez={9} />
         <p className="tool-actions">
           <Link href="/galeria" className="btn btn-primary">
             Ver a galeria completa
