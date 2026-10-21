@@ -11,18 +11,18 @@ const VAZIO: Record<string, never> = {};
 function Midia({ k }: { k: KataDoc }) {
   const videos = k.videos.filter((v) => enderecoOk(v.url));
   const imagens = k.imagens.filter((i) => enderecoOk(i.url));
-  if (!videos.length && !imagens.length) return null;
   return (
     <>
-      {videos.length > 0 && (
-        <div className="tlinks vids">
-          {videos.map((v, i) => (
-            <a key={i} href={v.url} target="_blank" rel="noopener noreferrer">
-              {descreverLink(v.url).icone} {v.titulo || `${descreverLink(v.url).rotulo} ${i + 1}`}
-            </a>
-          ))}
-        </div>
-      )}
+      <div className="tlinks vids">
+        {videos.map((v, i) => (
+          <a key={i} href={v.url} target="_blank" rel="noopener noreferrer">
+            {descreverLink(v.url).icone} {v.titulo || `${descreverLink(v.url).rotulo} ${i + 1}`}
+          </a>
+        ))}
+        <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(k.nome + " judô")}`} target="_blank" rel="noopener noreferrer">
+          🔎 Buscar vídeo no YouTube
+        </a>
+      </div>
       {imagens.length > 0 && (
         <div className="kata-imgs">
           {imagens.map((im, i) => (

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
+import { useFichas } from "../lib/fichas";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import Img from "./Img";
 import LinkBtns from "./LinkBtns";
@@ -22,6 +23,7 @@ export default function Tecnicas() {
   const [modo, setModo] = useState<Modo>("grupo");
   const [busca, setBusca] = useState("");
   const { mapa, lista: catalogo } = useTecnicas();
+  const fichasDrive = useFichas();
   const [aberta, setAberta] = useState<Item | null>(null);
 
   const termo = busca.trim().toLowerCase();
@@ -120,6 +122,16 @@ export default function Tecnicas() {
         <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>
           {mapa[aberta.id]?.imagem && <Img className="modal-img" src={mapa[aberta.id].imagem as string} alt={`Imagem da técnica ${aberta.nome}`} largura={1200} eager />}
           <h3 className="modal-titulo">{aberta.nome}</h3>
+          {(() => {
+            const fx = faixaEfetiva(aberta, mapa[aberta.id]).faixa;
+            const ff = fx ? fichasDrive.faixas[fx] : undefined;
+            const url = ff?.pdf ?? ff?.imagem;
+            return url ? (
+              <a className="btn btn-ghost ficha-faixa" href={url} target="_blank" rel="noopener noreferrer">
+                📘 Abrir a ficha completa da faixa {fx?.toLowerCase()}
+              </a>
+            ) : null;
+          })()}
           {ehProibida(aberta, mapa[aberta.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
           <p className="tmeta">
             {aberta.familia ?? "Nage-waza"}

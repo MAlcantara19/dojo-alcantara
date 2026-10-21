@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { corDaFaixa, faixas } from "../lib/faixas";
+import { useFichas } from "../lib/fichas";
 import { idDoDrive } from "../lib/links";
 import { lerMateriais, type Material } from "../lib/materiaisDb";
 import { useCarga } from "../lib/useCarga";
@@ -13,6 +14,8 @@ const abrir = (u: string) => (idDoDrive(u) && !u.includes("/folders/") ? `https:
 
 export default function Materiais() {
   const m = useCarga(lerMateriais, VAZIO);
+  const fichasDrive = useFichas();
+  const daFaixa = faixas.filter((f) => fichasDrive.faixas[f.nome]);
   const [faixa, setFaixa] = useState("");
   const [busca, setBusca] = useState("");
   const termo = busca.trim().toLowerCase();
@@ -21,7 +24,7 @@ export default function Materiais() {
 
   if (m.carregando) return <p className="form-help">Carregando materiais…</p>;
   if (m.erro) return <p className="empty">Não consegui carregar os materiais agora.</p>;
-  if (m.dados.length === 0) return <p className="empty">Os materiais aparecem aqui assim que o professor publicar.</p>;
+  if (m.dados.length === 0 && daFaixa.length === 0) return <p className="empty">Os materiais aparecem aqui assim que o professor publicar.</p>;
 
   return (
     <div className="materiais">
@@ -40,7 +43,32 @@ export default function Materiais() {
           </select>
         </div>
       </div>
-      {lista.length === 0 && <p className="empty">Nenhum material encontrado.</p>}
+      {daFaixa.length > 0 && (
+        <section className="mat-grupo">
+          <h2 className="sub">Fichas por faixa</h2>
+          <div className="mat-lista">
+            {daFaixa
+              .filter((f) => !faixa || f.nome === faixa)
+              .map((f) => {
+                const ff = fichasDrive.faixas[f.nome];
+                return (
+                  <a key={f.nome} className="mat-card" href={ff.pdf ?? ff.imagem} target="_blank" rel="noopener noreferrer">
+                    <span className="mat-icone" aria-hidden="true">
+                      📘
+                    </span>
+                    <span className="mat-texto">
+                      <strong>Ficha da faixa {f.nome.toLowerCase()}</strong>
+                      <small className="mat-meta">
+                        <i className="dot" style={{ background: corDaFaixa(f.nome) }} aria-hidden="true" /> {ff.pdf ? "PDF" : "Imagem"} · do Drive
+                      </small>
+                    </span>
+                  </a>
+                );
+              })}
+          </div>
+        </section>
+      )}
+      {lista.length === 0 && m.dados.length > 0 && <p className="empty">Nenhum material encontrado.</p>}
       {categorias.map((c) => (
         <section key={c} className="mat-grupo">
           <h2 className="sub">{c}</h2>

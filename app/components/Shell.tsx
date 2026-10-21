@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
+import { useMenu } from "../lib/menuConfig";
 import { ehEquipe } from "../lib/auth";
 import { corDaFaixa } from "../lib/faixas";
 import { siglaDe, useSite } from "../lib/siteConfig";
@@ -17,25 +18,6 @@ type Tema = "light" | "dark";
 
 type ItemMenu = { href: string; rotulo: string; filhos?: ItemMenu[] };
 
-const dojo: ItemMenu[] = [
-  { href: "/", rotulo: "Início" },
-  { href: "/#avisos", rotulo: "Avisos" },
-  { href: "/calendario", rotulo: "Calendário" },
-  { href: "/galeria", rotulo: "Galeria" },
-  { href: "/parcerias", rotulo: "Parcerias e descontos" },
-  { href: "/#sobre", rotulo: "Sobre nós" },
-];
-const estudo: ItemMenu = {
-  href: "/estudo",
-  rotulo: "Estudo do Judô",
-  filhos: [
-    { href: "/tecnicas", rotulo: "Técnicas" },
-    { href: "/simulados", rotulo: "Simulados" },
-    { href: "/roleta", rotulo: "Roleta" },
-    { href: "/katas", rotulo: "Katas" },
-    { href: "/materiais", rotulo: "Materiais e PDFs" },
-  ],
-};
 const minhaArea: ItemMenu = { href: "/perfil", rotulo: "Minha área", filhos: ABAS_PERFIL.map(([id, r]) => ({ href: `/perfil#${id}`, rotulo: r })) };
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -43,7 +25,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const { user, perfil } = useAuth();
   const site = useSite();
   const equipe = ehEquipe(perfil);
-  const pais: ItemMenu[] = user ? [estudo, minhaArea] : [estudo];
+  const { menu } = useMenu();
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -210,61 +192,78 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <div className="drawer-group">
-          <p className="drawer-title">Dojô</p>
-          {dojo.map((i) => (
-            <Link key={i.rotulo} href={i.href} aria-current={i.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
-              {i.rotulo}
-            </Link>
-          ))}
-        </div>
-
-        {pais.map((pai) => {
-          const ativo = pathname === pai.href || (pai.filhos ?? []).some((f) => f.href && f.href.split("#")[0] === pathname);
-          return (
-            <details className="drawer-pai" key={pai.rotulo} open={ativo || undefined}>
-              <summary>
-                {pai.rotulo}
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-                </svg>
-              </summary>
-              <div className="drawer-sub">
-              {pai.href !== "/perfil" && (
-                <Link href={pai.href} aria-current={pai.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
-                  Visão geral
+        {menu
+          .filter((sec) => sec.estado !== "oculto")
+          .map((sec) => {
+            const itens = sec.itens.filter((i) => i.estado !== "oculto");
+            const linha = (i: (typeof itens)[number]) =>
+              i.estado === "embreve" ? (
+                <span key={i.id} className="drawer-soon">
+                  {i.rotulo}
+                  <small>em breve</small>
+                </span>
+              ) : /^https?:\/\//.test(i.href) ? (
+                <a key={i.id} href={i.href} target="_blank" rel="noopener noreferrer" onClick={() => setAberto(false)}>
+                  {i.rotulo} ↗
+                </a>
+              ) : (
+                <Link key={i.id} href={i.href} aria-current={i.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
+                  {i.rotulo}
                 </Link>
-              )}
-              {(pai.filhos ?? []).map((f) =>
-                !f.href ? (
-                  <span key={f.rotulo} className="drawer-soon">
-                    {f.rotulo}
-                    <small>em breve</small>
-                  </span>
-                ) : f.href.includes("#") ? (
-                  <a
-                    key={f.rotulo}
-                    href={f.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setAberto(false);
-                      const [rota, hash] = f.href.split("#");
-                      if (pathname === rota) window.location.hash = hash;
-                      else router.push(f.href);
-                    }}
-                  >
-                    {f.rotulo}
-                  </a>
-                ) : (
-                  <Link key={f.rotulo} href={f.href} aria-current={f.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
-                    {f.rotulo}
+              );
+            if (sec.tipo === "lista")
+              return (
+                <div className="drawer-group" key={sec.id}>
+                  <p className="drawer-title">{sec.titulo}</p>
+                  {itens.map(linha)}
+                </div>
+              );
+            const ativo = pathname === sec.href || itens.some((f) => f.href === pathname);
+            return (
+              <details className="drawer-pai" key={sec.id} open={ativo || undefined}>
+                <summary>
+                  {sec.titulo}
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
+                </summary>
+                <div className="drawer-sub">
+                  <Link href={sec.href} aria-current={sec.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
+                    Visão geral
                   </Link>
-                ),
-              )}
-              </div>
-            </details>
-          );
-        })}
+                  {itens.map(linha)}
+                </div>
+              </details>
+            );
+          })}
+
+        {user && (
+          <details className="drawer-pai" open={pathname === "/perfil" || undefined}>
+            <summary>
+              {minhaArea.rotulo}
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+              </svg>
+            </summary>
+            <div className="drawer-sub">
+              {(minhaArea.filhos ?? []).map((f) => (
+                <a
+                  key={f.rotulo}
+                  href={f.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAberto(false);
+                    const [rota, hash] = f.href.split("#");
+                    if (pathname === rota) window.location.hash = hash;
+                    else router.push(f.href);
+                  }}
+                >
+                  {f.rotulo}
+                </a>
+              ))}
+            </div>
+          </details>
+        )}
 
         <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
           {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}

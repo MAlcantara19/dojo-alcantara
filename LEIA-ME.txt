@@ -1,14 +1,17 @@
-ATUALIZAÇÃO 18 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 19 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e clique em PUBLICAR.
-3. npm run build
-4. git add .
-   git commit -m "Menu lateral corrigido e pagina Materiais e PDFs"
+2. npm run build
+3. git add .
+   git commit -m "Menu lateral configuravel, fichas por faixa e busca de videos nos katas"
    git push
+(As regras do Firestore não mudaram nesta atualização.)
 
 NOVIDADES
- - Menu lateral: as subcategorias de "Estudo do Judô" e "Minha área" ficam uma embaixo da outra.
- - "Materiais e PDFs" (no lugar de "Apostilas em breve"): página com busca e filtro por faixa,
-   separada por categoria (Apostilas, Regras e arbitragem, Programa de faixas, Katas...).
-   Cadastro em Painel > Conteúdo > Materiais e PDFs (cole o link do PDF no Drive).
+ - Painel > Site > Menu lateral: renomear, reordenar, esconder ou deixar "em breve" cada item,
+   criar seções e itens com link, voltar ao padrão. A página Estudo do Judô, o início, Materiais
+   e Parcerias seguem o que estiver configurado.
+ - Fichas por faixa: arquivos na pasta de fichas do Drive com "faixa" + cor no nome
+   (ex.: "Fichas - Faixa Azul.pdf") abrem no detalhe das técnicas daquela faixa e aparecem em
+   Materiais e PDFs.
+ - Katas: botão "Buscar vídeo no YouTube" ao lado dos vídeos cadastrados.

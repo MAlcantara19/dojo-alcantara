@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { katas } from "./katas";
+import { faixas as listaFaixas } from "./faixas";
 import { idDoKata } from "./katasDb";
 import { idDaPastaDrive } from "./links";
 import { useSite } from "./siteConfig";
@@ -53,9 +54,20 @@ export function casar(nomeArquivo: string): { id?: string; nome?: string; sugest
 
 export function montarFichas(arquivos: ArquivoFicha[]) {
   const mapa: Record<string, Ficha> = {};
+  const faixas: Record<string, Ficha> = {};
   const semCorrespondencia: { name: string; sugestao?: string }[] = [];
   let ligados = 0;
   [...arquivos].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).forEach((a) => {
+    // Ficha da faixa inteira: o nome do arquivo tem “faixa” + a cor (ex.: “Fichas - Faixa Azul.pdf”).
+    const k = normalizar(a.name);
+    const daFaixa = listaFaixas.find((fx) => k.includes("faixa" + normalizar(fx.nome)));
+    if (daFaixa) {
+      const ff = (faixas[daFaixa.nome] ??= {});
+      if (a.mimeType === "application/pdf") ff.pdf ??= `https://drive.google.com/file/d/${a.id}/view`;
+      else ff.imagem ??= `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
+      ligados += 1;
+      return;
+    }
     const r = casar(a.name);
     if (!r.id) {
       semCorrespondencia.push({ name: a.name, sugestao: r.sugestao });
@@ -66,7 +78,7 @@ export function montarFichas(arquivos: ArquivoFicha[]) {
     else f.imagem ??= `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
     ligados += 1;
   });
-  return { mapa, semCorrespondencia, ligados };
+  return { mapa, faixas, semCorrespondencia, ligados };
 }
 
 /* ---------- Leitura da pasta (com cache de 5 minutos) ---------- */

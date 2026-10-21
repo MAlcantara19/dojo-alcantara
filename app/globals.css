@@ -815,3 +815,12 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
 .mat-texto{display:grid;gap:2px;min-width:0}
 .mat-texto small{color:var(--muted)}
 .mat-meta{display:flex;align-items:center;gap:4px}
+
+.study-card.em-breve{opacity:.6;cursor:default}
+.study-card.em-breve:hover{transform:none}
+.selo-breve{font-size:.7rem;font-weight:700;padding:.1rem .5rem;border-radius:999px;border:1px solid currentColor;vertical-align:middle}
+.em-breve-pagina{font-size:1.1rem}
+.menu-secao{display:grid;gap:10px}
+.menu-item{gap:10px;flex-wrap:wrap}
+.menu-item-campos{display:grid;gap:6px;flex:1 1 220px;min-width:0}
+.menu-item .tlinks select{width:auto;padding:.35rem .5rem}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { estadoDe, useMenu } from "../lib/menuConfig";
 import { lerParcerias, type Parceria } from "../lib/parceriasDb";
 import { useCarga } from "../lib/useCarga";
 import Img from "./Img";
@@ -29,7 +30,8 @@ function Cartao({ x, compacto = false }: { x: Parceria; compacto?: boolean }) {
 /** Seção da página inicial (não aparece enquanto não houver parceiros). */
 export default function Parcerias() {
   const p = useCarga(lerParcerias, VAZIO);
-  if (p.dados.length === 0) return null;
+  const { menu } = useMenu();
+  if (p.dados.length === 0 || estadoDe(menu, "/parcerias") !== "visivel") return null;
   return (
     <section className="block" id="parcerias">
       <h2>Parcerias e descontos</h2>
@@ -75,7 +77,8 @@ export function ParceriasPagina() {
 /** Barra à direita, só em telas largas de computador. */
 export function ParceriasLado() {
   const p = useCarga(lerParcerias, VAZIO);
-  if (p.dados.length === 0) return null;
+  const { menu } = useMenu();
+  if (p.dados.length === 0 || estadoDe(menu, "/parcerias") !== "visivel") return null;
   return (
     <aside className="parc-lado" aria-label="Parcerias e descontos">
       <strong>Parcerias e descontos</strong>

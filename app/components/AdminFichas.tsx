@@ -25,6 +25,11 @@ export default function AdminFichas() {
           >
             Atualizar a lista agora
           </button>
+          {Object.keys(f.faixas).length > 0 && (
+            <p className="form-help">
+              Fichas de faixa reconhecidas: {Object.keys(f.faixas).join(", ")}. Elas abrem no detalhe de cada técnica daquela faixa e aparecem em Materiais e PDFs.
+            </p>
+          )}
           {f.semCorrespondencia.length > 0 && (
             <>
               <h3 className="sub">Arquivos que não foram ligados</h3>

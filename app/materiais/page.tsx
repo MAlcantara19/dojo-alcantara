@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EmBreve } from "../components/EstudoCards";
 import Materiais from "../components/Materiais";
 
 export const metadata: Metadata = { title: "Materiais e PDFs" };
@@ -10,7 +11,9 @@ export default function MateriaisRota() {
       <div className="solo-card">
         <h1>Materiais e PDFs</h1>
         <p className="lead">Apostilas, regras, programa de faixas e outros materiais para estudar.</p>
-        <Materiais />
+        <EmBreve href="/materiais">
+          <Materiais />
+        </EmBreve>
         <Link href="/estudo" className="back">
           Voltar ao Estudo do Judô
         </Link>

@@ -17,6 +17,7 @@ import AdminFichas from "./AdminFichas";
 import AdminGaleria from "./AdminGaleria";
 import AdminKatas from "./AdminKatas";
 import AdminMateriais from "./AdminMateriais";
+import AdminMenu from "./AdminMenu";
 import AdminMural from "./AdminMural";
 import AdminParcerias from "./AdminParcerias";
 import AdminResultados from "./AdminResultados";
@@ -125,6 +126,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
         {aba === "site" && ehAdmin && (
           <>
+            <AdminMenu />
             <AdminSite />
             <AdminParcerias />
           </>

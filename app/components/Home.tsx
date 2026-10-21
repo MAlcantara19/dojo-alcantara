@@ -8,6 +8,7 @@ import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import Img, { useImagemUrl } from "./Img";
 import Midia from "./Midia";
+import EstudoCards from "./EstudoCards";
 import Parcerias from "./Parcerias";
 import { enderecoOk } from "../lib/katasDb";
 import { useAvisos, useEventos } from "../lib/conteudo";
@@ -110,24 +111,7 @@ export default function Home() {
       <section className="block" id="estudo">
         <h2>Estudo do Judô</h2>
         <p className="lead">Ferramentas para treinar em casa e se preparar para a prova.</p>
-        <div className="study">
-          <Link href="/tecnicas" className="study-card">
-            <h3>Técnicas</h3>
-            <p>Todas as técnicas do Kodokan, com PDF e vídeo.</p>
-          </Link>
-          <Link href="/simulados" className="study-card">
-            <h3>Simulados</h3>
-            <p>Perguntas para testar o que você já sabe.</p>
-          </Link>
-          <Link href="/roleta" className="study-card">
-            <h3>Roleta</h3>
-            <p>Gire e diga o que a palavra do judô significa.</p>
-          </Link>
-          <Link href="/katas" className="study-card">
-            <h3>Katas</h3>
-            <p>As formas de cada graduação, série por série.</p>
-          </Link>
-        </div>
+        <EstudoCards limite={4} />
       </section>
 
       <div className="duo alt">
