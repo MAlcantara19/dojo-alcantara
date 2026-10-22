@@ -12,10 +12,13 @@ import { useSyncExternalStore } from "react";
 import { ABAS_ADMIN, type Aba } from "../lib/abasAdmin";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
+import AdminCampeonatos from "./AdminCampeonatos";
+import AdminChamada from "./AdminChamada";
 import AdminEquipe from "./AdminEquipe";
 import AdminEstudoTudo from "./AdminEstudoTudo";
 import AdminGaleria from "./AdminGaleria";
 import AdminMural from "./AdminMural";
+import AdminParcerias from "./AdminParcerias";
 import AdminResultadosTudo from "./AdminResultadosTudo";
 import AdminResumo from "./AdminResumo";
 import AdminSiteTudo from "./AdminSiteTudo";
@@ -110,11 +113,14 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "mural" && <AdminMural turmas={minhasTurmas} autor={nome} ehAdmin={ehAdmin} />}
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} autor={nome} />}
+        {aba === "chamada" && <AdminChamada autor={nome} turmasPermitidas={escopo} />}
+        {aba === "campeonatos" && <AdminCampeonatos autor={nome} ehAdmin={ehAdmin} minhasTurmas={turmas} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
         {aba === "estudo" && <AdminEstudoTudo />}
         {aba === "galeria" && <AdminGaleria />}
         {aba === "resultados" && <AdminResultadosTudo escopo={escopo} res={res} />}
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
+        {aba === "parcerias" && ehAdmin && <AdminParcerias />}
         {aba === "site" && ehAdmin && <AdminSiteTudo />}
       </div>
     </>

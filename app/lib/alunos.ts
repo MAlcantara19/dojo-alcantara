@@ -13,6 +13,7 @@ export type NovaConta = {
   apelidoInterno: string;
   dataNascimento: string;
   faixa: string;
+  dan?: number;
   faixaDesde: string;
   academia: string;
   email: string;
@@ -32,6 +33,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
     dataNascimento: d.dataNascimento || "",
     faixa: d.faixa,
     faixaDesde: d.faixaDesde || hojeISO(),
+    dan: d.faixa === "Preta" ? (d.dan ?? 0) : 0,
     academia: d.academia,
     papel: d.papel,
     email: d.email.trim().toLowerCase(),
@@ -151,7 +153,7 @@ export async function mudarFaixa(uid: string, faixa: string) {
   await updateDoc(doc(getDb(), "users", uid), { faixa, faixaDesde: hojeISO() });
 }
 
-export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string; liberadoAte: string };
+export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string; liberadoAte: string; dan: number };
 export async function atualizarAluno(uid: string, d: DadosAluno) {
   await updateDoc(doc(getDb(), "users", uid), { ...d });
 }

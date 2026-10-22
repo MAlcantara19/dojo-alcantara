@@ -31,7 +31,7 @@ export default function FotosConta({ a, onSalvo, avisarAdmin = false }: { a: Alu
     setMsg("Salvando…");
     try {
       await updateDoc(doc(getDb(), "users", a.uid), { foto, fotoAjuste: aj("fotoAjuste"), banner, bannerAjuste: aj("bannerAjuste") });
-      if (avisarAdmin && (foto !== (a.foto ?? "") || banner !== (a.banner ?? ""))) void registrarAtividade(a.uid, a.apelido || a.nome, "mudou a foto de perfil ou o banner");
+      if (avisarAdmin && (foto !== (a.foto ?? "") || banner !== (a.banner ?? ""))) void registrarAtividade(a.uid, a.apelido || a.nome, "mudou a foto de perfil ou o banner", a.academia ?? "");
       setMsg("Fotos salvas.");
       onSalvo();
     } catch (err) {

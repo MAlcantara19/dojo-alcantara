@@ -4,8 +4,10 @@ import { useState } from "react";
 import { anoCampeonato, dataBR, diasParaAniversario, hojeISO, idade, mesesEntre, parseISO, type Aluno } from "../lib/aluno";
 import { atualizarAluno, lerInternos, lerTurmas, listarAlunos, salvarInterno, type Escopo, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
-import { corDaFaixa, faixas } from "../lib/faixas";
+import { corDaFaixa, DANS, faixaPorExtenso, faixas } from "../lib/faixas";
 import { guardarAniversario } from "../lib/aniversarios";
+import { registrarAtividade } from "../lib/atividades";
+import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import AcoesConta from "./AcoesConta";
 import FormCadastro, { semCel } from "./FormCadastro";
@@ -20,8 +22,9 @@ const VAZIO_A: Aluno[] = [];
 const VAZIO_T: Turma[] = [];
 const VAZIO_I: Record<string, string> = {};
 
-export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { ehAdmin: boolean; escopo: Escopo; autor?: string }) {
-  const alunos = useCarga(() => listarAlunos(escopo), VAZIO_A);
+export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin: boolean; escopo?: Escopo; autor?: string }) {
+  const alunos = useCarga(() => listarAlunos(null), VAZIO_A);
+  const { user } = useAuth();
   const turmas = useCarga(lerTurmas, VAZIO_T);
   const internos = useCarga(lerInternos, VAZIO_I, ehAdmin);
   const [busca, setBusca] = useState("");
@@ -62,7 +65,13 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
     }
     setAviso("Salvando…");
     try {
-      await atualizarAluno(a.uid, { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte") });
+      const novo = { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte"), dan: g("faixa") === "Preta" ? Number(g("dan")) || 0 : 0 };
+      await atualizarAluno(a.uid, novo);
+      if (!ehAdmin && user) {
+        const nomes: Record<string, string> = { nome: "nome", apelido: "apelido", dataNascimento: "nascimento", faixa: "faixa", faixaDesde: "data da faixa", academia: "turma", email: "e-mail", celular: "celular", liberadoAte: "técnicas liberadas", dan: "dan" };
+        const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => String(a[k] ?? (k === "dan" ? 0 : "")) !== String(novo[k]));
+        if (mudou.length) void registrarAtividade(user.uid, autor, `editou ${a.apelido || a.nome}: ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("faixa") ? ` (faixa ${a.faixa} → ${faixa})` : ""}`, novo.academia || a.academia || "");
+      }
       await guardarAniversario(a.uid, g("nome"), g("apelido"), g("nasc")).catch(() => undefined);
       if (ehAdmin && g("interno") !== (internos.dados[a.uid] ?? "")) await salvarInterno(a.uid, g("interno"));
       setAviso(`Dados de ${g("apelido") || g("nome")} salvos.${nota}`);
@@ -90,7 +99,7 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
       />
       {sec === "lista" && !ehAdmin && (
         <p className="form-help">
-          {escopo && escopo.length > 0 ? `Você vê os alunos das turmas: ${escopo.map((t) => turmaDe(t)?.apelido || t).join(", ")}.` : "Você ainda não foi vinculado a nenhuma turma. Peça ao administrador."} Só o administrador cadastra e edita os dados dos alunos.
+           Você pode editar qualquer aluno; o que você mudar fica registrado para o administrador.
         </p>
       )}
 
@@ -118,10 +127,8 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
             <label htmlFor="al-filtro">Turma</label>
             <select id="al-filtro" value={filtro} onChange={(e) => setFiltro(e.target.value)}>
               <option value="">Todas</option>
-              {ehAdmin && <option value="__sem">Sem turma designada ({semTurma})</option>}
-              {turmas.dados
-                .filter((t) => escopo === null || escopo.includes(t.nome))
-                .map((t) => (
+              <option value="__sem">Sem turma designada ({semTurma})</option>
+              {turmas.dados.map((t) => (
                   <option key={t.id} value={t.nome}>
                     {t.apelido || t.nome}
                   </option>
@@ -187,6 +194,17 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                     </div>
                   </div>
                   <div className="field">
+                          <label>Grau da faixa preta (dan)</label>
+                          <select name="dan" defaultValue={String(a.dan ?? 0)}>
+                            <option value="0">Não se aplica</option>
+                            {DANS.map((d) => (
+                              <option key={d.n} value={d.n}>
+                                {d.n}º Dan · {d.jp}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                  <div className="field">
                     <label>Técnicas liberadas até a faixa</label>
                     <select name="liberadoAte" defaultValue={a.liberadoAte ?? ""}>
                       <option value="">Automático: até a próxima faixa dele</option>
@@ -224,11 +242,11 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
               ) : (
                 <>
                   <span className="aluno-linha">
-                    <Avatar url={a.foto} ajuste={a.fotoAjuste} nome={a.apelido || a.nome} faixa={a.faixa} tamanho={44} />
+                    <Avatar url={a.foto} ajuste={a.fotoAjuste} nome={a.apelido || a.nome} faixa={a.faixa} dan={a.dan} tamanho={44} />
                     <span>
                     <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
                     <small>
-                      <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> Faixa {a.faixa.toLowerCase()}
+                      <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> Faixa {faixaPorExtenso(a.faixa, a.dan).toLowerCase()}
                       {a.faixaDesde ? ` desde ${dataBR(a.faixaDesde)}` : ""} · {turmaDe(a.academia)?.apelido || a.academia || "Sem turma designada"}
                     </small>
                     {a.dataNascimento && (
@@ -244,11 +262,10 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                     <button className="btn btn-ghost" onClick={() => setMedidas(medidas === a.uid ? null : a.uid)}>
                       {medidas === a.uid ? "Fechar medidas" : "Peso e altura"}
                     </button>
-                    {ehAdmin ? (
-                      <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
-                        Editar
-                      </button>
-                    ) : (
+                    <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
+                      Editar
+                    </button>
+                    {!ehAdmin && (
                       <button className="btn btn-ghost" onClick={() => setSenhaDe(senhaDe === a.uid ? null : a.uid)}>
                         Senha
                       </button>
@@ -262,8 +279,8 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                       Galeria
                     </button>
                   </span>
-                  {medidas === a.uid && <MedidasAluno uid={a.uid} />}
-                  {painel?.uid === a.uid && painel.tipo === "camp" && <CampeonatosAluno uid={a.uid} editavel nome={a.apelido || a.nome} />}
+                  {medidas === a.uid && <MedidasAluno uid={a.uid} nomeAluno={a.apelido || a.nome} turma={a.academia ?? ""} />}
+                  {painel?.uid === a.uid && painel.tipo === "camp" && <CampeonatosAluno uid={a.uid} editavel nome={a.apelido || a.nome} turma={a.academia ?? ""} />}
                   {painel?.uid === a.uid && painel.tipo === "gal" && <GaleriaAluno uid={a.uid} autor={autor} avisarAdmin={false} />}
                   {!ehAdmin && senhaDe === a.uid && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} completo={false} onApagada={alunos.recarregar} />}
                 </>

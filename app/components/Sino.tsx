@@ -37,7 +37,7 @@ export default function Sino() {
   const av = useAvisos();
   const turma = perfil?.academia ?? "";
   const daTurma = useCarga(() => lerAvisosTurma([turma]), VAZIO, Boolean(user && turma && perfil?.papel === "aluno"));
-  const atividades = useCarga(lerAtividades, VAZIO_AT, perfil?.papel === "admin");
+  const atividades = useCarga(() => lerAtividades(perfil?.papel === "admin" ? null : (perfil?.turmas ?? [])), VAZIO_AT, perfil?.papel === "admin" || perfil?.papel === "professor");
   const bruto = useSyncExternalStore(assinar, lerBruto, () => "x");
   const [aberto, setAberto] = useState(false);
 
@@ -50,7 +50,7 @@ export default function Sino() {
   const itens = [
     ...(av.erro ? [] : av.itens.map((a) => ({ id: "s" + a.id, titulo: a.titulo, origem: "Aviso do site", ts: quando(a), href: "/#avisos" }))),
     ...daTurma.dados.map((a) => ({ id: "t" + a.id, titulo: a.titulo, origem: "Aviso da sua turma", ts: quando(a), href: "/perfil" })),
-    ...atividades.dados.map((a) => ({ id: "a" + a.id, titulo: `${a.nome} ${a.texto}`, origem: "Atividade de aluno", ts: a.ts, href: "/admin" })),
+    ...atividades.dados.map((a) => ({ id: "a" + a.id, titulo: `${a.nome} ${a.texto}`, origem: a.turma ? `Atividade · ${a.turma}` : "Atividade", ts: a.ts, href: "/admin" })),
   ].sort((x, y) => y.ts - x.ts);
   const novos = itens.filter((i) => i.ts > visto);
 

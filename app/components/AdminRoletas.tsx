@@ -36,7 +36,7 @@ export default function AdminRoletas() {
 
   return (
     <section className="panel" id="roletas">
-      <h2>Mais roletas</h2>
+      <h2>Criar nova roleta</h2>
       <p className="lead">Crie roletas com o conteúdo que quiser: comandos do árbitro, katas, golpes da semana, perguntas para a turma.</p>
       {msg && (
         <p className="form-note" role="status">

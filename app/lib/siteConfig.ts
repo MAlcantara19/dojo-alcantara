@@ -4,13 +4,17 @@ import { dojo, sobre } from "./data";
 import { getDb } from "./firebase";
 import { useCarga } from "./useCarga";
 
-export type Transicao = "nenhuma" | "suave" | "subir" | "zoom" | "deslizar";
+export type Transicao = "nenhuma" | "suave" | "subir" | "zoom" | "deslizar" | "girar" | "desfocar" | "cortina" | "quique";
 export const TRANSICOES: { valor: Transicao; rotulo: string }[] = [
   { valor: "nenhuma", rotulo: "Nenhum" },
   { valor: "suave", rotulo: "Surgir suave" },
   { valor: "subir", rotulo: "Subir" },
   { valor: "zoom", rotulo: "Zoom" },
   { valor: "deslizar", rotulo: "Deslizar da direita" },
+  { valor: "girar", rotulo: "Girar em 3D" },
+  { valor: "desfocar", rotulo: "Sair do desfoque" },
+  { valor: "cortina", rotulo: "Abrir em círculo" },
+  { valor: "quique", rotulo: "Subir com quique" },
 ];
 export type Efeitos = { movimento: boolean; kanji: boolean; brilho: boolean; intro: boolean; ondinha: boolean; tilt: boolean; rolagem: boolean; transicao: Transicao };
 export type SiteConfig = {

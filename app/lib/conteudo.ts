@@ -8,7 +8,7 @@ import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
 
 export type AvisoDoc = Aviso & { id: string };
-export type EventoDoc = Evento & { id: string };
+export type EventoDoc = Evento & { id: string; interno?: boolean };
 
 async function ler<T>(nome: string, campo: string, dir: "asc" | "desc"): Promise<(T & { id: string })[]> {
   const snap = await getDocs(query(collection(getDb(), nome), orderBy(campo, dir)));
@@ -21,16 +21,21 @@ export const lerEventos = () => ler<Evento>("eventos", "data", "asc");
 export async function criarAviso(a: Aviso) {
   await addDoc(collection(getDb(), "avisos"), { ...a, ts: Date.now(), criadoEm: serverTimestamp() });
 }
-export async function criarEvento(e: Evento) {
-  await addDoc(collection(getDb(), "eventos"), { ...e, criadoEm: serverTimestamp() });
+/** interno = só no calendário dos alunos (quem está cadastrado). */
+export async function criarEvento(e: Evento, interno = false) {
+  await addDoc(collection(getDb(), interno ? "eventosInternos" : "eventos"), { ...e, criadoEm: serverTimestamp() });
 }
 export async function atualizarAviso(id: string, a: Aviso) {
   await updateDoc(doc(getDb(), "avisos", id), { ...a });
 }
-export async function atualizarEvento(id: string, e: Evento) {
-  await updateDoc(doc(getDb(), "eventos", id), { ...e });
+export async function atualizarEvento(id: string, e: Evento, interno = false) {
+  await updateDoc(doc(getDb(), interno ? "eventosInternos" : "eventos", id), { ...e });
 }
-export async function apagar(nome: "avisos" | "eventos", id: string) {
+export async function lerEventosInternos(): Promise<EventoDoc[]> {
+  const snap = await getDocs(collection(getDb(), "eventosInternos"));
+  return snap.docs.map((d) => ({ id: d.id, interno: true, ...(d.data() as Evento) })).sort((a, b) => a.data.localeCompare(b.data));
+}
+export async function apagar(nome: "avisos" | "eventos" | "eventosInternos", id: string) {
   await deleteDoc(doc(getDb(), nome, id));
 }
 

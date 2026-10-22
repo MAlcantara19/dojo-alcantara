@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { dataBR, hojeISO } from "../lib/aluno";
 import { mensagemErro } from "../lib/auth";
-import { addFeriadoLocal, apagarFeriadoLocal, lerFeriadosLocais, type FeriadoLocal } from "../lib/calendarioDb";
+import { addFeriadoLocal, apagarFeriadoLocal, lerFeriadosLocais, salvarFeriadoLocal, type FeriadoLocal } from "../lib/calendarioDb";
 import { useCarga } from "../lib/useCarga";
 
 const VAZIO: FeriadoLocal[] = [];
@@ -12,6 +12,7 @@ const VAZIO: FeriadoLocal[] = [];
 export default function AdminFeriados() {
   const f = useCarga(lerFeriadosLocais, VAZIO);
   const [msg, setMsg] = useState("");
+  const [editando, setEditando] = useState<string | null>(null);
 
   async function nova(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,17 +50,49 @@ export default function AdminFeriados() {
       </form>
       <ul className="manage">
         {f.dados.length === 0 && <li className="empty">Nenhum feriado local cadastrado.</li>}
-        {f.dados.map((x) => (
-          <li key={x.id}>
-            <span>
-              <strong>{x.nome}</strong>
-              <small>{dataBR(x.data)}</small>
-            </span>
-            <button className="btn btn-ghost" onClick={() => window.confirm(`Apagar “${x.nome}”?`) && void apagarFeriadoLocal(x.id).then(f.recarregar)}>
-              Apagar
-            </button>
-          </li>
-        ))}
+        {f.dados.map((x) =>
+          editando === x.id ? (
+            <li key={x.id} className="coluna">
+              <form
+                className="form inline"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const d = new FormData(e.currentTarget);
+                  const data = String(d.get("data") ?? "");
+                  const nome = String(d.get("nome") ?? "").trim();
+                  if (!data || !nome) return setMsg("Preencha a data e o nome do feriado.");
+                  void salvarFeriadoLocal(x.id, data, nome)
+                    .then(() => (setMsg("Feriado atualizado."), setEditando(null), f.recarregar()))
+                    .catch((err) => setMsg(mensagemErro(err)));
+                }}
+              >
+                <input name="data" type="date" defaultValue={x.data} aria-label="Data do feriado" />
+                <input name="nome" type="text" maxLength={60} defaultValue={x.nome} aria-label="Nome do feriado" />
+                <button className="btn btn-primary" type="submit">
+                  Salvar
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setEditando(null)}>
+                  Cancelar
+                </button>
+              </form>
+            </li>
+          ) : (
+            <li key={x.id}>
+              <span>
+                <strong>{x.nome}</strong>
+                <small>{dataBR(x.data)}</small>
+              </span>
+              <span className="tlinks">
+                <button className="btn btn-ghost" onClick={() => setEditando(x.id)}>
+                  Editar
+                </button>
+                <button className="btn btn-ghost" onClick={() => window.confirm(`Apagar “${x.nome}”?`) && void apagarFeriadoLocal(x.id).then(f.recarregar)}>
+                  Apagar
+                </button>
+              </span>
+            </li>
+          ),
+        )}
       </ul>
     </section>
   );

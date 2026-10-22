@@ -13,6 +13,7 @@ import { ParceriasLado } from "./Parcerias";
 import Avatar from "./Avatar";
 import Rodape from "./Rodape";
 import Sino from "./Sino";
+import Toasts from "./Toasts";
 import { useAuth } from "../lib/useAuth";
 
 type Tema = "light" | "dark";
@@ -122,6 +123,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Abertura />
+      <Toasts />
       <a className="skip" href="#conteudo">
         Ir para o conteúdo
       </a>
@@ -145,12 +147,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {user ? (
             <>
               <Link className="conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email ?? ""}`.trim()}>
-                <Avatar url={perfil?.foto} ajuste={perfil?.fotoAjuste} nome={perfil?.apelido || perfil?.nome || "?"} faixa={perfil?.faixa} tamanho={38} />
+                <Avatar url={perfil?.foto} ajuste={perfil?.fotoAjuste} nome={perfil?.apelido || perfil?.nome || "?"} faixa={perfil?.faixa} dan={perfil?.dan} tamanho={38} />
                 <span className="conta-textos">
                   <strong>{(perfil?.nome ?? "Minha conta").split(" ")[0]}</strong>
                   <small>
                     {perfil?.papel === "admin" ? "Administrador" : perfil?.papel === "professor" ? "Professor" : "Aluno"}
-                    {perfil?.faixa ? ` · faixa ${perfil.faixa.toLowerCase()}` : ""}
+                    {perfil?.faixa ? ` · ${perfil.faixa === "Preta" && perfil.dan ? `${perfil.dan}º Dan` : `faixa ${perfil.faixa.toLowerCase()}`}` : ""}
                   </small>
                 </span>
               </Link>

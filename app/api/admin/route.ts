@@ -42,17 +42,52 @@ export async function POST(req: Request) {
   const ehAdmin = papel === "admin";
   if (!ehAdmin && papel !== "professor") return resposta(403, "Só a equipe pode fazer isso.");
 
-  const corpo = (await req.json().catch(() => ({}))) as { acao?: string; uid?: string; senha?: string; email?: string };
+  const corpo = (await req.json().catch(() => ({}))) as { acao?: string; uid?: string; senha?: string; email?: string; dados?: string };
+
+  // Ligar um login que já existe (por exemplo, apagado só do banco) a um cadastro novo no site.
+  if (corpo.acao === "vincular") {
+    if (!ehAdmin) return resposta(403, "Só o administrador pode fazer isso.");
+    const login = String(corpo.email ?? "").trim().toLowerCase();
+    let usuario;
+    try {
+      usuario = await getAuth(app).getUserByEmail(login);
+    } catch {
+      return resposta(404, "Não achei esse login no Firebase. Tente cadastrar normalmente.");
+    }
+    const ref = db.doc(`users/${usuario.uid}`);
+    if ((await ref.get()).exists) return resposta(409, "Essa conta já tem cadastro no site. Procure em Alunos ou em Equipe.");
+    const d = JSON.parse(String(corpo.dados ?? "{}")) as Record<string, unknown>;
+    const papel = ["aluno", "professor", "admin"].includes(String(d.papel)) ? String(d.papel) : "aluno";
+    const texto = (k: string, max: number) => String(d[k] ?? "").slice(0, max);
+    await ref.set({
+      nome: texto("nome", 100) || "Sem nome",
+      apelido: texto("apelido", 40),
+      dataNascimento: texto("dataNascimento", 10),
+      faixa: texto("faixa", 30) || "Branca",
+      faixaDesde: texto("faixaDesde", 10),
+      dan: typeof d.dan === "number" ? d.dan : 0,
+      academia: papel === "aluno" ? texto("academia", 60) : "",
+      email: texto("email", 120),
+      celular: texto("celular", 20),
+      papel,
+      turmas: papel === "professor" && Array.isArray(d.turmas) ? (d.turmas as unknown[]).map(String).slice(0, 30) : [],
+      login,
+      precisaTrocarSenha: true,
+    });
+    const senha = String(corpo.senha ?? "");
+    if (senha.length >= 6) await getAuth(app).updateUser(usuario.uid, { password: senha });
+    return resposta(200, "Conta ligada. A pessoa entra com esse login e a senha provisória.");
+  }
+
   const uid = String(corpo.uid ?? "");
   if (!uid) return resposta(400, "Faltou dizer de qual conta.");
 
   try {
     if (corpo.acao === "senha") {
-      // O professor só troca a senha de alunos das turmas dele.
+      // O professor troca a senha de qualquer aluno (nunca de professor ou administrador).
       if (!ehAdmin) {
         const alvo = await db.doc(`users/${uid}`).get();
-        const turmas = (eu.data()?.turmas ?? []) as string[];
-        if (!alvo.exists || alvo.data()?.papel !== "aluno" || !turmas.includes(String(alvo.data()?.academia ?? ""))) return resposta(403, "Você só pode trocar a senha de alunos das suas turmas.");
+        if (!alvo.exists || alvo.data()?.papel !== "aluno") return resposta(403, "Você só pode trocar a senha de alunos.");
       }
       const senha = String(corpo.senha ?? "");
       if (senha.length < 6) return resposta(400, "A senha precisa ter pelo menos 6 caracteres.");

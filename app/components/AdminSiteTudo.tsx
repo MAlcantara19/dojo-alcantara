@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import AdminMenu from "./AdminMenu";
-import AdminParcerias from "./AdminParcerias";
 import AdminSite from "./AdminSite";
 import MenuSuspenso from "./MenuSuspenso";
 
-type Secao = "aparencia" | "menu" | "parcerias";
+type Secao = "aparencia" | "menu";
 
 export default function AdminSiteTudo() {
   const [s, setS] = useState<Secao>("aparencia");
@@ -20,12 +19,10 @@ export default function AdminSiteTudo() {
         opcoes={[
           ["aparencia", "Aparência, contatos, fotos e Drive"],
           ["menu", "Menu lateral"],
-          ["parcerias", "Parcerias e descontos"],
         ]}
       />
       {s === "aparencia" && <AdminSite />}
       {s === "menu" && <AdminMenu />}
-      {s === "parcerias" && <AdminParcerias />}
     </>
   );
 }

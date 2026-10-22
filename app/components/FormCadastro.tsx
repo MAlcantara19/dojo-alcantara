@@ -4,8 +4,9 @@ import { useState } from "react";
 import { hojeISO, senhaProvisoria } from "../lib/aluno";
 import { addMedida, criarConta, type Turma } from "../lib/alunos";
 import { guardarAniversario } from "../lib/aniversarios";
-import { mensagemErro } from "../lib/auth";
-import { faixas } from "../lib/faixas";
+import { chamarAdmin } from "../lib/adminApi";
+import { mensagemErro, paraEmail } from "../lib/auth";
+import { DANS, faixas } from "../lib/faixas";
 
 type Entregue = { nome: string; login: string; senha: string };
 export const semCel = (l?: string) => (l?.endsWith("@celular.dojoalcantara.app") ? l.split("@")[0] + " (celular)" : l);
@@ -16,6 +17,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [entregue, setEntregue] = useState<Entregue | null>(null);
+  const [jaExiste, setJaExiste] = useState<{ login: string; dados: Record<string, unknown>; senha: string } | null>(null);
   const ehAluno = tipo === "aluno";
 
   async function criar(e: React.FormEvent<HTMLFormElement>) {
@@ -30,6 +32,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       dataNascimento: g("nasc"),
       faixa: g("faixa"),
       faixaDesde: g("desde"),
+      dan: Number(g("dan")) || 0,
       academia: ehAluno ? g("academia") : "",
       email: g("email"),
       celular: g("celular"),
@@ -67,7 +70,11 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       onCriado();
     } catch (err) {
       const code = typeof err === "object" && err && "code" in err ? String((err as { code: unknown }).code) : "";
-      setMsg(code === "auth/email-already-in-use" ? "Já existe uma conta com esse e-mail ou celular." : code === "auth/weak-password" ? "Senha fraca: use pelo menos 6 caracteres." : mensagemErro(err));
+      if (code === "auth/email-already-in-use") {
+        const login = paraEmail(dados.email || dados.celular);
+        setJaExiste({ login, dados, senha: pw });
+        setMsg("Esse e-mail (ou celular) já tem login no Firebase, mesmo que tenha sido apagado do banco. Use o botão “Ligar essa conta” logo abaixo.");
+      } else setMsg(code === "auth/weak-password" ? "Senha fraca: use pelo menos 6 caracteres." : mensagemErro(err));
     }
     setOcupado(false);
   }
@@ -92,6 +99,34 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
           <button className="btn btn-ghost" onClick={() => setEntregue(null)}>
             Já anotei
           </button>
+        </div>
+      )}
+      {jaExiste && (
+        <div className="entrega" role="status">
+          <strong>O login {semCel(jaExiste.login)} já existe</strong>
+          <p className="form-help">Isso acontece quando a conta foi apagada só do banco de dados. Dá para aproveitar esse login: o site cria o cadastro com os dados deste formulário e coloca a senha provisória.</p>
+          <div className="tool-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setMsg("Ligando a conta…");
+                void chamarAdmin("vincular", { email: jaExiste.login, senha: jaExiste.senha, dados: JSON.stringify(jaExiste.dados) }).then((r) => {
+                  setMsg(r.mensagem);
+                  if (r.ok) {
+                    setEntregue({ nome: String(jaExiste.dados.nome), login: jaExiste.login, senha: jaExiste.senha });
+                    setJaExiste(null);
+                    onCriado();
+                  }
+                });
+              }}
+            >
+              Ligar essa conta
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => setJaExiste(null)}>
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
       <form className="form" onSubmit={criar}>
@@ -138,6 +173,17 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
               <label htmlFor={`c-desde-${tipo}`}>Está nessa faixa desde</label>
               <input id={`c-desde-${tipo}`} name="desde" type="date" max={hojeISO()} />
             </div>
+          </div>
+          <div className="field">
+            <label>Grau da faixa preta (dan)</label>
+            <select name="dan" defaultValue={String(0)}>
+              <option value="0">Não se aplica</option>
+              {DANS.map((d) => (
+                <option key={d.n} value={d.n}>
+                  {d.n}º Dan · {d.jp}
+                </option>
+              ))}
+            </select>
           </div>
           <p className="form-help">Se deixar a data em branco, vale hoje. Se a pessoa já era dessa faixa, coloque quando começou.</p>
           {ehAluno && (

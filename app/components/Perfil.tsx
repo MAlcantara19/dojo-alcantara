@@ -7,7 +7,7 @@ import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Al
 import { addMedida, addNota, apagarSub, atualizarMeuCadastro, atualizarNomeConta, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useTecnicas } from "../lib/conteudo";
-import { faixas } from "../lib/faixas";
+import { faixaPorExtenso, faixas } from "../lib/faixas";
 import { getAuthInstance } from "../lib/firebase";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
@@ -15,6 +15,7 @@ import { useCarga } from "../lib/useCarga";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { guardarAniversario } from "../lib/aniversarios";
+import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { registrarAtividade } from "../lib/atividades";
 import CampeonatosAluno from "./CampeonatosAluno";
 import { estiloFoto } from "../lib/fotoAjuste";
@@ -30,6 +31,7 @@ import Midia from "./Midia";
 import LoginForm from "./LoginForm";
 
 const VAZIO_AV: AvisoTurma[] = [];
+const VAZIO_CH: Chamada[] = [];
 const VAZIO_M: Medida[] = [];
 const VAZIO_N: Nota[] = [];
 const VAZIO_R: Resultado[] = [];
@@ -78,6 +80,7 @@ function Conteudo({ uid }: { uid: string }) {
   const resultados = useCarga(() => lerResultados(uid), VAZIO_R);
   const { mapa, lista: catalogo } = useTecnicas();
   const acesso = useAcessoTecnicas();
+  const presencas = useCarga(() => minhasPresencas(uid), VAZIO_CH);
   const academia = perfilCompleto.dados?.academia ?? "";
   const minhaTurma = useCarga<Turma | null>(() => lerMinhaTurma(academia), null, Boolean(academia));
   const avisosTurma = useCarga(() => lerAvisosTurma([academia]), VAZIO_AV, Boolean(academia));
@@ -142,7 +145,7 @@ function Conteudo({ uid }: { uid: string }) {
     <>
       <div className="perfil-banner">{p.banner && <Img src={p.banner} alt="" largura={1400} style={estiloFoto(p.bannerAjuste)} />}</div>
       <div className="perfil-head">
-        <Avatar url={p.foto} ajuste={p.fotoAjuste} nome={p.apelido || p.nome} faixa={p.faixa} tamanho={88} />
+        <Avatar url={p.foto} ajuste={p.fotoAjuste} nome={p.apelido || p.nome} faixa={p.faixa} dan={p.dan} tamanho={88} />
         <div>
           <h2>{p.apelido || p.nome}</h2>
           <p className="tmeta">
@@ -150,7 +153,7 @@ function Conteudo({ uid }: { uid: string }) {
             {p.academia ? ` · ${p.academia}` : ""}
           </p>
           <p className="tmeta">
-            {p.faixa ? `Faixa ${p.faixa.toLowerCase()}` : ""}{p.dataNascimento ? ` · ${idade(p.dataNascimento, hoje)} anos · idade de campeonato em ${hoje.getFullYear()}: ${anoCampeonato(p.dataNascimento, hoje)}` : ""}
+            {p.faixa ? `Faixa ${faixaPorExtenso(p.faixa, p.dan).toLowerCase()}` : ""}{p.dataNascimento ? ` · ${idade(p.dataNascimento, hoje)} anos · idade de campeonato em ${hoje.getFullYear()}: ${anoCampeonato(p.dataNascimento, hoje)}` : ""}
           </p>
         </div>
         <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
@@ -245,6 +248,10 @@ function Conteudo({ uid }: { uid: string }) {
       {aba === "resumo" && (
       <section className="panel">
         <h2>Meu progresso</h2>
+        <p className="presencas">
+          ✅ <b>{presencas.dados.length}</b> {presencas.dados.length === 1 ? "aula com presença registrada" : "aulas com presença registrada"}
+          {presencas.dados[0] ? ` · última em ${dataBR(presencas.dados[0].data)}` : ""}
+        </p>
         <div className="resumo-grid">
           {p.faixa && (
             <div className="resumo-card">
@@ -427,7 +434,7 @@ function Conteudo({ uid }: { uid: string }) {
         <section className="panel">
           <h2>Minha galeria</h2>
           <p className="lead">Fotos e vídeos seus: treinos, campeonatos, conquistas. Você e o professor podem colocar.</p>
-          <GaleriaAluno uid={uid} autor={p.apelido || p.nome} avisarAdmin={!equipe} />
+          <GaleriaAluno uid={uid} autor={p.apelido || p.nome} avisarAdmin={!equipe} turma={p.academia} />
         </section>
       )}
       {aba === "conta" && (
@@ -437,7 +444,7 @@ function Conteudo({ uid }: { uid: string }) {
             <FotosConta a={p} onSalvo={perfilCompleto.recarregar} avisarAdmin={!equipe} />
           </section>
           <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
-          <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} aluno={!equipe} nome={p.apelido || p.nome} />
+          <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} aluno={!equipe} nome={p.apelido || p.nome} turma={p.academia} />
         </>
       )}
     </>
@@ -468,7 +475,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
       await guardarAniversario(uid, p.nome, novo.apelido, novo.dataNascimento).catch(() => undefined);
       const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento" };
       const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
-      if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`);
+      if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`, p.academia ?? "");
       setMsg("Cadastro atualizado.");
       onFeito();
     } catch (err) {
@@ -519,7 +526,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
   );
 }
 
-function TrocarSenha({ uid, obrigatoria, onFeito, aluno, nome }: { uid: string; obrigatoria?: boolean; onFeito: () => void; aluno?: boolean; nome?: string }) {
+function TrocarSenha({ uid, obrigatoria, onFeito, aluno, nome, turma }: { uid: string; obrigatoria?: boolean; onFeito: () => void; aluno?: boolean; nome?: string; turma?: string }) {
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
 
@@ -537,7 +544,7 @@ function TrocarSenha({ uid, obrigatoria, onFeito, aluno, nome }: { uid: string; 
     try {
       await updatePassword(u, nova);
       await confirmarSenhaTrocada(uid).catch(() => undefined);
-      if (aluno) void registrarAtividade(uid, nome ?? "Aluno", "trocou a senha");
+      if (aluno) void registrarAtividade(uid, nome ?? "Aluno", "trocou a senha", turma ?? "");
       setMsg("Senha trocada.");
       form.reset();
       onFeito();

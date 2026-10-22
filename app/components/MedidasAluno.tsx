@@ -4,6 +4,8 @@ import { useState } from "react";
 import { dataBR, hojeISO } from "../lib/aluno";
 import { addMedida, lerMedidas, type Medida } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
+import { registrarAtividade } from "../lib/atividades";
+import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import LineChart from "./LineChart";
 
@@ -16,8 +18,9 @@ const num = (v: FormDataEntryValue | null): number | null => {
 };
 
 /** Gráficos de peso e altura de um aluno, com registro de nova medida pela equipe. */
-export default function MedidasAluno({ uid }: { uid: string }) {
+export default function MedidasAluno({ uid, nomeAluno = "", turma = "" }: { uid: string; nomeAluno?: string; turma?: string }) {
   const m = useCarga(() => lerMedidas(uid), VAZIO);
+  const { user, perfil } = useAuth();
   const [msg, setMsg] = useState("");
 
   async function registrar(e: React.FormEvent<HTMLFormElement>) {
@@ -32,6 +35,7 @@ export default function MedidasAluno({ uid }: { uid: string }) {
     setMsg("Salvando…");
     try {
       await addMedida(uid, { data, peso, altura });
+      if (user && perfil?.papel === "professor") void registrarAtividade(user.uid, perfil.apelido || perfil.nome || "Professor", `registrou ${[peso !== null ? `peso ${peso} kg` : "", altura !== null ? `altura ${altura} cm` : ""].filter(Boolean).join(" e ")} de ${nomeAluno}`, turma);
       setMsg("Medida registrada.");
       form.reset();
       m.recarregar();

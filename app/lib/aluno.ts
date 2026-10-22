@@ -8,6 +8,7 @@ export type Aluno = {
   dataNascimento?: string; // AAAA-MM-DD (opcional)
   faixa: string;
   faixaDesde?: string; // AAAA-MM-DD
+  dan?: number; // só para faixa preta (1 a 10)
   liberadoAte?: string; // faixa até onde as técnicas ficam liberadas (além da automática)
   foto?: string;
   fotoAjuste?: { z: number; x: number; y: number };

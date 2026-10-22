@@ -4,7 +4,8 @@ import { useState } from "react";
 import { hojeISO } from "../lib/aluno";
 import { addAvisoTurma, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
-import { apagar, atualizarAviso, atualizarEvento, criarAviso, criarEvento, useAvisos, useEventos, type AvisoDoc, type EventoDoc } from "../lib/conteudo";
+import { apagar, atualizarAviso, atualizarEvento, criarAviso, criarEvento, lerEventosInternos, useAvisos, useEventos, type AvisoDoc, type EventoDoc } from "../lib/conteudo";
+import { useCarga } from "../lib/useCarga";
 import { enderecoOk } from "../lib/katasDb";
 import AdminAgenda from "./AdminAgenda";
 import AdminCalendarios from "./AdminCalendarios";
@@ -12,11 +13,14 @@ import AdminFeriados from "./AdminFeriados";
 import CampoImagem from "./CampoImagem";
 import MenuSuspenso from "./MenuSuspenso";
 
+const VAZIO_EV: EventoDoc[] = [];
 const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Aula", "Outro"];
 
 export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]; autor: string; ehAdmin: boolean }) {
   const av = useAvisos();
   const ev = useEventos();
+  const internos = useCarga(lerEventosInternos, VAZIO_EV);
+  const todosEventos = [...(ev.erro ? [] : ev.itens), ...internos.dados].sort((a, b) => b.data.localeCompare(a.data));
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [editAviso, setEditAviso] = useState<AvisoDoc | null>(null);
@@ -56,7 +60,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
       return void rodar(
         async () => {
           for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video });
-          if (evento) await criarEvento(evento);
+          if (evento) await criarEvento(evento, g("ev-cal") === "alunos");
         },
         `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}${evento ? " e marcado no calendário" : ""}.`,
         () => (form.reset(), setNoCalendario(false), ev.recarregar()),
@@ -67,7 +71,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
         if (alvo) await atualizarAviso(alvo.id, { ...a, autor: alvo.autor ?? autor });
         else {
           await criarAviso(a);
-          if (evento) await criarEvento(evento);
+          if (evento) await criarEvento(evento, g("ev-cal") === "alunos");
         }
       },
       alvo ? "Aviso atualizado." : evento ? "Aviso publicado e marcado no calendário." : "Aviso publicado no site.",
@@ -101,14 +105,16 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
     if (!dados.titulo || !dados.data) return setMsg("Preencha o título e a data do evento.");
     if ((dados.video && !/^https:\/\//.test(dados.video)) || (dados.pastaDrive && !/^https:\/\/|^[\w-]{10,}$/.test(dados.pastaDrive)) || (dados.imagem && !enderecoOk(dados.imagem))) return setMsg("Confira os links: vídeo e pasta do Drive precisam começar com https://");
     const alvo = editEvento;
-    void rodar(() => (alvo ? atualizarEvento(alvo.id, { ...dados, autor: alvo.autor ?? autor }) : criarEvento(dados)), alvo ? "Evento atualizado." : "Evento publicado.", () => {
+    const interno = alvo ? Boolean(alvo.interno) : g("calendario") === "alunos";
+    void rodar(() => (alvo ? atualizarEvento(alvo.id, { ...dados, autor: alvo.autor ?? autor }, interno) : criarEvento(dados, interno)), alvo ? "Evento atualizado." : interno ? "Evento publicado no calendário dos alunos." : "Evento publicado no calendário geral.", () => {
       form.reset();
       setEditEvento(null);
       ev.recarregar();
+      internos.recarregar();
     });
   }
 
-  function remover(nome: "avisos" | "eventos", id: string, titulo: string, depois: () => void) {
+  function remover(nome: "avisos" | "eventos" | "eventosInternos", id: string, titulo: string, depois: () => void) {
     if (!window.confirm(`Apagar “${titulo}”? Isso não pode ser desfeito.`)) return;
     void rodar(() => apagar(nome, id), "Apagado.", depois);
   }
@@ -122,7 +128,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
         onMudar={(v) => (setSec(v), setMsg(""))}
         opcoes={[
           ["avisos", `Avisos (${av.itens.length})`],
-          ["eventos", `Eventos do calendário (${ev.itens.length})`],
+          ["eventos", `Eventos do calendário (${todosEventos.length})`],
           ["feriados", "Feriados locais"],
           ...(ehAdmin
             ? ([
@@ -191,6 +197,13 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
                       <label htmlFor="ev-local">Local (opcional)</label>
                       <input id="ev-local" name="ev-local" type="text" maxLength={80} />
                     </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="ev-cal">Em qual calendário?</label>
+                    <select id="ev-cal" name="ev-cal" defaultValue="geral">
+                      <option value="geral">Calendário geral (todo mundo vê)</option>
+                      <option value="alunos">Só no calendário dos alunos</option>
+                    </select>
                   </div>
                 </>
               )}
@@ -294,6 +307,15 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
             <label htmlFor="e-desc">Descrição (opcional)</label>
             <textarea id="e-desc" name="descricao" rows={2} maxLength={400} defaultValue={editEvento?.descricao ?? ""} />
           </div>
+          {!editEvento && (
+            <div className="field">
+              <label htmlFor="e-cal">Em qual calendário?</label>
+              <select id="e-cal" name="calendario" defaultValue="geral">
+                <option value="geral">Calendário geral (todo mundo vê: campeonatos, início e volta às aulas, dias sem aula…)</option>
+                <option value="alunos">Só no calendário dos alunos (quem está cadastrado)</option>
+              </select>
+            </div>
+          )}
           <CampoImagem name="imagem" rotulo="Imagem do evento (opcional)" valorInicial={editEvento?.imagem ?? ""} />
           <div className="field">
             <label htmlFor="e-video">Vídeo (opcional): link do YouTube ou do Drive</label>
@@ -317,12 +339,14 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
         </form>
         <ul className="manage">
           {ev.carregando && <li className="empty">Carregando…</li>}
-          {!ev.carregando && ev.itens.length === 0 && <li className="empty">Nenhum evento publicado.</li>}
+          {!ev.carregando && todosEventos.length === 0 && <li className="empty">Nenhum evento publicado.</li>}
           {ev.erro && <li className="empty">Não consegui ler o banco. Os eventos abaixo são só de exemplo.</li>}
-          {ev.itens.map((e) => (
-            <li key={e.id}>
+          {todosEventos.map((e) => (
+            <li key={(e.interno ? "i" : "g") + e.id}>
               <span>
-                <strong>{e.titulo}</strong>
+                <strong>
+                  {e.titulo} {e.interno && <em className="selo">só alunos</em>}
+                </strong>
                 <small>
                   {e.data} · {e.tipo}
                   {e.autor ? ` · por ${e.autor}` : ""}
@@ -333,7 +357,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
                   <button className="btn btn-ghost" onClick={() => (setEditEvento(e), window.scrollTo({ top: 0, behavior: "smooth" }))}>
                     Editar
                   </button>
-                  <button className="btn btn-ghost" onClick={() => remover("eventos", e.id, e.titulo, ev.recarregar)} disabled={ocupado}>
+                  <button className="btn btn-ghost" onClick={() => remover(e.interno ? "eventosInternos" : "eventos", e.id, e.titulo, () => (ev.recarregar(), internos.recarregar()))} disabled={ocupado}>
                     Apagar
                   </button>
                 </span>

@@ -1,20 +1,20 @@
-ATUALIZAÇÃO 22 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 24 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. npm run build
-3. git add .
-   git commit -m "Painel organizado em menus, agenda do Google e fichas do Drive com miniaturas"
+2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
+3. npm run build
+4. git add .
+   git commit -m "Campeonatos com inscritos, chamada por turma e calendario geral e dos alunos"
    git push
-(As regras do Firestore não mudaram.)
 
 NOVIDADES
- - Painel com uma parte por vez (menu suspenso) em Mural, Turmas, Alunos, Estudo, Resultados,
-   Equipe e Site. "Conteúdo" e "Estudo" viraram uma aba só (Estudo); Galeria ganhou aba própria.
- - Menu lateral: "Área do professor" com todas as abas e "Meu perfil".
- - Botão "Meu cadastro" no painel; o administrador edita o próprio nome lá.
- - Equipe: escolhe o professor no menu e marca as turmas dele; administradores listados.
- - Alunos: lista, cadastrar, aniversários e tempo na faixa separados.
- - Resultados: por aluno (com questões certas e erradas) e questões que mais erram.
- - Fichas do Drive: miniatura de cada arquivo, a que técnica ou faixa ficou ligado, os sem ligação
-   e o botão "Abrir no Drive".
- - Agenda do Google: Mural e calendário > Agenda do Google (instruções na tela).
+ - Painel > Campeonatos: nome, data, local, informações, arquivos (edital, chaves), turma (geral
+   ou interno), calendário (geral ou só dos alunos) e aviso automático para todos ou para turmas.
+   Inscrição de alunos já cadastrados com filtro por turma, peso e altura opcionais (viram medida
+   do aluno), classe pela idade e categoria de peso sugeridas, e comprovante (só administrador e
+   professor da turma veem).
+ - Calendário: "Calendário geral" (todo mundo) e "Calendário dos alunos" (cadastrados), com
+   eventos internos, campeonatos com quem vai competir e aniversários.
+ - Mural: ao criar evento, escolher o calendário (geral ou só dos alunos).
+ - Painel > Chamada: turma, data, tocar em quem veio, incluir aluno de fora (entra na turma),
+   salvar e ver as chamadas anteriores. O aluno vê quantas presenças tem.

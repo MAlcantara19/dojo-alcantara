@@ -18,7 +18,7 @@ const OPCOES: [Secao, string][] = [
   ["palavras", "Palavras da roleta"],
   ["exercicios", "Exercícios físicos"],
   ["simulados", "Simulados"],
-  ["roletas", "Mais roletas"],
+  ["roletas", "Criar nova roleta"],
 ];
 
 /** Tudo do Estudo do Judô, uma parte por vez. */

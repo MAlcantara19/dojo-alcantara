@@ -3,7 +3,8 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { dataBR, hojeISO } from "../lib/aluno";
 import { lerCalendariosOficiais, lerFeriadosLocais, type CalendarioOficial, type FeriadoLocal } from "../lib/calendarioDb";
-import { useEventos, type EventoDoc } from "../lib/conteudo";
+import { lerCampeonatosDojo, lerInscritos, type CampeonatoDojo, type Inscrito } from "../lib/campeonatosDojo";
+import { lerEventosInternos, useEventos, type EventoDoc } from "../lib/conteudo";
 import { feriadosNacionais, type Feriado } from "../lib/feriados";
 import { linkGoogleAgenda } from "../lib/ics";
 import { descreverLink, idDoDrive } from "../lib/links";
@@ -21,6 +22,49 @@ const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const VAZIO_F: FeriadoLocal[] = [];
 const VAZIO_C: CalendarioOficial[] = [];
 const VAZIO_AN: Aniversario[] = [];
+const VAZIO_EV: EventoDoc[] = [];
+const VAZIO_CAMP: CampeonatoDojo[] = [];
+const VAZIO_INS: Inscrito[] = [];
+
+/** Arquivos do campeonato e, no calendário dos alunos, quem vai competir. */
+function ArquivosEInscritos({ id, camps, mostrarInscritos }: { id: string; camps: CampeonatoDojo[]; mostrarInscritos: boolean }) {
+  const c = camps.find((x) => x.id === id);
+  const insc = useCarga(() => lerInscritos(id), VAZIO_INS, mostrarInscritos);
+  if (!c) return null;
+  return (
+    <>
+      {c.arquivos.length > 0 && (
+        <div className="tlinks">
+          {c.arquivos.map((a, i) =>
+            a.url.startsWith("db:") ? (
+              <Img key={i} className="midia-img" src={a.url} alt={a.titulo} largura={1200} />
+            ) : (
+              <a key={i} className="btn btn-ghost" href={a.url} target="_blank" rel="noopener noreferrer">
+                📄 {a.titulo}
+              </a>
+            ),
+          )}
+        </div>
+      )}
+      {mostrarInscritos && (
+        <>
+          <h4>Quem vai competir ({insc.dados.length})</h4>
+          {insc.dados.length === 0 ? (
+            <p className="form-help">Ainda sem inscritos.</p>
+          ) : (
+            <ul className="inscritos">
+              {insc.dados.map((i) => (
+                <li key={i.uid}>
+                  <strong>{i.nome}</strong> <small>{[i.classe, i.categoria].filter(Boolean).join(" · ")}</small>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </>
+  );
+}
 const iso = (a: number, m: number, d: number) => `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 const semAssinatura = () => () => {};
@@ -35,16 +79,25 @@ export default function Calendario() {
 function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
   const evSite = useEventos();
   const agenda = useAgendaGoogle();
-  const ev = useMemo(() => ({ itens: [...evSite.itens, ...agenda] }), [evSite.itens, agenda]);
+  const { user } = useAuth();
+  const [vista, setVista] = useState<"geral" | "alunos">("geral");
+  const doAluno = Boolean(user) && vista === "alunos";
+  const internos = useCarga(lerEventosInternos, VAZIO_EV, Boolean(user));
+  const camps = useCarga(() => lerCampeonatosDojo(Boolean(user)), VAZIO_CAMP);
+  const ev = useMemo(() => {
+    const campsEv: EventoDoc[] = camps.dados
+      .filter((x) => doAluno || x.publico)
+      .map((x) => ({ id: "camp-" + x.id, titulo: "🏆 " + x.nome, data: x.data, hora: "A confirmar", local: x.local || "A definir", tipo: "Campeonato", descricao: x.descricao, autor: x.autor, interno: !x.publico }));
+    return { itens: [...evSite.itens, ...agenda, ...campsEv, ...(doAluno ? internos.dados : [])] };
+  }, [evSite.itens, agenda, camps.dados, internos.dados, doAluno]);
   const locais = useCarga(lerFeriadosLocais, VAZIO_F);
   const oficiais = useCarga(lerCalendariosOficiais, VAZIO_C);
-  const { user } = useAuth();
   const anivs = useCarga(lerAniversarios, VAZIO_AN, Boolean(user));
   const anivPorDia = useMemo(() => {
     const m = new Map<string, string[]>();
-    anivs.dados.forEach((a) => m.set(a.mmdd, [...(m.get(a.mmdd) ?? []), a.nome]));
+    if (doAluno) anivs.dados.forEach((a) => m.set(a.mmdd, [...(m.get(a.mmdd) ?? []), a.nome]));
     return m;
-  }, [anivs.dados]);
+  }, [anivs.dados, doAluno]);
   const [ano, setAno] = useState(Number(hojeStr.slice(0, 4)));
   const [mes, setMes] = useState(Number(hojeStr.slice(5, 7)) - 1);
   const [dia, setDia] = useState(hojeStr);
@@ -82,6 +135,19 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
 
   return (
     <div className="calendario">
+      {user && (
+        <div className="tabs" role="tablist" aria-label="Qual calendário">
+          <button role="tab" aria-selected={vista === "geral"} onClick={() => setVista("geral")}>
+            Calendário geral
+          </button>
+          <button role="tab" aria-selected={vista === "alunos"} onClick={() => setVista("alunos")}>
+            Calendário dos alunos
+          </button>
+        </div>
+      )}
+      <p className="form-help">
+        {doAluno ? "Tudo do calendário geral, mais o que é só para alunos: eventos internos, campeonatos com os inscritos e aniversários." : "Campeonatos, início e volta das aulas, dias sem aula e outros compromissos do dojô."}
+      </p>
       <div className="cal-topo">
         <button type="button" className="cal-seta" onClick={() => mover(-1)} aria-label="Mês anterior">
           ‹
@@ -166,6 +232,8 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
                 <FotosDaPasta pasta={e.pastaDrive} vazio="Ainda não há fotos deste evento." />
               </>
             )}
+            {e.id.startsWith("camp-") && <ArquivosEInscritos id={e.id.slice(5)} camps={camps.dados} mostrarInscritos={doAluno} />}
+            {e.interno && <p className="form-help">Só para alunos.</p>}
             {e.autor && <p className="form-help">Publicado por {e.autor}</p>}
             <div className="tool-actions">
               <a className="btn btn-ghost" href={linkGoogleAgenda(e)} target="_blank" rel="noopener noreferrer">

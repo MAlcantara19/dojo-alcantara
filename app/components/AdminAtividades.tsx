@@ -1,17 +1,19 @@
 "use client";
 
 import { apagarAtividade, lerAtividades, type Atividade } from "../lib/atividades";
+import type { Escopo } from "../lib/alunos";
 import { useCarga } from "../lib/useCarga";
 
 const VAZIO: Atividade[] = [];
 
 /** Só o administrador: o que os alunos mudaram no site (apelido, cadastro, senha, fotos…). */
-export default function AdminAtividades() {
-  const a = useCarga(lerAtividades, VAZIO);
+export default function AdminAtividades({ escopo = null }: { escopo?: Escopo }) {
+  const a = useCarga(() => lerAtividades(escopo), VAZIO);
+  const ehAdmin = escopo === null;
   return (
     <section className="panel" id="atividades">
-      <h2>Atividades dos alunos ({a.dados.length})</h2>
-      <p className="lead">Tudo o que os alunos mudam no próprio perfil aparece aqui, só para você.</p>
+      <h2>Atividades ({a.dados.length})</h2>
+      <p className="lead">{ehAdmin ? "O que os alunos mudam no perfil e o que os professores mudam nos alunos." : "O que os alunos das suas turmas mudaram."}</p>
       {a.erro && <p className="empty">Não consegui ler as atividades. Publique as regras novas do Firestore.</p>}
       <ul className="manage">
         {!a.carregando && !a.erro && a.dados.length === 0 && <li className="empty">Nada por enquanto.</li>}
@@ -22,9 +24,11 @@ export default function AdminAtividades() {
               <small>{x.texto}</small>
               <small>{new Date(x.ts).toLocaleString("pt-BR")}</small>
             </span>
-            <button className="btn btn-ghost" onClick={() => void apagarAtividade(x.id).then(a.recarregar)}>
-              Visto
-            </button>
+            {ehAdmin && (
+              <button className="btn btn-ghost" onClick={() => void apagarAtividade(x.id).then(a.recarregar)}>
+                Visto
+              </button>
+            )}
           </li>
         ))}
       </ul>

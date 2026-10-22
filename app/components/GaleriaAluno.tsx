@@ -14,7 +14,7 @@ const VAZIO: ItemGaleria[] = [];
 const ehImagem = (u: string) => u.startsWith("db:") || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
 
 /** Fotos e vídeos do perfil do aluno: o próprio aluno e o professor podem colocar. */
-export default function GaleriaAluno({ uid, autor, avisarAdmin }: { uid: string; autor: string; avisarAdmin: boolean }) {
+export default function GaleriaAluno({ uid, autor, avisarAdmin, turma = "" }: { uid: string; autor: string; avisarAdmin: boolean; turma?: string }) {
   const g = useCarga(() => lerGaleriaAluno(uid), VAZIO);
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState("");
@@ -27,7 +27,7 @@ export default function GaleriaAluno({ uid, autor, avisarAdmin }: { uid: string;
     setMsg("Salvando…");
     try {
       await addGaleriaAluno(uid, { url, legenda, autor });
-      if (avisarAdmin) void registrarAtividade(uid, autor, `adicionou ${ehImagem(url) ? "uma foto" : "um vídeo"} ao perfil${legenda ? `: “${legenda}”` : ""}`);
+      if (avisarAdmin) void registrarAtividade(uid, autor, `adicionou ${ehImagem(url) ? "uma foto" : "um vídeo"} ao perfil${legenda ? `: “${legenda}”` : ""}`, turma);
       setMsg("Adicionado.");
       setUrl("");
       setChave((k) => k + 1);

@@ -5,6 +5,8 @@ import { dataBR, hojeISO } from "../lib/aluno";
 import { mensagemErro } from "../lib/auth";
 import { addCampeonato, apagarCampeonato, COLOCACOES, COMO, lerCampeonatos, lutaVazia, PONTOS, salvarCampeonato, type Campeonato, type DadosCampeonato, type Luta, type Ponto } from "../lib/campeonatos";
 import { enderecoOk } from "../lib/katasDb";
+import { registrarAtividade } from "../lib/atividades";
+import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
 import Img from "./Img";
@@ -19,8 +21,9 @@ const placar = (p: Record<Ponto, number>) =>
 const ehImagem = (u: string) => u.startsWith("db:") || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
 
 /** Campeonatos de um aluno. editavel = professor/administrador; o aluno só vê. */
-export default function CampeonatosAluno({ uid, editavel, nome }: { uid: string; editavel: boolean; nome?: string }) {
+export default function CampeonatosAluno({ uid, editavel, nome, turma = "" }: { uid: string; editavel: boolean; nome?: string; turma?: string }) {
   const c = useCarga(() => lerCampeonatos(uid), VAZIO);
+  const { user, perfil } = useAuth();
   const [editando, setEditando] = useState<Campeonato | "novo" | null>(null);
   const [msg, setMsg] = useState("");
 
@@ -46,6 +49,7 @@ export default function CampeonatosAluno({ uid, editavel, nome }: { uid: string;
               if (editando === "novo") await addCampeonato(uid, d);
               else await salvarCampeonato(uid, editando.id, d);
               setMsg("Campeonato salvo.");
+              if (user && perfil?.papel === "professor") void registrarAtividade(user.uid, perfil.apelido || perfil.nome || "Professor", `${editando === "novo" ? "registrou" : "editou"} o campeonato “${d.nome}” de ${nome ?? "aluno"}`, turma);
               setEditando(null);
               c.recarregar();
             } catch (e) {

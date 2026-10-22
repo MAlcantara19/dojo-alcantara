@@ -4,7 +4,7 @@ import { getAuthInstance, getDb } from "./firebase";
 
 export type Papel = "admin" | "professor" | "aluno";
 export type AjusteFoto = { z: number; x: number; y: number };
-export type Perfil = { papel: Papel; nome?: string; apelido?: string; faixa?: string; academia?: string; turmas?: string[]; liberadoAte?: string; foto?: string; fotoAjuste?: AjusteFoto };
+export type Perfil = { papel: Papel; nome?: string; apelido?: string; faixa?: string; academia?: string; turmas?: string[]; liberadoAte?: string; dan?: number; foto?: string; fotoAjuste?: AjusteFoto };
 
 /** Celular vira um e-mail interno (não precisa existir caixa de entrada). */
 export function paraEmail(entrada: string): string {
@@ -20,7 +20,7 @@ export async function lerPerfil(uid: string): Promise<Perfil | null> {
   const d = snap.data() as Partial<Perfil>;
   const turmas = Array.isArray(d.turmas) ? d.turmas.filter((t): t is string => typeof t === "string") : [];
   if (d.papel !== "admin" && d.papel !== "professor" && d.papel !== "aluno") return null;
-  return { papel: d.papel, nome: d.nome, apelido: d.apelido, faixa: d.faixa, academia: d.academia, turmas, liberadoAte: d.liberadoAte, foto: d.foto, fotoAjuste: d.fotoAjuste };
+  return { papel: d.papel, nome: d.nome, apelido: d.apelido, faixa: d.faixa, academia: d.academia, turmas, liberadoAte: d.liberadoAte, dan: typeof d.dan === "number" ? d.dan : undefined, foto: d.foto, fotoAjuste: d.fotoAjuste };
 }
 
 export function ehEquipe(p: Perfil | null): boolean {

@@ -30,7 +30,7 @@ export default function AdminResumo({ uid, escopo, novosResultados, ir, ehAdmin 
   return (
     <>
     {ehAdmin && <AdminPedidos />}
-    {ehAdmin && <AdminAtividades />}
+    <AdminAtividades escopo={escopo} />
     <section className="panel" id="resumo">
       <h2>Resumo de hoje</h2>
       <div className="resumo-grid">

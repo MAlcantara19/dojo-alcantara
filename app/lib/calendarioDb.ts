@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getDb } from "./firebase";
 import type { Feriado } from "./feriados";
 
@@ -11,6 +11,7 @@ export async function lerFeriadosLocais(): Promise<FeriadoLocal[]> {
 export async function addFeriadoLocal(data: string, nome: string) {
   await addDoc(collection(getDb(), "feriados"), { data, nome, criadoEm: serverTimestamp() });
 }
+export const salvarFeriadoLocal = (id: string, data: string, nome: string) => updateDoc(doc(getDb(), "feriados", id), { data, nome });
 export const apagarFeriadoLocal = (id: string) => deleteDoc(doc(getDb(), "feriados", id));
 
 /* ---------- Calendários oficiais (ex.: da Confederação), em imagem ou PDF ---------- */

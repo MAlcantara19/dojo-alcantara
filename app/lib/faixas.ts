@@ -17,3 +17,25 @@ export const faixasAltas = [
 ];
 
 export const corDaFaixa = (nome?: string) => faixas.find((f) => f.nome === nome)?.cor;
+
+/* Graus da faixa preta (dan), com o nome em japonês. Do 6º ao 8º a faixa é vermelha e branca; 9º e 10º, vermelha. */
+export const DANS = [
+  { n: 1, jp: "Shodan" },
+  { n: 2, jp: "Nidan" },
+  { n: 3, jp: "Sandan" },
+  { n: 4, jp: "Yondan" },
+  { n: 5, jp: "Godan" },
+  { n: 6, jp: "Rokudan" },
+  { n: 7, jp: "Shichidan" },
+  { n: 8, jp: "Hachidan" },
+  { n: 9, jp: "Kudan" },
+  { n: 10, jp: "Judan" },
+];
+export const nomeDan = (dan?: number) => {
+  const d = DANS.find((x) => x.n === dan);
+  return d ? `${d.n}º Dan (${d.jp})` : "";
+};
+/** Faixa por extenso, com o dan quando houver: “Preta · 4º Dan (Yondan)”. */
+export const faixaPorExtenso = (faixa?: string, dan?: number) => (faixa ? (faixa === "Preta" && dan ? `Preta · ${nomeDan(dan)}` : faixa) : "");
+/** Cor da borda da foto: do 6º ao 8º dan coral (vermelha e branca), 9º e 10º vermelha. */
+export const corComDan = (faixa?: string, dan?: number) => (faixa === "Preta" && dan && dan >= 9 ? faixasAltas[1].cor : faixa === "Preta" && dan && dan >= 6 ? faixasAltas[0].cor : corDaFaixa(faixa));

@@ -13,8 +13,9 @@ service cloud.firestore {
     function minhasTurmas() { return perfil().get('turmas', []); }
     // Professor vê só as turmas dele; o admin vê todas.
     function daMinhaTurma(turma) { return ehProfessor() && turma in minhasTurmas(); }
+    // Qualquer professor pode cuidar de qualquer aluno (o que ele muda fica registrado para o administrador).
     function alunoDaMinhaTurma(uid) {
-      return ehProfessor() && get(/databases/$(database)/documents/users/$(uid)).data.get('academia', '') in minhasTurmas();
+      return ehProfessor() && get(/databases/$(database)/documents/users/$(uid)).data.get('papel', '') == 'aluno';
     }
 
     // ---------- Validações ----------
@@ -36,9 +37,11 @@ service cloud.firestore {
     // Só o admin cria e altera. O aluno só pode marcar que já trocou a senha provisória.
     match /users/{uid} {
       allow read: if ehProprio(uid) || ehAdmin()
-        || (ehProfessor() && resource.data.get('papel', '') == 'aluno' && daMinhaTurma(resource.data.get('academia', '')));
+        || (ehProfessor() && resource.data.get('papel', '') == 'aluno');
       allow create, delete: if ehAdmin();
       allow update: if ehAdmin()
+        || (ehProfessor() && resource.data.get('papel', '') == 'aluno' && request.resource.data.get('papel', '') == 'aluno'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
         || (ehProprio(uid)
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste'])
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
@@ -283,12 +286,16 @@ service cloud.firestore {
     match /parcerias/{id} {
       allow read: if true;
       allow create, update: if ehAdmin() && texto('nome', 60)
-        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 160
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 600
         && request.resource.data.get('url', '') is string && request.resource.data.get('url', '').size() <= 300
         && (request.resource.data.get('url', '') == '' || request.resource.data.get('url', '').matches('^https://.*'))
         && request.resource.data.get('logo', '') is string && request.resource.data.get('logo', '').size() <= 300
         && request.resource.data.get('desconto', '') is string && request.resource.data.get('desconto', '').size() <= 100
-        && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 40;
+        && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 40
+        && request.resource.data.get('cupom', '') is string && request.resource.data.get('cupom', '').size() <= 40
+        && request.resource.data.get('banner', '') is string && request.resource.data.get('banner', '').size() <= 300
+        && request.resource.data.get('destaque', false) is bool
+        && request.resource.data.get('produtos', []) is list && request.resource.data.get('produtos', []).size() <= 30;
       allow delete: if ehAdmin();
     }
 
@@ -315,18 +322,59 @@ service cloud.firestore {
     // Aniversários (só apelido/primeiro nome e dia/mês): só quem está logado vê.
     match /aniversarios/{uid} {
       allow read: if temPerfil();
-      allow create, update: if (ehAdmin() || ehProprio(uid))
+      allow create, update: if (ehAdmin() || ehProprio(uid) || alunoDaMinhaTurma(uid))
         && request.resource.data.keys().hasOnly(['nome', 'mmdd'])
         && request.resource.data.nome is string && request.resource.data.nome.size() <= 40
         && request.resource.data.mmdd is string && request.resource.data.mmdd.size() == 5;
-      allow delete: if ehAdmin() || ehProprio(uid);
+      allow delete: if ehAdmin() || ehProprio(uid) || alunoDaMinhaTurma(uid);
+    }
+
+    // Campeonatos do dojô: os públicos todos veem; os só dos alunos, quem está cadastrado. A equipe cuida.
+    match /campeonatos/{id} {
+      allow read: if resource.data.get('publico', false) == true || temPerfil();
+      allow create, update: if ehEquipe() && texto('nome', 100)
+        && request.resource.data.data is string && request.resource.data.data.size() == 10
+        && request.resource.data.publico is bool
+        && request.resource.data.get('descricao', '') is string && request.resource.data.get('descricao', '').size() <= 1500
+        && request.resource.data.get('arquivos', []) is list && request.resource.data.get('arquivos', []).size() <= 12;
+      allow delete: if ehAdmin() || (ehProfessor() && resource.data.get('autor', '') == perfil().get('nome', ''));
+
+      // Inscritos: quem está cadastrado vê; a equipe inscreve.
+      match /inscritos/{uid} {
+        allow read: if temPerfil();
+        allow write: if ehEquipe();
+      }
+      // Comprovante de pagamento ou documento: só o administrador e o professor da turma do aluno.
+      match /comprovantes/{uid} {
+        allow read: if ehAdmin() || daMinhaTurma(resource.data.get('turma', ''));
+        allow create, update: if ehEquipe() && request.resource.data.url is string && request.resource.data.url.size() <= 300;
+        allow delete: if ehEquipe();
+      }
+    }
+
+    // Eventos só do calendário dos alunos (quem está cadastrado).
+    match /eventosInternos/{id} {
+      allow read: if temPerfil();
+      allow create, update: if ehEquipe() && texto('titulo', 80) && dataValida();
+      allow delete: if ehEquipe();
+    }
+
+    // Chamadas: a equipe faz; o aluno vê as chamadas em que está presente.
+    match /chamadas/{id} {
+      allow read: if ehEquipe() || (logado() && request.auth.uid in resource.data.get('presentes', []));
+      allow create, update: if ehEquipe()
+        && request.resource.data.turma is string && request.resource.data.data is string && request.resource.data.data.size() == 10
+        && request.resource.data.presentes is list && request.resource.data.presentes.size() <= 200;
+      allow delete: if ehAdmin();
     }
 
     // Atividades: cada pessoa registra o que ela mesma mudou; só o admin lê e apaga.
     match /atividades/{id} {
-      allow read, delete: if ehAdmin();
+      allow read: if ehAdmin() || daMinhaTurma(resource.data.get('turma', ''));
+      allow delete: if ehAdmin();
       allow create: if logado()
-        && request.resource.data.keys().hasOnly(['uid', 'nome', 'texto', 'ts'])
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'texto', 'ts', 'turma'])
+        && request.resource.data.get('turma', '') is string && request.resource.data.get('turma', '').size() <= 60
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.nome is string && request.resource.data.nome.size() <= 100
         && request.resource.data.texto is string && request.resource.data.texto.size() <= 300
