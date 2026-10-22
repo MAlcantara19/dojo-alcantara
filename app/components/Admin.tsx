@@ -22,6 +22,7 @@ import AdminMural from "./AdminMural";
 import AdminParcerias from "./AdminParcerias";
 import AdminResultados from "./AdminResultados";
 import AdminResumo from "./AdminResumo";
+import AdminRoletas from "./AdminRoletas";
 import AdminSite from "./AdminSite";
 import AdminTurmas from "./AdminTurmas";
 import AdminTecnicas from "./AdminTecnicas";
@@ -122,7 +123,12 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
             <AdminGaleria />
           </>
         )}
-        {aba === "estudo" && <AdminEstudo />}
+        {aba === "estudo" && (
+          <>
+            <AdminEstudo />
+            <AdminRoletas />
+          </>
+        )}
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
         {aba === "site" && ehAdmin && (
           <>

@@ -1,15 +1,20 @@
-ATUALIZAÇÃO 20 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 21 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. npm run build
-3. git add .
-   git commit -m "Galeria em grade sem titulos e visualizador em tela cheia"
+2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
+3. npm run build
+4. git add .
+   git commit -m "Fotos de perfil e banner, tecnicas por faixa liberada, roletas novas e aniversarios no calendario"
    git push
-(As regras do Firestore não mudaram.)
+5. Depois de publicar: Painel > Alunos > "Colocar os aniversários no calendário" (uma vez).
 
 NOVIDADES
- - Galeria: miniaturas quadradas que ocupam a largura da tela (3 por linha no celular, 4 no tablet,
-   5 no computador), sem os nomes dos arquivos, com "Ver mais fotos".
- - Visualizador em tela cheia: contador (3 de 40), setas, deslizar o dedo, botão de baixar e fechar.
- - Vale para a galeria, os álbuns, as fotos dos eventos e as fotos novas do início.
- - Início: mostra 9 fotos e o botão para a galeria completa.
+ - Roleta: escolher quantos itens entram (6, 8, 12, 16, 24 ou todos) e "Sortear outros";
+   "Mais roletas" criadas em Painel > Estudo (item | resposta, um por linha).
+ - Simulados: aluno e professor veem as questões erradas (com a certa) e as certas de cada simulado.
+ - Técnicas: o público vê só as faixas marcadas em Painel > Site (padrão: azul); o aluno vê até a
+   próxima faixa dele; no cadastro do aluno dá para liberar mais faixas. "Para treinar" virou
+   "Minhas técnicas", mostrando as faixas liberadas.
+ - Aniversários no calendário (só para quem está logado, com apelido ou primeiro nome).
+ - Foto de perfil e banner para todos (aluno, professor, administrador e o dojô), redondas com
+   borda de 2px na cor da faixa, com zoom e enquadramento.

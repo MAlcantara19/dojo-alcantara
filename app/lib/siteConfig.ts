@@ -1,3 +1,4 @@
+import { AJUSTE_PADRAO, lerAjuste, type Ajuste } from "./fotoAjuste";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { dojo, sobre } from "./data";
 import { getDb } from "./firebase";
@@ -17,6 +18,8 @@ export type SiteConfig = {
   slogan: string;
   logoUrl: string;
   bannerUrl: string;
+  logoAjuste: Ajuste;
+  bannerAjuste: Ajuste;
   instagram: string;
   whatsapp: string;
   emailContato: string;
@@ -26,6 +29,7 @@ export type SiteConfig = {
   driveFichas: string;
   driveChave: string;
   diasDestaque: number;
+  faixasPublicas: string[];
 };
 
 export const siteBase: SiteConfig = {
@@ -33,6 +37,8 @@ export const siteBase: SiteConfig = {
   slogan: dojo.slogan,
   logoUrl: "",
   bannerUrl: "",
+  logoAjuste: AJUSTE_PADRAO,
+  bannerAjuste: AJUSTE_PADRAO,
   instagram: dojo.contato.instagram,
   whatsapp: dojo.contato.whatsapp,
   emailContato: "",
@@ -42,6 +48,7 @@ export const siteBase: SiteConfig = {
   driveFichas: "",
   driveChave: "",
   diasDestaque: 7,
+  faixasPublicas: ["Azul"],
 };
 
 let cache: Promise<Partial<SiteConfig>> | null = null;
@@ -68,6 +75,8 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     slogan: str(p.slogan, siteBase.slogan),
     logoUrl: str(p.logoUrl, ""),
     bannerUrl: str(p.bannerUrl, ""),
+    logoAjuste: lerAjuste(p.logoAjuste),
+    bannerAjuste: lerAjuste(p.bannerAjuste),
     instagram: str(p.instagram, siteBase.instagram),
     whatsapp: str(p.whatsapp, siteBase.whatsapp),
     emailContato: str(p.emailContato, ""),
@@ -85,6 +94,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     drivePasta: str(p.drivePasta, ""),
     driveFichas: str(p.driveFichas, ""),
     driveChave: str(p.driveChave, ""),
+    faixasPublicas: Array.isArray(p.faixasPublicas) ? p.faixasPublicas.filter((x): x is string => typeof x === "string") : ["Azul"],
     diasDestaque: typeof p.diasDestaque === "number" && p.diasDestaque >= 1 && p.diasDestaque <= 60 ? Math.round(p.diasDestaque) : 7,
   };
 }

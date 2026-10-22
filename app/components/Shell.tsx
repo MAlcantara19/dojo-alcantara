@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { useMenu } from "../lib/menuConfig";
 import { ehEquipe } from "../lib/auth";
-import { corDaFaixa } from "../lib/faixas";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import Abertura from "./Abertura";
 import { ParceriasLado } from "./Parcerias";
+import Avatar from "./Avatar";
 import Rodape from "./Rodape";
 import Sino from "./Sino";
 import { useAuth } from "../lib/useAuth";
@@ -144,9 +144,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {user ? (
             <>
               <Link className="conta" href={equipe ? "/admin" : "/perfil"} title={`${perfil?.nome ?? ""} ${user.email ?? ""}`.trim()}>
-                <span className="conta-avatar" style={perfil?.faixa ? { background: corDaFaixa(perfil.faixa), color: ["Branca", "Amarela"].includes(perfil.faixa) ? "#1a1030" : "#fff" } : undefined} aria-hidden="true">
-                  {(perfil?.nome ?? "?").slice(0, 1).toUpperCase()}
-                </span>
+                <Avatar url={perfil?.foto} ajuste={perfil?.fotoAjuste} nome={perfil?.apelido || perfil?.nome || "?"} faixa={perfil?.faixa} tamanho={38} />
                 <span className="conta-textos">
                   <strong>{(perfil?.nome ?? "Minha conta").split(" ")[0]}</strong>
                   <small>

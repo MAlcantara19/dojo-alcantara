@@ -7,7 +7,7 @@ import { imagemDireta } from "../lib/links";
 const VAZIA = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 /** Imagem do site: aceita endereço https, arquivo /img/..., link do Drive ou foto enviada (db:…). */
-export default function Img({ src, alt, className, largura = 1000, eager = false }: { src: string; alt: string; className?: string; largura?: number; eager?: boolean }) {
+export default function Img({ src, alt, className, largura = 1000, eager = false, style }: { src: string; alt: string; className?: string; largura?: number; eager?: boolean; style?: React.CSSProperties }) {
   const ref = useRef<HTMLImageElement>(null);
   const [db, setDb] = useState<{ ref: string; url: string } | null>(null);
   const [falhou, setFalhou] = useState(false);
@@ -44,7 +44,7 @@ export default function Img({ src, alt, className, largura = 1000, eager = false
   if (falhou) return null;
   const url = ehRefDb(src) ? (db && db.ref === src ? db.url : VAZIA) : imagemDireta(src, largura);
   // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={ref} src={url} alt={alt} className={className} loading={eager ? "eager" : "lazy"} referrerPolicy="no-referrer" onError={() => setFalhou(true)} />;
+  return <img ref={ref} src={url} alt={alt} className={className} style={style} loading={eager ? "eager" : "lazy"} referrerPolicy="no-referrer" onError={() => setFalhou(true)} />;
 }
 
 /** Para fundos (banner): devolve o endereço pronto para usar em CSS, ou "" enquanto carrega. */

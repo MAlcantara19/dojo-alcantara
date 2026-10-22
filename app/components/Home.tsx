@@ -7,6 +7,7 @@ import { useAuth } from "../lib/useAuth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import Img, { useImagemUrl } from "./Img";
+import { estiloFoto } from "../lib/fotoAjuste";
 import Midia from "./Midia";
 import EstudoCards from "./EstudoCards";
 import Parcerias from "./Parcerias";
@@ -60,7 +61,7 @@ export default function Home() {
       <section
         className="hero"
         id="inicio"
-        style={banner ? { backgroundImage: `linear-gradient(165deg, rgba(11,4,20,.88), rgba(43,15,87,.62) 55%, rgba(106,53,201,.5)), url(${banner})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        style={banner ? { backgroundImage: `linear-gradient(165deg, rgba(11,4,20,.88), rgba(43,15,87,.62) 55%, rgba(106,53,201,.5)), url(${banner})`, backgroundSize: "cover", backgroundPosition: `center, ${site.bannerAjuste.x}% ${site.bannerAjuste.y}%` } : undefined}
       >
         <span className="kanji" aria-hidden="true">
           柔道
@@ -68,7 +69,7 @@ export default function Home() {
         <div className="hero-inner">
           <div className="logo" aria-label={`Logo do ${site.nome}`}>
             {enderecoOk(site.logoUrl) ? (
-              <Img src={site.logoUrl} alt="" largura={400} eager />
+              <Img src={site.logoUrl} alt="" largura={400} eager style={estiloFoto(site.logoAjuste)} />
             ) : (
               <span>{siglaDe(site.nome)}</span>
             )}

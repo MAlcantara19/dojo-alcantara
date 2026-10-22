@@ -151,7 +151,7 @@ export async function mudarFaixa(uid: string, faixa: string) {
   await updateDoc(doc(getDb(), "users", uid), { faixa, faixaDesde: hojeISO() });
 }
 
-export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string };
+export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string; liberadoAte: string };
 export async function atualizarAluno(uid: string, d: DadosAluno) {
   await updateDoc(doc(getDb(), "users", uid), { ...d });
 }
@@ -184,7 +184,7 @@ export type Medida = { id: string; data: string; peso?: number | null; altura?: 
 export type Nota = { id: string; data: string; texto: string };
 export type Resp = { pergunta: string; marcada: string; correta: string; acertou: boolean };
 export type Resultado = { id: string; data: string; titulo: string; acertos: number; total: number; respostas?: Resp[]; simuladoId?: string; ts?: number };
-export type ResultadoEquipe = { id: string; uid: string; nome: string; apelido: string; academia: string; simuladoId: string; titulo: string; acertos: number; total: number; data: string; ts: number };
+export type ResultadoEquipe = { id: string; uid: string; nome: string; apelido: string; academia: string; simuladoId: string; titulo: string; acertos: number; total: number; data: string; ts: number; respostas?: Resp[] };
 
 async function lerSub<T>(uid: string, nome: string): Promise<(T & { id: string })[]> {
   const snap = await getDocs(collection(getDb(), "users", uid, nome));

@@ -5,11 +5,14 @@ import { anoCampeonato, dataBR, diasParaAniversario, hojeISO, idade, mesesEntre,
 import { atualizarAluno, lerInternos, lerTurmas, listarAlunos, salvarInterno, type Escopo, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { corDaFaixa, faixas } from "../lib/faixas";
+import { guardarAniversario } from "../lib/aniversarios";
 import { useCarga } from "../lib/useCarga";
 import AcoesConta from "./AcoesConta";
 import FormCadastro, { semCel } from "./FormCadastro";
 import CampeonatosAluno from "./CampeonatosAluno";
 import GaleriaAluno from "./GaleriaAluno";
+import Avatar from "./Avatar";
+import FotosConta from "./FotosConta";
 import MedidasAluno from "./MedidasAluno";
 
 const VAZIO_A: Aluno[] = [];
@@ -57,7 +60,8 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
     }
     setAviso("Salvando…");
     try {
-      await atualizarAluno(a.uid, { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, "") });
+      await atualizarAluno(a.uid, { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte") });
+      await guardarAniversario(a.uid, g("nome"), g("apelido"), g("nasc")).catch(() => undefined);
       if (ehAdmin && g("interno") !== (internos.dados[a.uid] ?? "")) await salvarInterno(a.uid, g("interno"));
       setAviso(`Dados de ${g("apelido") || g("nome")} salvos.${nota}`);
       setEditando(null);
@@ -116,6 +120,7 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
           {lista.slice(0, 60).map((a) => (
             <li key={a.uid} className="aluno coluna">
               {editando === a.uid ? (
+                <>
                 <form className="form tedit" onSubmit={(e) => void salvar(e, a)}>
                   <strong>Editar {a.apelido || a.nome}</strong>
                   <div className="field">
@@ -166,6 +171,18 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                       <input name="desde" type="date" max={hojeISO()} defaultValue={a.faixaDesde ?? ""} />
                     </div>
                   </div>
+                  <div className="field">
+                    <label>Técnicas liberadas até a faixa</label>
+                    <select name="liberadoAte" defaultValue={a.liberadoAte ?? ""}>
+                      <option value="">Automático: até a próxima faixa dele</option>
+                      {faixas.map((f) => (
+                        <option key={f.nome} value={f.nome}>
+                          Até a faixa {f.nome.toLowerCase()}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="form-help">Para aluno avançado que já treina técnicas de faixas acima.</p>
+                  </div>
                   <div className="two">
                     <div className="field">
                       <label>E-mail (contato)</label>
@@ -187,9 +204,13 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                   </div>
                   {ehAdmin && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} onApagada={() => (setEditando(null), alunos.recarregar())} onEmail={alunos.recarregar} />}
                 </form>
+                <FotosConta a={a} onSalvo={alunos.recarregar} />
+                </>
               ) : (
                 <>
-                  <span>
+                  <span className="aluno-linha">
+                    <Avatar url={a.foto} ajuste={a.fotoAjuste} nome={a.apelido || a.nome} faixa={a.faixa} tamanho={44} />
+                    <span>
                     <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
                     <small>
                       <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> Faixa {a.faixa.toLowerCase()}
@@ -202,6 +223,7 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
                     )}
                     <small>Login: {semCel(a.login)}</small>
                     {ehAdmin && internos.dados[a.uid] && <small>Apelido interno: {internos.dados[a.uid]}</small>}
+                    </span>
                   </span>
                   <span className="tlinks">
                     <button className="btn btn-ghost" onClick={() => setMedidas(medidas === a.uid ? null : a.uid)}>
@@ -240,6 +262,22 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
       <section className="panel" id="faixas">
         <h2>Aniversários e tempo na faixa</h2>
         <h3 className="sub">Aniversariantes dos próximos 30 dias ({aniversarios.length})</h3>
+        {ehAdmin && (
+          <p className="tool-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                setAviso("Atualizando os aniversários do calendário…");
+                void Promise.all(alunos.dados.map((x) => guardarAniversario(x.uid, x.nome, x.apelido, x.dataNascimento)))
+                  .then(() => setAviso("Aniversários atualizados. Eles aparecem no calendário para quem está logado (só o apelido ou o primeiro nome)."))
+                  .catch((e) => setAviso(mensagemErro(e)));
+              }}
+            >
+              🎂 Colocar os aniversários no calendário
+            </button>
+          </p>
+        )}
         <ul className="manage">
           {aniversarios.length === 0 && <li className="empty">Nenhum aniversário nos próximos 30 dias.</li>}
           {aniversarios.map(({ a, dias }) => (

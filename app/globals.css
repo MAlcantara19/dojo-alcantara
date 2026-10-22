@@ -843,3 +843,38 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
 .vis-seta.esq{left:10px}
 .vis-seta.dir{right:10px}
 .vis-acoes a:hover,.vis-acoes button:hover,.vis-seta:hover{background:#fff;color:var(--deep)}
+
+.resp-simulado{display:grid;gap:8px;margin-top:6px}
+.resp-resumo{margin:0;display:flex;gap:12px;font-weight:700}
+.resp-resumo .ok{color:#2f9e5b}.resp-resumo .erro{color:#d9334a}
+.resp-simulado h4{font-size:.95rem;font-weight:800}
+.resp-simulado summary,.resp-detalhe summary{cursor:pointer;color:var(--accent);font-weight:600}
+
+.qtd-roleta{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.qtd-roleta label{font-weight:600}
+.qtd-roleta select{width:auto}
+
+.m-aniv{font-size:.7rem;line-height:1}
+.cal-aniv{margin:0;padding:.5rem .8rem;border-radius:var(--r-md);background:rgba(242,210,60,.15);border:1px solid #d9a441;font-weight:600}
+.tags-faixas{margin:0;font-weight:600;color:var(--muted)}
+.aviso-acesso{margin-bottom:6px}
+
+/* Fotos redondas com borda de 2px na cor da faixa */
+.avatar{display:inline-grid;flex:none;padding:2px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.avatar-in{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,var(--bright),var(--deep));color:#fff;font-family:"Bricolage Grotesque",sans-serif;font-weight:800}
+.avatar-in img{display:block}
+.editor-foto{display:grid;gap:10px}
+.editor-foto-area{display:grid;gap:12px;align-items:center;padding:12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line)}
+@media (min-width:640px){.editor-foto-area.redondo{grid-template-columns:auto 1fr}}
+.editor-previa{display:grid;place-items:center}
+.banner-previa{width:100%;aspect-ratio:3/1;border-radius:12px;overflow:hidden;background:var(--surface)}
+.editor-controles{display:grid;gap:8px}
+.editor-controles label{display:grid;gap:2px;font-size:.88rem;font-weight:600}
+.editor-controles input[type=range]{width:100%;accent-color:var(--bright)}
+/* cabeçalho do perfil com banner */
+.perfil-banner{width:100%;aspect-ratio:3/1;max-height:220px;border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(160deg,#0b0414,#2b0f57 55%,#6a35c9)}
+.perfil-banner img{display:block}
+.perfil-head .avatar{margin-top:-46px;box-shadow:0 0 0 4px var(--surface)}
+.conta .avatar{width:38px!important;height:38px!important}
+.aluno-linha{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.aluno-linha>span{display:grid;min-width:0}

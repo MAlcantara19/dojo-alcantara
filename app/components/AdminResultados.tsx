@@ -1,5 +1,6 @@
 "use client";
 
+import RespostasSimulado from "./RespostasSimulado";
 import { useState } from "react";
 import { dataBR } from "../lib/aluno";
 import type { ResultadoEquipe } from "../lib/alunos";
@@ -45,6 +46,10 @@ export default function AdminResultados({ itens, carregando, erro, visto, marcar
               <small>
                 {r.academia || "sem turma"} · {dataBR(r.data)}
               </small>
+              <details className="resp-detalhe">
+                <summary>Ver as questões</summary>
+                <RespostasSimulado respostas={r.respostas} voce={false} />
+              </details>
             </span>
           </li>
         ))}

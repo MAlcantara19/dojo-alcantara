@@ -40,12 +40,15 @@ service cloud.firestore {
       allow create, delete: if ehAdmin();
       allow update: if ehAdmin()
         || (ehProprio(uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste'])
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
             && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 40
             && request.resource.data.get('email', '') is string && request.resource.data.get('email', '').size() <= 120
             && request.resource.data.get('celular', '') is string && request.resource.data.get('celular', '').size() <= 20
-            && request.resource.data.get('dataNascimento', '') is string && request.resource.data.get('dataNascimento', '').size() <= 10);
+            && request.resource.data.get('dataNascimento', '') is string && request.resource.data.get('dataNascimento', '').size() <= 10
+            && request.resource.data.get('foto', '') is string && request.resource.data.get('foto', '').size() <= 300
+            && request.resource.data.get('banner', '') is string && request.resource.data.get('banner', '').size() <= 300
+            && request.resource.data.get('fotoAjuste', {}) is map && request.resource.data.get('bannerAjuste', {}) is map);
 
       match /medidas/{id} {
         allow read: if ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid);
@@ -141,7 +144,8 @@ service cloud.firestore {
     match /resultados/{id} {
       allow read: if ehAdmin() || daMinhaTurma(resource.data.get('academia', ''));
       allow create: if logado()
-        && request.resource.data.keys().hasOnly(['uid', 'nome', 'apelido', 'academia', 'simuladoId', 'titulo', 'acertos', 'total', 'data', 'ts'])
+        && request.resource.data.keys().hasOnly(['uid', 'nome', 'apelido', 'academia', 'simuladoId', 'titulo', 'acertos', 'total', 'data', 'ts', 'respostas'])
+        && request.resource.data.get('respostas', []) is list && request.resource.data.get('respostas', []).size() <= 60
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.acertos is int && request.resource.data.total is int
         && request.resource.data.acertos >= 0 && request.resource.data.acertos <= request.resource.data.total
@@ -298,6 +302,24 @@ service cloud.firestore {
         && request.resource.data.get('categoria', '') is string && request.resource.data.get('categoria', '').size() <= 40
         && request.resource.data.get('faixa', '') is string && request.resource.data.get('faixa', '').size() <= 30;
       allow delete: if ehEquipe();
+    }
+
+    // Roletas criadas pelo professor.
+    match /roletas/{id} {
+      allow read: if true;
+      allow create, update: if ehEquipe() && texto('titulo', 60)
+        && request.resource.data.itens is list && request.resource.data.itens.size() >= 2 && request.resource.data.itens.size() <= 100;
+      allow delete: if ehEquipe();
+    }
+
+    // Aniversários (só apelido/primeiro nome e dia/mês): só quem está logado vê.
+    match /aniversarios/{uid} {
+      allow read: if temPerfil();
+      allow create, update: if (ehAdmin() || ehProprio(uid))
+        && request.resource.data.keys().hasOnly(['nome', 'mmdd'])
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 40
+        && request.resource.data.mmdd is string && request.resource.data.mmdd.size() == 5;
+      allow delete: if ehAdmin() || ehProprio(uid);
     }
 
     // Atividades: cada pessoa registra o que ela mesma mudou; só o admin lê e apaga.

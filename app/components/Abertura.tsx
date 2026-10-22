@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { siglaDe, useSite } from "../lib/siteConfig";
+import { estiloFoto } from "../lib/fotoAjuste";
 import Img from "./Img";
 
 const CHAVE = "dojoAbertura";
@@ -35,7 +36,7 @@ export default function Abertura() {
     <div className="abertura" aria-hidden="true" onAnimationEnd={fim}>
       <div className="abertura-conteudo">
         <div className="logo" style={{ width: 120, height: 120 }}>
-          {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={300} eager /> : <span>{siglaDe(site.nome)}</span>}
+          {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={300} eager style={estiloFoto(site.logoAjuste)} /> : <span>{siglaDe(site.nome)}</span>}
         </div>
         <strong>{site.nome}</strong>
         <span className="abertura-faixas">

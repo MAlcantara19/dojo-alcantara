@@ -7,6 +7,8 @@ import { useEventos, type EventoDoc } from "../lib/conteudo";
 import { feriadosNacionais, type Feriado } from "../lib/feriados";
 import { linkGoogleAgenda } from "../lib/ics";
 import { descreverLink, idDoDrive } from "../lib/links";
+import { lerAniversarios, type Aniversario } from "../lib/aniversarios";
+import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import { FotosDaPasta } from "./Galeria";
 import Img from "./Img";
@@ -17,6 +19,7 @@ const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julh
 const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const VAZIO_F: FeriadoLocal[] = [];
 const VAZIO_C: CalendarioOficial[] = [];
+const VAZIO_AN: Aniversario[] = [];
 const iso = (a: number, m: number, d: number) => `${a}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 const semAssinatura = () => () => {};
@@ -32,6 +35,13 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
   const ev = useEventos();
   const locais = useCarga(lerFeriadosLocais, VAZIO_F);
   const oficiais = useCarga(lerCalendariosOficiais, VAZIO_C);
+  const { user } = useAuth();
+  const anivs = useCarga(lerAniversarios, VAZIO_AN, Boolean(user));
+  const anivPorDia = useMemo(() => {
+    const m = new Map<string, string[]>();
+    anivs.dados.forEach((a) => m.set(a.mmdd, [...(m.get(a.mmdd) ?? []), a.nome]));
+    return m;
+  }, [anivs.dados]);
   const [ano, setAno] = useState(Number(hojeStr.slice(0, 4)));
   const [mes, setMes] = useState(Number(hojeStr.slice(5, 7)) - 1);
   const [dia, setDia] = useState(hojeStr);
@@ -100,6 +110,7 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
             <button key={k} type="button" className={"cal-celula" + (k === dia ? " sel" : "") + (k === hojeStr ? " hoje" : "") + (f?.some((x) => !x.facultativo) ? " feriado" : "") + (e ? " tem" : "")} onClick={() => setDia(k)} aria-pressed={k === dia} aria-label={`${d} de ${MESES[mes]}${e ? `, evento: ${e.map((x) => x.titulo).join(", ")}` : ""}${f ? `, ${f.map((x) => x.nome).join(", ")}` : ""}`}>
               <b>{d}</b>
               <span className="cal-marcas" aria-hidden="true">
+                {anivPorDia.has(k.slice(5)) && <span className="m-aniv">🎂</span>}
                 {e && <i className="m-evento" />}
                 {f && <i className={f.some((x) => !x.facultativo) ? "m-feriado" : "m-facult"} />}
               </span>
@@ -118,6 +129,7 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
         <span>
           <i className="m-facult" /> Ponto facultativo
         </span>
+        {user && <span>🎂 Aniversário</span>}
         <button type="button" className="link-btn" onClick={hoje}>
           Voltar para hoje
         </button>
@@ -131,7 +143,12 @@ function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
             {f.local ? " (feriado local)" : ""}
           </p>
         ))}
-        {doDia.length === 0 && feriadosDoDia.length === 0 && <p className="form-help">Nenhum evento neste dia.</p>}
+        {(anivPorDia.get(dia.slice(5)) ?? []).map((n) => (
+          <p key={n} className="cal-aniv">
+            🎂 Aniversário de {n}
+          </p>
+        ))}
+        {doDia.length === 0 && feriadosDoDia.length === 0 && !anivPorDia.has(dia.slice(5)) && <p className="form-help">Nenhum evento neste dia.</p>}
         {doDia.map((e) => (
           <article key={e.id} className="cal-evento">
             <h3>{e.titulo}</h3>

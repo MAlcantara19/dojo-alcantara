@@ -7,15 +7,22 @@ import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Al
 import { addMedida, addNota, apagarSub, atualizarMeuCadastro, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useTecnicas } from "../lib/conteudo";
-import { corDaFaixa, faixas } from "../lib/faixas";
+import { faixas } from "../lib/faixas";
 import { getAuthInstance } from "../lib/firebase";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
+import { podeVer, useAcessoTecnicas } from "../lib/acesso";
+import { guardarAniversario } from "../lib/aniversarios";
 import { registrarAtividade } from "../lib/atividades";
 import CampeonatosAluno from "./CampeonatosAluno";
+import { estiloFoto } from "../lib/fotoAjuste";
+import Avatar from "./Avatar";
 import CampoSenha from "./CampoSenha";
+import FotosConta from "./FotosConta";
+import Img from "./Img";
+import RespostasSimulado from "./RespostasSimulado";
 import GaleriaAluno from "./GaleriaAluno";
 import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
@@ -70,6 +77,7 @@ function Conteudo({ uid }: { uid: string }) {
   const notas = useCarga(() => lerNotas(uid), VAZIO_N);
   const resultados = useCarga(() => lerResultados(uid), VAZIO_R);
   const { mapa, lista: catalogo } = useTecnicas();
+  const acesso = useAcessoTecnicas();
   const academia = perfilCompleto.dados?.academia ?? "";
   const minhaTurma = useCarga<Turma | null>(() => lerMinhaTurma(academia), null, Boolean(academia));
   const avisosTurma = useCarga(() => lerAvisosTurma([academia]), VAZIO_AV, Boolean(academia));
@@ -128,12 +136,13 @@ function Conteudo({ uid }: { uid: string }) {
 
   const paraTreinar = catalogo
     .map((t) => ({ ...t, faixa: faixaEfetiva(t, mapa[t.id]).faixa, nota: mapa[t.id]?.nota || t.nota, cfg: mapa[t.id] }))
-    .filter((t) => t.faixa && indiceFaixa(t.faixa) >= 0 && indiceFaixa(t.faixa) <= idx + 1);
+    .filter((t) => podeVer(acesso, t.faixa));
 
   return (
     <>
+      <div className="perfil-banner">{p.banner && <Img src={p.banner} alt="" largura={1400} style={estiloFoto(p.bannerAjuste)} />}</div>
       <div className="perfil-head">
-        <span className="perfil-faixa" style={{ background: corDaFaixa(p.faixa) ?? "var(--bright)" }} aria-hidden="true" />
+        <Avatar url={p.foto} ajuste={p.fotoAjuste} nome={p.apelido || p.nome} faixa={p.faixa} tamanho={88} />
         <div>
           <h2>{p.apelido || p.nome}</h2>
           <p className="tmeta">
@@ -264,15 +273,23 @@ function Conteudo({ uid }: { uid: string }) {
       </section>
       )}
 
-      {aba === "treinar" && !p.faixa && <p className="empty">Sem faixa cadastrada.</p>}
-      {aba === "treinar" && p.faixa && (
+      {aba === "tecnicas" && (
       <section className="panel">
-        <h2>Para treinar</h2>
+        <h2>Minhas técnicas</h2>
+        <p className="tags-faixas">
+          Liberadas para você:{" "}
+          {acesso.todas
+            ? "todas as faixas"
+            : faixas
+                .filter((f) => acesso.liberadas.has(f.nome))
+                .map((f) => f.nome.toLowerCase())
+                .join(", ")}
+        </p>
         {paraTreinar.length === 0 ? (
           <p className="lead">Seu professor ainda não liberou técnicas para a sua faixa.</p>
         ) : (
           <>
-            <p className="lead">Técnicas da sua faixa e de todas as anteriores, mais as da próxima faixa.</p>
+            <p className="lead">Técnicas da sua faixa, das anteriores e da próxima. Se o professor liberar mais faixas, elas aparecem aqui.</p>
             {faixas
               .filter((f) => paraTreinar.some((t) => t.faixa === f.nome))
               .map((f) => (
@@ -391,21 +408,7 @@ function Conteudo({ uid }: { uid: string }) {
                     {dataBR(r.data)} · {r.acertos} de {r.total} ({Math.round((r.acertos / r.total) * 100)}%)
                   </small>
                 </summary>
-                {r.respostas && r.respostas.length > 0 ? (
-                  <ol className="respostas">
-                    {r.respostas.map((x, i) => (
-                      <li key={i} className={x.acertou ? "ok" : "erro"}>
-                        <span>{x.pergunta}</span>
-                        <small>
-                          Você marcou: {x.marcada} {x.acertou ? "✓" : "✗"}
-                          {!x.acertou && ` · Certa: ${x.correta}`}
-                        </small>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="form-help">Este resultado não guardou as respostas.</p>
-                )}
+                <RespostasSimulado respostas={r.respostas} />
               </details>
             </li>
           ))}
@@ -429,6 +432,10 @@ function Conteudo({ uid }: { uid: string }) {
       )}
       {aba === "conta" && (
         <>
+          <section className="panel">
+            <h2>Minhas fotos</h2>
+            <FotosConta a={p} onSalvo={perfilCompleto.recarregar} avisarAdmin={!equipe} />
+          </section>
           <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
           <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} aluno={!equipe} nome={p.apelido || p.nome} />
         </>
@@ -457,6 +464,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
     try {
       const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") };
       await atualizarMeuCadastro(uid, novo);
+      await guardarAniversario(uid, p.nome, novo.apelido, novo.dataNascimento).catch(() => undefined);
       const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento" };
       const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
       if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`);

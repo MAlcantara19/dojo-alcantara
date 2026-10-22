@@ -4,8 +4,10 @@ import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { enderecoOk } from "../lib/katasDb";
 import { testarDrive } from "../lib/fichas";
-import CampoImagem from "./CampoImagem";
 import { idDaPastaDrive } from "../lib/links";
+import { faixas } from "../lib/faixas";
+import { lerAjuste } from "../lib/fotoAjuste";
+import EditorFoto from "./EditorFoto";
 import { lerSite, mesclar, salvarSite, TRANSICOES, type SiteConfig, type Transicao } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
 
@@ -35,6 +37,20 @@ export default function AdminSite() {
       slogan: g("slogan"),
       logoUrl: g("logo"),
       bannerUrl: g("banner"),
+      logoAjuste: (() => {
+        try {
+          return lerAjuste(JSON.parse(g("logoAjuste") || "{}"));
+        } catch {
+          return lerAjuste({});
+        }
+      })(),
+      bannerAjuste: (() => {
+        try {
+          return lerAjuste(JSON.parse(g("bannerAjuste") || "{}"));
+        } catch {
+          return lerAjuste({});
+        }
+      })(),
       instagram: g("instagram").replace(/^@/, "").replace(/[^A-Za-z0-9_.]/g, ""),
       whatsapp: g("whatsapp").replace(/\D/g, ""),
       emailContato: g("emailContato").toLowerCase(),
@@ -53,6 +69,7 @@ export default function AdminSite() {
       driveFichas: idDaPastaDrive(g("fichas")),
       driveChave: g("chave"),
       diasDestaque: Math.min(60, Math.max(1, Math.round(Number(g("dias")) || 7))),
+      faixasPublicas: f.getAll("faixasPublicas").map(String),
     };
     if (!novo.nome) return setMsg("O nome do dojô não pode ficar vazio.");
     if ((novo.logoUrl && !enderecoOk(novo.logoUrl)) || (novo.bannerUrl && !enderecoOk(novo.bannerUrl))) return setMsg("Logo e banner: escolha uma imagem do celular ou cole um link que comece com https://");
@@ -87,8 +104,8 @@ export default function AdminSite() {
           <label htmlFor="s-slogan">Frase abaixo do nome</label>
           <input id="s-slogan" name="slogan" type="text" maxLength={100} defaultValue={atual.slogan} />
         </div>
-        <CampoImagem name="logo" rotulo="Logo do dojô" valorInicial={atual.logoUrl} />
-        <CampoImagem name="banner" rotulo="Banner do topo da página inicial" valorInicial={atual.bannerUrl} ajuda="Dica: uma foto da turma, na horizontal, fica bonita. Deixe vazio para voltar ao visual padrão roxo." />
+        <EditorFoto name="logo" rotulo="Logo / foto de perfil do dojô" valorInicial={atual.logoUrl} ajusteInicial={atual.logoAjuste} formato="redondo" nome={atual.nome} />
+        <EditorFoto name="banner" rotulo="Banner do topo da página inicial (uma foto da turma, na horizontal, fica bonita)" valorInicial={atual.bannerUrl} ajusteInicial={atual.bannerAjuste} formato="banner" semZoom />
         <div className="two">
           <div className="field">
             <label htmlFor="s-ig">Instagram (sem @)</label>
@@ -137,6 +154,15 @@ export default function AdminSite() {
           <label htmlFor="s-dias">Dias em que a foto nova fica em destaque</label>
           <input id="s-dias" name="dias" type="number" min={1} max={60} defaultValue={atual.diasDestaque} />
         </div>
+        <fieldset className="checks">
+          <legend>Técnicas abertas para quem não está logado</legend>
+          <small>As outras faixas só aparecem para quem entra. O aluno vê até a próxima faixa dele (ou mais, se você liberar no cadastro dele).</small>
+          {faixas.map((fx) => (
+            <label key={fx.nome}>
+              <input type="checkbox" name="faixasPublicas" value={fx.nome} defaultChecked={atual.faixasPublicas.includes(fx.nome)} /> Faixa {fx.nome.toLowerCase()}
+            </label>
+          ))}
+        </fieldset>
         <h3 className="sub">Efeitos do site</h3>
         <p className="form-help">Ligue ou desligue cada efeito. Se desligar “Animações em geral”, todos os movimentos param (bom para quem prefere um site mais sério ou usa celular antigo).</p>
         <fieldset className="checks">

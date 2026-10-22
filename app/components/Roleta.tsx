@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
 import { lerMeuDesempenho, registrarPalavra, type Desempenho } from "../lib/desempenho";
+import { podeVer, useAcessoTecnicas } from "../lib/acesso";
+import { amostra, lerRoletas, type RoletaDoc } from "../lib/roletasDb";
 import { useAuth } from "../lib/useAuth";
 import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
@@ -12,12 +14,14 @@ import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
 
-type Modo = "palavras" | "tecnicas" | "exercicios";
+type Modo = "palavras" | "tecnicas" | "exercicios" | "mais";
 type Jogo = "falar" | "escolher";
 const VAZIO_PAL: PalavraDoc[] = [];
 const VAZIO_EXE: ExercicioDoc[] = [];
 const VAZIO_LISTAS: ListaPalavras[] = [];
 const VAZIO_DESEMP: Desempenho[] = [];
+const VAZIO_ROL: RoletaDoc[] = [];
+const QTDS = [6, 8, 12, 16, 24];
 const PALETA = ["#6a35c9", "#2b0f57", "#8b5be0", "#3d1a82"];
 const PALETA_EXE = ["#12a39a", "#cf3d9a", "#6a35c9", "#e0793f", "#3c8dbc", "#7d6fa8", "#c2417a", "#2f9e5b"];
 const LETRAS = ["A", "B", "C", "D", "E"];
@@ -58,6 +62,10 @@ export default function Roleta() {
   const [escolhas, setEscolhas] = useState<{ texto: string; certa: boolean }[]>([]);
   const [marcada, setMarcada] = useState<number | null>(null);
   const [placarSessao, setPlacarSessao] = useState({ acertos: 0, jogadas: 0 });
+  const [qtd, setQtd] = useState(12);
+  const [semente, setSemente] = useState(7);
+  const [roletaId, setRoletaId] = useState("");
+  const dbRoletas = useCarga(lerRoletas, VAZIO_ROL);
   const { user, perfil } = useAuth();
   const meu = useCarga(() => lerMeuDesempenho(user?.uid ?? ""), VAZIO_DESEMP, Boolean(user));
   const totalGuardado = meu.dados.reduce((s, x) => ({ acertos: s.acertos + x.acertos, jogadas: s.jogadas + x.acertos + x.erros }), { acertos: 0, jogadas: 0 });
@@ -70,20 +78,29 @@ export default function Roleta() {
   const escolhida = opcoesPal.find((o) => o.nome === lista) ?? opcoesPal[Math.min(1, opcoesPal.length - 1)] ?? opcoesPal[0];
   const exercicios = useMemo(() => exerciciosOuPadrao(dbExe.dados), [dbExe.dados]);
 
-  const palavras: Palavra[] = escolhida.itens;
-  const tecs = useMemo(() => catalogo.filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro, catalogo]);
+  const todasPalavras: Palavra[] = escolhida.itens;
+  const palavras: Palavra[] = useMemo(() => amostra(todasPalavras, qtd, semente), [todasPalavras, qtd, semente]);
+  const acesso = useAcessoTecnicas();
+  const todasTecs = useMemo(() => catalogo.filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)).filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro, catalogo, acesso, mapa]);
+  const tecs = useMemo(() => amostra(todasTecs, qtd, semente), [todasTecs, qtd, semente]);
+  const roletaMais = dbRoletas.dados.find((x) => x.id === roletaId) ?? dbRoletas.dados[0];
+  const itensMais = useMemo(() => amostra(roletaMais?.itens ?? [], qtd, semente), [roletaMais, qtd, semente]);
+  const totalDoModo = modo === "palavras" ? todasPalavras.length : modo === "tecnicas" ? todasTecs.length : modo === "mais" ? (roletaMais?.itens.length ?? 0) : exercicios.length;
 
   const fatias: Fatia[] =
     modo === "palavras"
       ? palavras.map((p, i) => ({ rotulo: p.termo, cor: PALETA[i % PALETA.length] }))
       : modo === "tecnicas"
         ? tecs.map((t) => ({ rotulo: t.nome, cor: corDe(t) }))
-        : exercicios.map((e, i) => ({ rotulo: e.nome, cor: PALETA_EXE[i % PALETA_EXE.length] }));
+        : modo === "mais"
+          ? itensMais.map((x, i) => ({ rotulo: x.texto, cor: PALETA[i % PALETA.length] }))
+          : exercicios.map((e, i) => ({ rotulo: e.nome, cor: PALETA_EXE[i % PALETA_EXE.length] }));
 
-  const chave = modo === "palavras" ? "p-" + escolhida.nome + palavras.length : modo === "tecnicas" ? "t-" + filtro : "e-" + exercicios.length;
+  const chave = (modo === "palavras" ? "p-" + escolhida.nome : modo === "tecnicas" ? "t-" + filtro : modo === "mais" ? "m-" + (roletaMais?.id ?? "") : "e-" + exercicios.length) + `-${qtd}-${semente}`;
   const tec = modo === "tecnicas" && resultado !== null ? tecs[resultado] : null;
   const pal = modo === "palavras" && resultado !== null ? palavras[resultado] : null;
   const exe = modo === "exercicios" && resultado !== null ? exercicios[resultado] : null;
+  const mais = modo === "mais" && resultado !== null ? itensMais[resultado] : null;
   const cfg = tec ? mapa[tec.id] : undefined;
 
   function limpar() {
@@ -97,7 +114,7 @@ export default function Roleta() {
   function terminou(i: number) {
     setResultado(i);
     setGirando(false);
-    if (modo === "palavras" && jogo === "escolher") setEscolhas(montarEscolhas(palavras, i));
+    if (modo === "palavras" && jogo === "escolher") setEscolhas(montarEscolhas(todasPalavras, todasPalavras.indexOf(palavras[i])));
   }
 
   function responder(k: number) {
@@ -110,12 +127,44 @@ export default function Roleta() {
   return (
     <div className="tool">
       <div className="tabs" role="tablist" aria-label="Tipo de roleta">
-        {(["palavras", "tecnicas", "exercicios"] as Modo[]).map((m) => (
+        {(["palavras", "tecnicas", "exercicios", ...(dbRoletas.dados.length ? ["mais"] : [])] as Modo[]).map((m) => (
           <button key={m} role="tab" aria-selected={modo === m} onClick={() => (setModo(m), limpar())}>
-            {m === "palavras" ? "Palavras" : m === "tecnicas" ? "Técnicas" : "Exercícios"}
+            {m === "palavras" ? "Palavras" : m === "tecnicas" ? "Técnicas" : m === "mais" ? "Mais roletas" : "Exercícios"}
           </button>
         ))}
       </div>
+
+      {modo === "mais" && (
+        <div className="field">
+          <label htmlFor="mais-rol">Roleta</label>
+          <select id="mais-rol" value={roletaMais?.id ?? ""} onChange={(e) => (setRoletaId(e.target.value), limpar())} disabled={girando}>
+            {dbRoletas.dados.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.titulo} ({x.itens.length})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {modo !== "exercicios" && totalDoModo > QTDS[0] && (
+        <div className="qtd-roleta">
+          <label htmlFor="qtd">Quantos na roleta:</label>
+          <select id="qtd" value={qtd} onChange={(e) => (setQtd(Number(e.target.value)), limpar())} disabled={girando}>
+            {QTDS.filter((n) => n < totalDoModo).map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+            <option value={0}>Todos ({totalDoModo})</option>
+          </select>
+          {qtd > 0 && qtd < totalDoModo && (
+            <button type="button" className="btn btn-ghost" onClick={() => (setSemente((s) => s + 1), limpar())} disabled={girando}>
+              🔀 Sortear outros
+            </button>
+          )}
+        </div>
+      )}
 
       {modo === "palavras" && (
         <div className="two">
@@ -157,6 +206,18 @@ export default function Roleta() {
       <div className="result-card" aria-live="polite" style={{ borderColor: tec ? corDe(tec) : undefined }}>
         {resultado === null ? (
           <p className="form-help">{girando ? "Girando…" : "Toque em “Girar” no centro da roleta."}</p>
+        ) : mais ? (
+          <>
+            <strong className="result-word">{mais.texto}</strong>
+            {mais.resposta &&
+              (mostrar ? (
+                <p className="result-mean">{mais.resposta}</p>
+              ) : (
+                <button className="btn btn-ghost" onClick={() => setMostrar(true)}>
+                  Mostrar a resposta
+                </button>
+              ))}
+          </>
         ) : pal ? (
           <>
             <strong className="result-word">{pal.termo}</strong>

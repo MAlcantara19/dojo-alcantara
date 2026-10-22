@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { hojeISO, senhaProvisoria } from "../lib/aluno";
 import { addMedida, criarConta, type Turma } from "../lib/alunos";
+import { guardarAniversario } from "../lib/aniversarios";
 import { mensagemErro } from "../lib/auth";
 import { faixas } from "../lib/faixas";
 
@@ -55,6 +56,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
     setMsg("Criando a conta…");
     try {
       const { login, uid } = await criarConta(dados, pw);
+      await guardarAniversario(uid, dados.nome, dados.apelido, dados.dataNascimento).catch(() => undefined);
       if (typeof peso === "number" || typeof altura === "number") {
         await addMedida(uid, { data: hojeISO(), peso: typeof peso === "number" ? peso : null, altura: typeof altura === "number" ? altura : null }).catch(() => undefined);
       }

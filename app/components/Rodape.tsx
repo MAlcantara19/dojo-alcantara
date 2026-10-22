@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { siglaDe, useSite } from "../lib/siteConfig";
+import { estiloFoto } from "../lib/fotoAjuste";
 import Img from "./Img";
 
 /** Rodapé do site: marca, atalhos, contato e selos de confiança. */
@@ -18,7 +19,7 @@ export default function Rodape() {
       <div className="rodape-grade">
         <div className="rodape-marca">
           <div className="logo logo-sm" aria-hidden="true">
-            {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={200} /> : <span>{siglaDe(site.nome)}</span>}
+            {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={200} style={estiloFoto(site.logoAjuste)} /> : <span>{siglaDe(site.nome)}</span>}
           </div>
           <strong>{site.nome}</strong>
           <p>{site.slogan}</p>

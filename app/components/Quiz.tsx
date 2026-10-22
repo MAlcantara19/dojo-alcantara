@@ -3,6 +3,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { hojeISO } from "../lib/aluno";
 import { addResultado, lerAluno, publicarResultado, type Resp } from "../lib/alunos";
+import { useAcessoTecnicas } from "../lib/acesso";
 import { useTecnicas } from "../lib/conteudo";
 import { lerSimulados, simuladosOuPadrao, type SimuladoDoc } from "../lib/estudoDb";
 import type { Pergunta } from "../lib/simulados";
@@ -54,7 +55,7 @@ async function registrar(uid: string, s: SimuladoDoc, ac: number, det: Resp[]): 
   try {
     await addResultado(uid, { data, titulo: s.titulo, simuladoId: s.id, acertos: ac, total: s.perguntas.length, respostas: det, ts });
     const a = await lerAluno(uid).catch(() => null);
-    await publicarResultado({ uid, nome: a?.nome ?? "Aluno", apelido: a?.apelido ?? "", academia: a?.academia ?? "", simuladoId: s.id, titulo: s.titulo, acertos: ac, total: s.perguntas.length, data, ts }).catch(() => undefined);
+    await publicarResultado({ uid, nome: a?.nome ?? "Aluno", apelido: a?.apelido ?? "", academia: a?.academia ?? "", simuladoId: s.id, titulo: s.titulo, acertos: ac, total: s.perguntas.length, data, ts, respostas: det.slice(0, 60) }).catch(() => undefined);
     return "Resultado salvo no seu perfil e enviado ao professor.";
   } catch {
     return "Não consegui salvar o resultado no seu perfil.";
@@ -65,7 +66,8 @@ export default function Quiz() {
   const { user } = useAuth();
   const doBanco = useCarga(lerSimulados, VAZIO_SIM);
   const { mapa, lista } = useTecnicas();
-  const porFaixa = useMemo(() => simuladosPorFaixa(lista, (t) => faixaEfetiva(t, mapa[t.id]).faixa), [lista, mapa]);
+  const acesso = useAcessoTecnicas();
+  const porFaixa = useMemo(() => simuladosPorFaixa(lista, (t) => faixaEfetiva(t, mapa[t.id]).faixa).filter((s) => acesso.todas || Array.from(acesso.liberadas).some((f) => s.id === `faixa-${f.toLowerCase()}`)), [lista, mapa, acesso]);
   const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...porFaixa];
   const [numAlt, setNumAlt] = useState(0);
   const [salvo, setSalvo] = useState("");

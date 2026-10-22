@@ -7,6 +7,7 @@ import { ehEquipe, enviarLinkSenha, lerPerfil, mensagemErro, paraEmail, pedirNov
 import { getAuthInstance } from "../lib/firebase";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import CampoSenha from "./CampoSenha";
+import { estiloFoto } from "../lib/fotoAjuste";
 import Img from "./Img";
 
 /** Entrada única: aluno e professor usam o mesmo login e cada um vai para a sua área. */
@@ -67,7 +68,7 @@ export default function LoginForm({ destino }: { destino?: string }) {
     <div className="entrar">
       <div className="entrar-marca">
         <div className="logo logo-sm" aria-hidden="true">
-          {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={300} eager /> : <span>{siglaDe(site.nome)}</span>}
+          {site.logoUrl ? <Img src={site.logoUrl} alt="" largura={300} eager style={estiloFoto(site.logoAjuste)} /> : <span>{siglaDe(site.nome)}</span>}
         </div>
         <strong className="entrar-nome">{site.nome}</strong>
         <small>Área de alunos e professores</small>

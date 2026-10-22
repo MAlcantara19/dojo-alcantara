@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
+import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { useFichas } from "../lib/fichas";
+import Link from "next/link";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import Img from "./Img";
 import LinkBtns from "./LinkBtns";
@@ -27,7 +29,10 @@ export default function Tecnicas() {
   const [aberta, setAberta] = useState<Item | null>(null);
 
   const termo = busca.trim().toLowerCase();
+  const acesso = useAcessoTecnicas();
+  const bloqueadas = catalogo.filter((t) => !podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)).length;
   const lista: Item[] = catalogo
+    .filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa))
     .map((t) => {
       const f = faixaEfetiva(t, mapa[t.id]);
       return { ...t, nota: mapa[t.id]?.nota || t.nota, faixaFinal: f.faixa, sugerida: f.sugerida };
@@ -61,6 +66,24 @@ export default function Tecnicas() {
 
   return (
     <div className="tool">
+      {!acesso.carregando && bloqueadas > 0 && (
+        <div className="aviso-dia aviso-acesso" role="note">
+          {acesso.logado ? (
+            <p>
+              🔒 {bloqueadas} técnicas de outras faixas ainda não estão liberadas para você. Elas abrem conforme a sua graduação ou quando o professor liberar.
+            </p>
+          ) : (
+            <>
+              <p>
+                🔒 Aqui aparecem as técnicas da faixa {Array.from(acesso.liberadas).join(", ").toLowerCase() || "azul"}. Para ver as outras {bloqueadas}, entre com a sua conta de aluno.
+              </p>
+              <Link className="btn btn-primary" href="/entrar">
+                Entrar
+              </Link>
+            </>
+          )}
+        </div>
+      )}
       <div className="tabs" role="tablist" aria-label="Categoria">
         {([["todas", "Todas"], ["nage", "Projeções"], ["katame", "Solo"]] as [Aba, string][]).map(([k, r]) => (
           <button key={k} role="tab" aria-selected={aba === k} onClick={() => setAba(k)}>
