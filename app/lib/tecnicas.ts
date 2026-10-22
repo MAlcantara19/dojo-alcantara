@@ -180,3 +180,6 @@ export function montarCatalogo(ajustes: Record<string, AjusteTecnica>, incluirEs
 /* Técnicas hoje proibidas em campeonatos (você pode marcar outras no painel). */
 const proibidasInicial = new Set(["kani-basami"]);
 export const ehProibida = (t: Tecnica, ajuste?: { proibida?: boolean }): boolean => (typeof ajuste?.proibida === "boolean" ? ajuste.proibida : proibidasInicial.has(t.id));
+
+/** “Faixa amarela · 1º grupo …”: o grupo do Gokyo com a faixa correspondente na frente. */
+export const tituloGrupoComFaixa = (g: GrupoId) => (faixaPorGrupo[g] ? `Faixa ${faixaPorGrupo[g]?.toLowerCase()} · ${grupos[g].titulo}` : grupos[g].titulo);

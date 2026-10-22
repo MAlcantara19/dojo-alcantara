@@ -2,6 +2,7 @@
 export const ABAS_PERFIL: [string, string][] = [
   ["resumo", "Resumo"],
   ["tecnicas", "Minhas técnicas"],
+  ["checklist", "Checklist da faixa"],
   ["corpo", "Corpo e medidas"],
   ["campeonatos", "Campeonatos"],
   ["galeria", "Minha galeria"],

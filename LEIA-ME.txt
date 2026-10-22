@@ -1,20 +1,18 @@
-ATUALIZAÇÃO 24 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 26 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
 2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
 3. npm run build
 4. git add .
-   git commit -m "Campeonatos com inscritos, chamada por turma e calendario geral e dos alunos"
+   git commit -m "Checklist da faixa, graus pela chamada, sequencias e contragolpes e formularios recolhidos"
    git push
 
 NOVIDADES
- - Painel > Campeonatos: nome, data, local, informações, arquivos (edital, chaves), turma (geral
-   ou interno), calendário (geral ou só dos alunos) e aviso automático para todos ou para turmas.
-   Inscrição de alunos já cadastrados com filtro por turma, peso e altura opcionais (viram medida
-   do aluno), classe pela idade e categoria de peso sugeridas, e comprovante (só administrador e
-   professor da turma veem).
- - Calendário: "Calendário geral" (todo mundo) e "Calendário dos alunos" (cadastrados), com
-   eventos internos, campeonatos com quem vai competir e aniversários.
- - Mural: ao criar evento, escolher o calendário (geral ou só dos alunos).
- - Painel > Chamada: turma, data, tocar em quem veio, incluir aluno de fora (entra na turma),
-   salvar e ver as chamadas anteriores. O aluno vê quantas presenças tem.
+ - Checklist da faixa (Minha área > Checklist da faixa): Sei o nome / Executo / Sei o erro,
+   com progresso, salvo sozinho e botão de imprimir. O professor vê e marca em Alunos > Checklist.
+ - Graus pela chamada: 9 aulas = 1 grau e 4 graus = pronto para avaliação (mude em Site >
+   Aparência). O aluno vê a faixa com os graus; Alunos > "Graus pela chamada e exames".
+ - Sequências (renraku-waza) e contragolpes (kaeshi-waza) por técnica, cadastrados em
+   Estudo > Técnicas; aparecem no detalhe da técnica nos dois sentidos, com toque para abrir.
+ - Formulários começam recolhidos ("+ Novo aviso", "+ Registrar medida"...) para sobrar
+   espaço no celular, e nada mais passa da largura da tela.

@@ -8,6 +8,7 @@ import { registrarAtividade } from "../lib/atividades";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import LineChart from "./LineChart";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: Medida[] = [];
 const num = (v: FormDataEntryValue | null): number | null => {
@@ -52,7 +53,8 @@ export default function MedidasAluno({ uid, nomeAluno = "", turma = "" }: { uid:
       {m.erro && <p className="empty">Não consegui ler as medidas.</p>}
       <LineChart titulo="Peso" unidade="kg" pontos={ponto("peso")} />
       <LineChart titulo="Altura" unidade="cm" pontos={ponto("altura")} />
-      <form className="form tedit" onSubmit={(e) => void registrar(e)}>
+      <Recolhivel titulo="Registrar nova medida">
+<form className="form tedit" onSubmit={(e) => void registrar(e)}>
         <strong>Registrar nova medida</strong>
         <div className="two">
           <div className="field">
@@ -77,6 +79,7 @@ export default function MedidasAluno({ uid, nomeAluno = "", turma = "" }: { uid:
           </p>
         )}
       </form>
+</Recolhivel>
     </div>
   );
 }

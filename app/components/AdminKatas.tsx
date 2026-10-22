@@ -5,6 +5,7 @@ import { mensagemErro } from "../lib/auth";
 import { apagarCardKata, criarCardKata, enderecoOk, lerKatasDb, montarKatas, salvarMidiaKata, salvarTextosKata, seriesParaTexto, textoParaSeries, type Imagem, type Video } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: Record<string, never> = {};
 
@@ -132,7 +133,8 @@ export default function AdminKatas() {
             </button>
           </form>
 
-          <form className="form tedit" onSubmit={novoVideo}>
+          <Recolhivel titulo="Adicionar vídeo">
+<form className="form tedit" onSubmit={novoVideo}>
             <strong>Vídeos de {atual.nome}</strong>
             <ul className="manage">
               {atual.videos.length === 0 && <li className="empty">Nenhum vídeo ainda.</li>}
@@ -160,8 +162,10 @@ export default function AdminKatas() {
               Adicionar vídeo
             </button>
           </form>
+</Recolhivel>
 
-          <form className="form tedit" onSubmit={novaImagem}>
+          <Recolhivel titulo="Adicionar imagem">
+<form className="form tedit" onSubmit={novaImagem}>
             <strong>Imagens de {atual.nome}</strong>
             <ul className="manage">
               {atual.imagens.length === 0 && <li className="empty">Nenhuma imagem ainda.</li>}
@@ -186,6 +190,7 @@ export default function AdminKatas() {
               Adicionar imagem
             </button>
           </form>
+</Recolhivel>
 
           {atual.custom && (
             <button
@@ -201,7 +206,8 @@ export default function AdminKatas() {
 
       <details className="novo">
         <summary>Criar um card novo (outro kata, ou um aviso sobre um kata)</summary>
-        <form className="form" onSubmit={novoCard}>
+        <Recolhivel titulo="Criar kata novo">
+<form className="form" onSubmit={novoCard}>
           <div className="field">
             <label htmlFor="kc-n">Nome</label>
             <input id="kc-n" name="nome" type="text" maxLength={60} autoComplete="off" />
@@ -218,6 +224,7 @@ export default function AdminKatas() {
             Criar card
           </button>
         </form>
+</Recolhivel>
       </details>
     </section>
   );

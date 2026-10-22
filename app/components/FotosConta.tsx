@@ -9,6 +9,7 @@ import { getDb } from "../lib/firebase";
 import { lerAjuste } from "../lib/fotoAjuste";
 import { enderecoOk } from "../lib/katasDb";
 import EditorFoto from "./EditorFoto";
+import Recolhivel from "./Recolhivel";
 
 /** Foto de perfil e banner de uma pessoa (ela mesma ou a equipe pode mudar). */
 export default function FotosConta({ a, onSalvo, avisarAdmin = false }: { a: Aluno; onSalvo: () => void; avisarAdmin?: boolean }) {
@@ -40,8 +41,8 @@ export default function FotosConta({ a, onSalvo, avisarAdmin = false }: { a: Alu
   }
 
   return (
+    <Recolhivel titulo="Mudar foto de perfil e banner">
     <form className="form tedit" onSubmit={(e) => void salvar(e)}>
-      <strong>Foto de perfil e banner</strong>
       <EditorFoto name="foto" rotulo="Foto de perfil" valorInicial={a.foto ?? ""} ajusteInicial={a.fotoAjuste} formato="redondo" faixa={a.faixa} nome={a.apelido || a.nome} />
       <EditorFoto name="banner" rotulo="Banner (imagem larga no topo do perfil, opcional)" valorInicial={a.banner ?? ""} ajusteInicial={a.bannerAjuste} formato="banner" />
       <button className="btn btn-primary" type="submit">
@@ -53,5 +54,6 @@ export default function FotosConta({ a, onSalvo, avisarAdmin = false }: { a: Alu
         </p>
       )}
     </form>
+    </Recolhivel>
   );
 }

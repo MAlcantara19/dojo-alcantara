@@ -66,6 +66,9 @@ export async function listarAdmins(): Promise<Aluno[]> {
   const snap = await getDocs(query(collection(getDb(), "users"), where("papel", "==", "admin")));
   return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as Omit<Aluno, "uid">) })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
+export async function atualizarLoginProprio(uid: string, login: string) {
+  await updateDoc(doc(getDb(), "users", uid), { login });
+}
 export async function atualizarNomeConta(uid: string, nome: string) {
   await updateDoc(doc(getDb(), "users", uid), { nome });
 }

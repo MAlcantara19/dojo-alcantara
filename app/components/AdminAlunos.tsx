@@ -7,6 +7,9 @@ import { mensagemErro } from "../lib/auth";
 import { corDaFaixa, DANS, faixaPorExtenso, faixas } from "../lib/faixas";
 import { guardarAniversario } from "../lib/aniversarios";
 import { registrarAtividade } from "../lib/atividades";
+import { todasChamadas, type Chamada } from "../lib/chamadas";
+import { calcularGraus } from "../lib/graus";
+import { useSite } from "../lib/siteConfig";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 import AcoesConta from "./AcoesConta";
@@ -15,12 +18,14 @@ import CampeonatosAluno from "./CampeonatosAluno";
 import GaleriaAluno from "./GaleriaAluno";
 import Avatar from "./Avatar";
 import FotosConta from "./FotosConta";
+import ChecklistFaixa from "./ChecklistFaixa";
 import MedidasAluno from "./MedidasAluno";
 import MenuSuspenso from "./MenuSuspenso";
 
 const VAZIO_A: Aluno[] = [];
 const VAZIO_T: Turma[] = [];
 const VAZIO_I: Record<string, string> = {};
+const VAZIO_CH: Chamada[] = [];
 
 export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin: boolean; escopo?: Escopo; autor?: string }) {
   const alunos = useCarga(() => listarAlunos(null), VAZIO_A);
@@ -31,11 +36,14 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
   const [filtro, setFiltro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
   const [medidas, setMedidas] = useState<string | null>(null);
-  const [painel, setPainel] = useState<{ uid: string; tipo: "camp" | "gal" } | null>(null);
+  const [aberto, setAberto] = useState<string | null>(null);
+  const [painel, setPainel] = useState<{ uid: string; tipo: "camp" | "gal" | "ck" } | null>(null);
   const [senhaDe, setSenhaDe] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [limite, setLimite] = useState(12);
-  const [sec, setSec] = useState<"lista" | "cadastrar" | "aniversarios" | "faixa">("lista");
+  const [sec, setSec] = useState<"lista" | "cadastrar" | "aniversarios" | "faixa" | "graus">("lista");
+  const site = useSite();
+  const chamadas = useCarga(todasChamadas, VAZIO_CH, sec === "graus");
 
   const hoje = new Date();
   const termo = busca.trim().toLowerCase();
@@ -95,6 +103,7 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
           ...(ehAdmin ? ([["cadastrar", "Cadastrar aluno"]] as ["cadastrar", string][]) : []),
           ["aniversarios", `Aniversários (${aniversarios.length} nos próximos 30 dias)`],
           ["faixa", "Tempo na faixa"],
+          ["graus", "Graus pela chamada e exames"],
         ]}
       />
       {sec === "lista" && !ehAdmin && (
@@ -241,46 +250,63 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
                 </>
               ) : (
                 <>
-                  <span className="aluno-linha">
+                  <button type="button" className="aluno-resumo" onClick={() => setAberto(aberto === a.uid ? null : a.uid)} aria-expanded={aberto === a.uid}>
                     <Avatar url={a.foto} ajuste={a.fotoAjuste} nome={a.apelido || a.nome} faixa={a.faixa} dan={a.dan} tamanho={44} />
                     <span>
-                    <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
-                    <small>
-                      <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> Faixa {faixaPorExtenso(a.faixa, a.dan).toLowerCase()}
-                      {a.faixaDesde ? ` desde ${dataBR(a.faixaDesde)}` : ""} · {turmaDe(a.academia)?.apelido || a.academia || "Sem turma designada"}
-                    </small>
-                    {a.dataNascimento && (
+                      <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
                       <small>
-                        {idade(a.dataNascimento, hoje)} anos · campeonato {hoje.getFullYear()}: {anoCampeonato(a.dataNascimento, hoje)} anos
+                        <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> {faixaPorExtenso(a.faixa, a.dan)} · {turmaDe(a.academia)?.apelido || a.academia || "Sem turma"}
                       </small>
-                    )}
-                    <small>Login: {semCel(a.login)}</small>
-                    {ehAdmin && internos.dados[a.uid] && <small>Apelido interno: {internos.dados[a.uid]}</small>}
                     </span>
-                  </span>
-                  <span className="tlinks">
-                    <button className="btn btn-ghost" onClick={() => setMedidas(medidas === a.uid ? null : a.uid)}>
-                      {medidas === a.uid ? "Fechar medidas" : "Peso e altura"}
-                    </button>
-                    <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
-                      Editar
-                    </button>
-                    {!ehAdmin && (
-                      <button className="btn btn-ghost" onClick={() => setSenhaDe(senhaDe === a.uid ? null : a.uid)}>
-                        Senha
-                      </button>
-                    )}
-                  </span>
-                  <span className="tlinks">
-                    <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "camp" ? null : { uid: a.uid, tipo: "camp" })}>
-                      Campeonatos
-                    </button>
-                    <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "gal" ? null : { uid: a.uid, tipo: "gal" })}>
-                      Galeria
-                    </button>
-                  </span>
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" className={aberto === a.uid ? "virado" : ""}>
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </button>
+                  {aberto === a.uid && (
+                    <div className="aluno-detalhes">
+                      <small>{a.faixaDesde ? `Na faixa desde ${dataBR(a.faixaDesde)}` : "Sem data de faixa"}</small>
+                      {a.dataNascimento && (
+                        <small>
+                          {idade(a.dataNascimento, hoje)} anos · idade de campeonato em {hoje.getFullYear()}: {anoCampeonato(a.dataNascimento, hoje)} anos
+                        </small>
+                      )}
+                      <small>Login: {semCel(a.login)}</small>
+                      {a.celular && <small>Celular: {a.celular}</small>}
+                      {ehAdmin && internos.dados[a.uid] && <small>Apelido interno: {internos.dados[a.uid]}</small>}
+                      <span className="tlinks">
+                        <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>
+                          Editar
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => setMedidas(medidas === a.uid ? null : a.uid)}>
+                          {medidas === a.uid ? "Fechar medidas" : "Peso e altura"}
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "camp" ? null : { uid: a.uid, tipo: "camp" })}>
+                          Campeonatos
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "gal" ? null : { uid: a.uid, tipo: "gal" })}>
+                          Galeria
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => setPainel(painel?.uid === a.uid && painel.tipo === "ck" ? null : { uid: a.uid, tipo: "ck" })}>
+                          Checklist
+                        </button>
+                        {!ehAdmin && (
+                          <button className="btn btn-ghost" onClick={() => setSenhaDe(senhaDe === a.uid ? null : a.uid)}>
+                            Senha
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                  )}
                   {medidas === a.uid && <MedidasAluno uid={a.uid} nomeAluno={a.apelido || a.nome} turma={a.academia ?? ""} />}
                   {painel?.uid === a.uid && painel.tipo === "camp" && <CampeonatosAluno uid={a.uid} editavel nome={a.apelido || a.nome} turma={a.academia ?? ""} />}
+                  {painel?.uid === a.uid && painel.tipo === "ck" && (
+                    <ChecklistFaixa
+                      uid={a.uid}
+                      nome={a.apelido || a.nome}
+                      faixasLiberadas={faixas.slice(0, Math.max(faixas.findIndex((f) => f.nome === a.faixa) + 1, faixas.findIndex((f) => f.nome === a.liberadoAte)) + 1).map((f) => f.nome)}
+                      faixaInicial={faixas[faixas.findIndex((f) => f.nome === a.faixa) + 1]?.nome ?? a.faixa}
+                    />
+                  )}
                   {painel?.uid === a.uid && painel.tipo === "gal" && <GaleriaAluno uid={a.uid} autor={autor} avisarAdmin={false} />}
                   {!ehAdmin && senhaDe === a.uid && <AcoesConta uid={a.uid} nome={a.apelido || a.nome} completo={false} onApagada={alunos.recarregar} />}
                 </>
@@ -356,6 +382,38 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
         </ul>
         <p className="form-help">É só um aviso para você avaliar. A decisão de exame continua sendo sua e da federação.</p>
       </section>
+      )}
+      {sec === "graus" && (
+        <section className="panel" id="graus">
+          <h2>Graus pela chamada</h2>
+          <p className="lead">
+            {site.aulasPorGrau} aulas com presença = 1 grau, contando desde a data da faixa atual. Com {site.grausPorFaixa} graus o aluno fica pronto para a avaliação. Mude esses números em Site → Aparência.
+          </p>
+          {chamadas.carregando && <p className="form-help">Lendo as chamadas…</p>}
+          <ul className="manage">
+            {alunos.dados
+              .filter((x) => x.faixa !== "Preta")
+              .map((x) => ({ x, g: calcularGraus(chamadas.dados.filter((c) => c.presentes.includes(x.uid)).map((c) => c.data), x.faixaDesde, site.aulasPorGrau, site.grausPorFaixa) }))
+              .sort((p, q) => Number(q.g.pronto) - Number(p.g.pronto) || q.g.graus - p.g.graus || q.g.aulas - p.g.aulas)
+              .map(({ x, g }) => (
+                <li key={x.uid}>
+                  <span className="aluno-linha">
+                    <Avatar url={x.foto} ajuste={x.fotoAjuste} nome={x.apelido || x.nome} faixa={x.faixa} dan={x.dan} tamanho={40} />
+                    <span>
+                      <strong>
+                        {g.pronto ? "🎉 " : ""}
+                        {x.apelido || x.nome}
+                      </strong>
+                      <small>
+                        Faixa {x.faixa.toLowerCase()} · {g.graus} de {g.total} graus · {g.aulas} aulas desde {x.faixaDesde ? dataBR(x.faixaDesde) : "o início"}
+                        {g.pronto ? " · pronto para avaliação" : ` · faltam ${g.faltam} para o próximo grau`}
+                      </small>
+                    </span>
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </section>
       )}
     </>
   );

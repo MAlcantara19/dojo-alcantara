@@ -182,6 +182,15 @@ function FormCamp({ inicial, turmas, autor, onSalvo, onCancelar }: { inicial?: C
           {avisar && (
             <div className="checks">
               <small>Para quem? Sem marcar nenhuma turma, o aviso vai para todos (página inicial).</small>
+              <label>
+                <input
+                  type="checkbox"
+                  onChange={(e) => {
+                    e.currentTarget.form?.querySelectorAll<HTMLInputElement>('input[name="avisoTurmas"]').forEach((i) => (i.checked = e.currentTarget.checked));
+                  }}
+                />{" "}
+                <b>Todas as turmas</b>
+              </label>
               {turmas.map((t) => (
                 <label key={t.id}>
                   <input type="checkbox" name="avisoTurmas" value={t.nome} /> {t.apelido || t.nome}

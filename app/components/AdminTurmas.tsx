@@ -7,6 +7,7 @@ import { mensagemErro } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
 import GerenciarAlunos from "./GerenciarAlunos";
 import MenuSuspenso from "./MenuSuspenso";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO_T: Turma[] = [];
 const VAZIO_A: Aluno[] = [];
@@ -218,7 +219,8 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
             {ehAdmin && gerenciando === t.id && <GerenciarAlunos turma={t} turmas={turmas.dados} alunos={alunos.dados} onFeito={alunos.recarregar} />}
 
             <h3 className="sub">Avisos da turma</h3>
-            <form className="form tedit" onSubmit={(e) => novoAviso(e, t)}>
+            <Recolhivel titulo="Novo aviso para a turma">
+<form className="form tedit" onSubmit={(e) => novoAviso(e, t)}>
               <div className="field">
                 <label>Título (ex.: Sem aula na quinta)</label>
                 <input name="titulo" type="text" maxLength={80} autoComplete="off" />
@@ -231,6 +233,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                 Publicar para a turma
               </button>
             </form>
+</Recolhivel>
             {msg("av" + t.id)}
             <ul className="manage">
               {doAviso.length === 0 && <li className="empty">Nenhum aviso para esta turma.</li>}

@@ -25,13 +25,21 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
   const [presentes, setPresentes] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
   const [novo, setNovo] = useState("");
+  const [obs, setObs] = useState("");
+  const [visitantes, setVisitantes] = useState<string[]>([]);
+  const [visitante, setVisitante] = useState("");
 
   // Abre a chamada salva daquela turma e daquele dia (se houver).
   useEffect(() => {
     if (!t || !data) return;
     let vivo = true;
     void lerChamada(t, data)
-      .then((c) => vivo && setPresentes(c?.presentes ?? []))
+      .then((c) => {
+        if (!vivo) return;
+        setPresentes(c?.presentes ?? []);
+        setObs(c?.obs ?? "");
+        setVisitantes(c?.visitantes ?? []);
+      })
       .catch(() => vivo && setPresentes([]));
     return () => {
       vivo = false;
@@ -45,7 +53,7 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
   async function salvar() {
     setMsg("Salvando…");
     try {
-      await salvarChamada({ turma: t, data, presentes: presentes.filter((u) => daTurma.some((a) => a.uid === u)), total: daTurma.length, autor, ts: Date.now() });
+      await salvarChamada({ turma: t, data, presentes: presentes.filter((u) => daTurma.some((a) => a.uid === u)), total: daTurma.length, autor, ts: Date.now(), obs: obs.trim().slice(0, 1000), visitantes });
       setMsg(`Chamada de ${dataBR(data)} salva: ${presentes.length} de ${daTurma.length} presentes.`);
       historico.recarregar();
     } catch (err) {
@@ -125,6 +133,44 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
             Colocar na turma e marcar presente
           </button>
         </div>
+        <div className="form tedit">
+          <div className="field">
+            <label htmlFor="ch-visit">Alguém que não tem cadastro? Escreva o nome (fica registrado só nesta chamada)</label>
+            <div className="inline">
+              <input id="ch-visit" type="text" maxLength={80} value={visitante} onChange={(e) => setVisitante(e.target.value)} placeholder="Ex.: João (aula experimental)" />
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={!visitante.trim()}
+                onClick={() => {
+                  setVisitantes((v) => [...v, visitante.trim()].slice(0, 30));
+                  setVisitante("");
+                }}
+              >
+                Adicionar
+              </button>
+            </div>
+          </div>
+          {visitantes.length > 0 && (
+            <ul className="manage">
+              {visitantes.map((v, i) => (
+                <li key={i}>
+                  <span>
+                    <strong>{v}</strong>
+                    <small>Sem cadastro</small>
+                  </span>
+                  <button type="button" className="btn btn-ghost" onClick={() => setVisitantes((l) => l.filter((_, k) => k !== i))}>
+                    Tirar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="field">
+            <label htmlFor="ch-obs">Observações da aula (opcional)</label>
+            <textarea id="ch-obs" rows={3} maxLength={1000} value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex.: treino de kata, aula com o professor convidado, chuva forte…" />
+          </div>
+        </div>
         <button type="button" className="btn btn-primary chamada-salvar" onClick={() => void salvar()}>
           Salvar chamada de {dataBR(data)}
         </button>
@@ -139,8 +185,9 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
               <span>
                 <strong>{dataBR(c.data)}</strong>
                 <small>
-                  {c.presentes.length} de {c.total} presentes · por {c.autor}
+                  {c.presentes.length} de {c.total} presentes{c.visitantes?.length ? ` + ${c.visitantes.length} sem cadastro` : ""} · por {c.autor}
                 </small>
+                {c.obs && <small className="pre">{c.obs}</small>}
               </span>
               <button type="button" className="btn btn-ghost" onClick={() => (setData(c.data), window.scrollTo({ top: 0, behavior: "smooth" }))}>
                 Abrir

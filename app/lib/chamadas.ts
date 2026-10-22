@@ -2,7 +2,7 @@ import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase
 import { getDb } from "./firebase";
 
 /* Chamada: uma por turma e por dia. Marcado = veio; não marcado = faltou. */
-export type Chamada = { id: string; turma: string; data: string; presentes: string[]; total: number; autor: string; ts: number };
+export type Chamada = { id: string; turma: string; data: string; presentes: string[]; total: number; autor: string; ts: number; obs?: string; visitantes?: string[] };
 
 export const idChamada = (turma: string, data: string) => `${turma.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-")}_${data}`;
 
@@ -21,4 +21,10 @@ export async function chamadasDaTurma(turma: string): Promise<Chamada[]> {
 export async function minhasPresencas(uid: string): Promise<Chamada[]> {
   const snap = await getDocs(query(collection(getDb(), "chamadas"), where("presentes", "array-contains", uid)));
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Chamada, "id">) })).sort((a, b) => b.data.localeCompare(a.data));
+}
+
+/** Todas as chamadas (para a equipe calcular os graus de todo mundo). */
+export async function todasChamadas(): Promise<Chamada[]> {
+  const snap = await getDocs(collection(getDb(), "chamadas"));
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Chamada, "id">) }));
 }

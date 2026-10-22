@@ -70,7 +70,10 @@ export default function AdminSite() {
       driveChave: g("chave"),
       diasDestaque: Math.min(60, Math.max(1, Math.round(Number(g("dias")) || 7))),
       faixasPublicas: f.getAll("faixasPublicas").map(String),
+      faixasPublicasRoleta: f.getAll("faixasPublicasRoleta").map(String),
       agendaIcs: atual.agendaIcs,
+      aulasPorGrau: Math.min(60, Math.max(1, Math.round(Number(g("aulasPorGrau")) || 9))),
+      grausPorFaixa: Math.min(10, Math.max(1, Math.round(Number(g("grausPorFaixa")) || 4))),
     };
     if (!novo.nome) return setMsg("O nome do dojô não pode ficar vazio.");
     if ((novo.logoUrl && !enderecoOk(novo.logoUrl)) || (novo.bannerUrl && !enderecoOk(novo.bannerUrl))) return setMsg("Logo e banner: escolha uma imagem do celular ou cole um link que comece com https://");
@@ -155,12 +158,31 @@ export default function AdminSite() {
           <label htmlFor="s-dias">Dias em que a foto nova fica em destaque</label>
           <input id="s-dias" name="dias" type="number" min={1} max={60} defaultValue={atual.diasDestaque} />
         </div>
+        <div className="two">
+          <div className="field">
+            <label htmlFor="s-apg">Aulas com presença para 1 grau</label>
+            <input id="s-apg" name="aulasPorGrau" type="number" min={1} max={60} defaultValue={atual.aulasPorGrau} />
+          </div>
+          <div className="field">
+            <label htmlFor="s-gpf">Graus até a avaliação de exame</label>
+            <input id="s-gpf" name="grausPorFaixa" type="number" min={1} max={10} defaultValue={atual.grausPorFaixa} />
+          </div>
+        </div>
         <fieldset className="checks">
           <legend>Técnicas abertas para quem não está logado</legend>
           <small>As outras faixas só aparecem para quem entra. O aluno vê até a próxima faixa dele (ou mais, se você liberar no cadastro dele).</small>
           {faixas.map((fx) => (
             <label key={fx.nome}>
               <input type="checkbox" name="faixasPublicas" value={fx.nome} defaultChecked={atual.faixasPublicas.includes(fx.nome)} /> Faixa {fx.nome.toLowerCase()}
+            </label>
+          ))}
+        </fieldset>
+        <fieldset className="checks">
+          <legend>Roleta de técnicas para quem não está logado</legend>
+          <small>A faixa amarela corresponde ao 1º grupo do Gokyo. Quem entra vê até a próxima faixa dele.</small>
+          {faixas.map((fx) => (
+            <label key={fx.nome}>
+              <input type="checkbox" name="faixasPublicasRoleta" value={fx.nome} defaultChecked={atual.faixasPublicasRoleta.includes(fx.nome)} /> Faixa {fx.nome.toLowerCase()}
             </label>
           ))}
         </fieldset>

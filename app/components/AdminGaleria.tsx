@@ -1,5 +1,6 @@
 "use client";
 
+import { useSite } from "../lib/siteConfig";
 import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { addFoto, apagarFoto, lerGaleria, salvarLegenda, type FotoDoc } from "../lib/galeriaDb";
@@ -10,6 +11,7 @@ import CampoImagem from "./CampoImagem";
 const VAZIO: FotoDoc[] = [];
 
 export default function AdminGaleria() {
+  const site = useSite();
   const g = useCarga(lerGaleria, VAZIO);
   const [msg, setMsg] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -43,6 +45,26 @@ export default function AdminGaleria() {
   return (
     <section className="panel" id="galeria">
       <h2>Galeria</h2>
+      <div className="aviso-dia" role="note">
+        {site.drivePasta ? (
+          <>
+            <p>
+              📁 Pasta do Drive usada na galeria do site: <span className="quebra">{site.drivePasta}</span>
+            </p>
+            <p className="form-help">As subpastas dela viram álbuns. Para trocar a pasta: Site → Aparência, contatos, fotos e Drive.</p>
+            <a className="btn btn-ghost" href={/^https:\/\//.test(site.drivePasta) ? site.drivePasta : `https://drive.google.com/drive/folders/${site.drivePasta}`} target="_blank" rel="noopener noreferrer">
+              Abrir a pasta no Drive
+            </a>
+          </>
+        ) : (
+          <p>Nenhuma pasta do Drive ligada. Para ligar: Site → Aparência, contatos, fotos e Drive.</p>
+        )}
+        {site.driveFichas && (
+          <p className="form-help">
+            Pasta das fichas das técnicas: <span className="quebra">{site.driveFichas}</span>
+          </p>
+        )}
+      </div>
       <p className="lead">{g.dados.length === 0 ? "Enquanto não houver fotos aqui, o site mostra os quadrados de exemplo." : `${g.dados.length} fotos na galeria.`}</p>
       {msg && (
         <p className="form-note" role="status">

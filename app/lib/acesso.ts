@@ -14,10 +14,10 @@ export type Acesso = { todas: boolean; liberadas: Set<string>; logado: boolean; 
  * - aluno: até a próxima faixa dele, ou até a faixa que o administrador liberar;
  * - professor e administrador: todas.
  */
-export function useAcessoTecnicas(): Acesso {
+export function useAcessoTecnicas(contexto: "tecnicas" | "roleta" = "tecnicas"): Acesso {
   const { user, perfil, carregando } = useAuth();
   const site = useSite();
-  const publicas = site.faixasPublicas.join("|");
+  const publicas = (contexto === "roleta" ? site.faixasPublicasRoleta : site.faixasPublicas).join("|");
   return useMemo(() => {
     const nomes = faixas.map((f) => f.nome);
     const liberadas = new Set(publicas ? publicas.split("|") : []);

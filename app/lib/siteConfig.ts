@@ -34,6 +34,9 @@ export type SiteConfig = {
   driveChave: string;
   diasDestaque: number;
   faixasPublicas: string[];
+  faixasPublicasRoleta: string[];
+  aulasPorGrau: number;
+  grausPorFaixa: number;
   agendaIcs: string;
 };
 
@@ -54,6 +57,9 @@ export const siteBase: SiteConfig = {
   driveChave: "",
   diasDestaque: 7,
   faixasPublicas: ["Azul"],
+  faixasPublicasRoleta: ["Azul", "Amarela"],
+  aulasPorGrau: 9,
+  grausPorFaixa: 4,
   agendaIcs: "",
 };
 
@@ -101,6 +107,9 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     driveFichas: str(p.driveFichas, ""),
     driveChave: str(p.driveChave, ""),
     agendaIcs: str(p.agendaIcs, ""),
+    aulasPorGrau: typeof p.aulasPorGrau === "number" && p.aulasPorGrau >= 1 ? p.aulasPorGrau : 9,
+    grausPorFaixa: typeof p.grausPorFaixa === "number" && p.grausPorFaixa >= 1 ? p.grausPorFaixa : 4,
+    faixasPublicasRoleta: Array.isArray(p.faixasPublicasRoleta) ? p.faixasPublicasRoleta.filter((x): x is string => typeof x === "string") : ["Azul", "Amarela"],
     faixasPublicas: Array.isArray(p.faixasPublicas) ? p.faixasPublicas.filter((x): x is string => typeof x === "string") : ["Azul"],
     diasDestaque: typeof p.diasDestaque === "number" && p.diasDestaque >= 1 && p.diasDestaque <= 60 ? Math.round(p.diasDestaque) : 7,
   };

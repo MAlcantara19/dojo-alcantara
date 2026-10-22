@@ -4,6 +4,7 @@ import { useState } from "react";
 import { mensagemErro } from "../lib/auth";
 import { addRoleta, apagarRoleta, itensParaTexto, lerItensDoTexto, lerRoletas, salvarRoleta, type RoletaDoc } from "../lib/roletasDb";
 import { useCarga } from "../lib/useCarga";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: RoletaDoc[] = [];
 
@@ -43,7 +44,8 @@ export default function AdminRoletas() {
           {msg}
         </p>
       )}
-      <form className="form tedit" onSubmit={(e) => void salvar(e)} key={editando?.id ?? "nova"}>
+      <Recolhivel titulo="Nova roleta" aberto={Boolean(editando)}>
+<form className="form tedit" onSubmit={(e) => void salvar(e)} key={editando?.id ?? "nova"}>
         <strong>{editando ? `Editando “${editando.titulo}”` : "Nova roleta"}</strong>
         <div className="field">
           <label htmlFor="rl-titulo">Nome da roleta</label>
@@ -64,6 +66,7 @@ export default function AdminRoletas() {
           )}
         </div>
       </form>
+</Recolhivel>
       <ul className="manage">
         {r.dados.length === 0 && <li className="empty">Nenhuma roleta criada.</li>}
         {r.dados.map((x) => (

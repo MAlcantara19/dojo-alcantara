@@ -8,7 +8,7 @@ import { amostra, lerRoletas, type RoletaDoc } from "../lib/roletasDb";
 import { useAuth } from "../lib/useAuth";
 import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
 import type { Palavra } from "../lib/palavras";
-import { corDe, ehProibida, faixaEfetiva, familias, grupos, rotuloGrupo, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { corDe, ehProibida, faixaEfetiva, familias, rotuloGrupo, tituloGrupoComFaixa, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
 import Img from "./Img";
 import LinkBtns from "./LinkBtns";
@@ -31,7 +31,7 @@ const opcoesTecnicas: { valor: string; rotulo: string; filtro: (t: Tecnica) => b
   { valor: "nage", rotulo: "Nage-waza · projeções", filtro: (t) => t.categoria === "Nage-waza" },
   { valor: "katame", rotulo: "Katame-waza · solo", filtro: (t) => t.categoria === "Katame-waza" },
   ...(Object.keys(familias) as Familia[]).map((f) => ({ valor: "f:" + f, rotulo: familias[f].titulo, filtro: (t: Tecnica) => t.familia === f })),
-  ...(["1", "2", "3", "4", "5", "6"] as GrupoId[]).map((g) => ({ valor: "g:" + g, rotulo: grupos[g].titulo, filtro: (t: Tecnica) => t.grupo === g })),
+  ...(["1", "2", "3", "4", "5", "6"] as GrupoId[]).map((g) => ({ valor: "g:" + g, rotulo: tituloGrupoComFaixa(g), filtro: (t: Tecnica) => t.grupo === g })),
   { valor: "g:S", rotulo: "Golpes adicionais (Shinmeisho)", filtro: (t) => t.grupo === "S" },
 ];
 
@@ -79,9 +79,11 @@ export default function Roleta() {
   const exercicios = useMemo(() => exerciciosOuPadrao(dbExe.dados), [dbExe.dados]);
 
   const todasPalavras: Palavra[] = escolhida.itens;
-  const palavras: Palavra[] = useMemo(() => amostra(todasPalavras, qtd, semente), [todasPalavras, qtd, semente]);
-  const acesso = useAcessoTecnicas();
-  const todasTecs = useMemo(() => catalogo.filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)).filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro, catalogo, acesso, mapa]);
+  const palavras: Palavra[] = todasPalavras;
+  const acesso = useAcessoTecnicas("roleta");
+  const liberadas = useMemo(() => catalogo.filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)), [catalogo, acesso, mapa]);
+  const opcoesVisiveis = opcoesTecnicas.filter((o) => liberadas.some(o.filtro));
+  const todasTecs = useMemo(() => liberadas.filter(opcoesTecnicas.find((o) => o.valor === filtro)?.filtro ?? (() => true)), [filtro, liberadas]);
   const tecs = useMemo(() => amostra(todasTecs, qtd, semente), [todasTecs, qtd, semente]);
   const roletaMais = dbRoletas.dados.find((x) => x.id === roletaId) ?? dbRoletas.dados[0];
   const itensMais = useMemo(() => amostra(roletaMais?.itens ?? [], qtd, semente), [roletaMais, qtd, semente]);
@@ -147,7 +149,7 @@ export default function Roleta() {
         </div>
       )}
 
-      {modo !== "exercicios" && totalDoModo > QTDS[0] && (
+      {modo !== "exercicios" && modo !== "palavras" && totalDoModo > QTDS[0] && (
         <div className="qtd-roleta">
           <label htmlFor="qtd">Quantos na roleta:</label>
           <select id="qtd" value={qtd} onChange={(e) => (setQtd(Number(e.target.value)), limpar())} disabled={girando}>
@@ -188,11 +190,14 @@ export default function Roleta() {
         </div>
       )}
 
+      {modo === "tecnicas" && !acesso.logado && !acesso.carregando && (
+        <p className="form-help">🔒 Aqui giram as técnicas abertas a todos. Entre com a sua conta para girar com as técnicas da sua faixa.</p>
+      )}
       {modo === "tecnicas" && (
         <div className="field">
           <label htmlFor="filtro">Roleta de</label>
           <select id="filtro" value={filtro} onChange={(e) => (setFiltro(e.target.value), limpar())} disabled={girando}>
-            {opcoesTecnicas.map((o) => (
+            {opcoesVisiveis.map((o) => (
               <option key={o.valor} value={o.valor}>
                 {o.rotulo}
               </option>

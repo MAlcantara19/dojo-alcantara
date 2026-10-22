@@ -5,6 +5,7 @@ import { dataBR, hojeISO } from "../lib/aluno";
 import { mensagemErro } from "../lib/auth";
 import { addFeriadoLocal, apagarFeriadoLocal, lerFeriadosLocais, salvarFeriadoLocal, type FeriadoLocal } from "../lib/calendarioDb";
 import { useCarga } from "../lib/useCarga";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: FeriadoLocal[] = [];
 
@@ -41,13 +42,15 @@ export default function AdminFeriados() {
           {msg}
         </p>
       )}
-      <form className="form inline" onSubmit={(e) => void nova(e)}>
+      <Recolhivel titulo="Adicionar feriado local">
+<form className="form inline" onSubmit={(e) => void nova(e)}>
         <input name="data" type="date" defaultValue={hojeISO()} aria-label="Data do feriado" />
         <input name="nome" type="text" maxLength={60} placeholder="Ex.: Aniversário da cidade" aria-label="Nome do feriado" autoComplete="off" />
         <button className="btn btn-primary" type="submit">
           Adicionar
         </button>
       </form>
+</Recolhivel>
       <ul className="manage">
         {f.dados.length === 0 && <li className="empty">Nenhum feriado local cadastrado.</li>}
         {f.dados.map((x) =>

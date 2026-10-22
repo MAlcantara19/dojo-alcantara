@@ -10,7 +10,7 @@ import Img from "./Img";
 import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
-import { ehProibida, faixaEfetiva, familias, grupos, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+import { ehProibida, faixaEfetiva, familias, grupos, tituloGrupoComFaixa, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
@@ -46,7 +46,7 @@ export default function Tecnicas() {
       return ordemGrupos
         .map((k) => ({
           chave: k,
-          titulo: k in grupos ? grupos[k as GrupoId].titulo : familias[k as Familia].titulo,
+          titulo: k in grupos ? tituloGrupoComFaixa(k as GrupoId) : familias[k as Familia].titulo,
           cor: k in grupos ? grupos[k as GrupoId].cor : familias[k as Familia].cor,
           itens: lista.filter((t) => chaveDe(t) === k),
         }))
@@ -155,6 +155,31 @@ export default function Tecnicas() {
               </a>
             ) : null;
           })()}
+          {((mapa[aberta.id]?.sequencias ?? []).length > 0 || (mapa[aberta.id]?.contragolpes ?? []).length > 0) && (
+            <div className="seq-contra">
+              {(mapa[aberta.id]?.sequencias ?? []).length > 0 && (
+                <div>
+                  <strong>Sequências (renraku-waza)</strong>
+                  <ul>
+                    {(mapa[aberta.id]?.sequencias ?? []).map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {(mapa[aberta.id]?.contragolpes ?? []).length > 0 && (
+                <div>
+                  <strong>Contragolpes (kaeshi-waza)</strong>
+                  <ul>
+                    {(mapa[aberta.id]?.contragolpes ?? []).map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <Ligacoes t={aberta} catalogo={catalogo} mapa={mapa} abrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />
           {ehProibida(aberta, mapa[aberta.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
           <p className="tmeta">
             {aberta.familia ?? "Nage-waza"}
@@ -167,6 +192,53 @@ export default function Tecnicas() {
       )}
 
       <p className="form-help">Lista baseada nas 100 técnicas do Kodokan (2022). A faixa “padrão do grupo” pode ser trocada pelo professor, técnica por técnica.</p>
+    </div>
+  );
+}
+
+/** Sequências e contragolpes da técnica, e onde ela aparece nas outras (toque para abrir). */
+function Ligacoes({ t, catalogo, mapa, abrir }: { t: Tecnica; catalogo: Tecnica[]; mapa: Record<string, { sequencias?: string[]; contragolpes?: string[] }>; abrir: (t: Tecnica) => void }) {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
+  const achar = (nome: string) => catalogo.find((x) => norm(x.nome) === norm(nome));
+  const seq = mapa[t.id]?.sequencias ?? [];
+  const con = mapa[t.id]?.contragolpes ?? [];
+  const vemDepois = catalogo.filter((x) => (mapa[x.id]?.sequencias ?? []).some((n) => norm(n) === norm(t.nome)));
+  const respondeA = catalogo.filter((x) => (mapa[x.id]?.contragolpes ?? []).some((n) => norm(n) === norm(t.nome)));
+  if (!seq.length && !con.length && !vemDepois.length && !respondeA.length) return null;
+  const chip = (nome: string, k: string, seta: string) => {
+    const x = achar(nome);
+    return x ? (
+      <button key={k} type="button" className="lig-chip" onClick={() => abrir(x)}>
+        {seta} {x.nome}
+      </button>
+    ) : (
+      <span key={k} className="lig-chip">
+        {seta} {nome}
+      </span>
+    );
+  };
+  return (
+    <div className="ligacoes">
+      {seq.length > 0 && (
+        <p>
+          <b>Sequência (renraku-waza):</b> {t.nome} {seq.map((n, i) => chip(n, "s" + i, "→"))}
+        </p>
+      )}
+      {vemDepois.length > 0 && (
+        <p>
+          <b>Vem depois de:</b> {vemDepois.map((x, i) => chip(x.nome, "v" + i, "←"))}
+        </p>
+      )}
+      {con.length > 0 && (
+        <p>
+          <b>Contragolpes (kaeshi-waza):</b> {con.map((n, i) => chip(n, "c" + i, "↩"))}
+        </p>
+      )}
+      {respondeA.length > 0 && (
+        <p>
+          <b>É contragolpe de:</b> {respondeA.map((x, i) => chip(x.nome, "r" + i, "↩"))}
+        </p>
+      )}
     </div>
   );
 }

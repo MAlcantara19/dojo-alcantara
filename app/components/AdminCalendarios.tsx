@@ -6,6 +6,7 @@ import { addCalendarioOficial, apagarCalendarioOficial, lerCalendariosOficiais, 
 import { enderecoOk } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: CalendarioOficial[] = [];
 
@@ -43,7 +44,8 @@ export default function AdminCalendarios() {
           {msg}
         </p>
       )}
-      <form className="form tedit" onSubmit={(e) => void nova(e)} key={tipo}>
+      <Recolhivel titulo="Publicar calendário oficial">
+<form className="form tedit" onSubmit={(e) => void nova(e)} key={tipo}>
         <div className="field">
           <label htmlFor="co-titulo">Título</label>
           <input id="co-titulo" name="titulo" type="text" maxLength={80} autoComplete="off" />
@@ -68,6 +70,7 @@ export default function AdminCalendarios() {
           Publicar
         </button>
       </form>
+</Recolhivel>
       <ul className="manage">
         {c.dados.length === 0 && <li className="empty">Nenhum calendário oficial publicado.</li>}
         {c.dados.map((x) => (

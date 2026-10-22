@@ -1,13 +1,13 @@
 "use client";
 
-import { signOut, updatePassword } from "firebase/auth";
+import { EmailAuthProvider, reauthenticateWithCredential, signOut, updatePassword, verifyBeforeUpdateEmail } from "firebase/auth";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Aluno } from "../lib/aluno";
-import { addMedida, addNota, apagarSub, atualizarMeuCadastro, atualizarNomeConta, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
+import { addMedida, addNota, apagarSub, atualizarLoginProprio, atualizarMeuCadastro, atualizarNomeConta, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useTecnicas } from "../lib/conteudo";
-import { faixaPorExtenso, faixas } from "../lib/faixas";
+import { corDaFaixa, faixaPorExtenso, faixas } from "../lib/faixas";
 import { getAuthInstance } from "../lib/firebase";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
@@ -16,6 +16,9 @@ import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { guardarAniversario } from "../lib/aniversarios";
 import { minhasPresencas, type Chamada } from "../lib/chamadas";
+import { calcularGraus } from "../lib/graus";
+import { useSite } from "../lib/siteConfig";
+import ChecklistFaixa from "./ChecklistFaixa";
 import { registrarAtividade } from "../lib/atividades";
 import CampeonatosAluno from "./CampeonatosAluno";
 import { estiloFoto } from "../lib/fotoAjuste";
@@ -29,6 +32,7 @@ import LineChart from "./LineChart";
 import LinkBtns from "./LinkBtns";
 import Midia from "./Midia";
 import LoginForm from "./LoginForm";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO_AV: AvisoTurma[] = [];
 const VAZIO_CH: Chamada[] = [];
@@ -81,6 +85,7 @@ function Conteudo({ uid }: { uid: string }) {
   const { mapa, lista: catalogo } = useTecnicas();
   const acesso = useAcessoTecnicas();
   const presencas = useCarga(() => minhasPresencas(uid), VAZIO_CH);
+  const site = useSite();
   const academia = perfilCompleto.dados?.academia ?? "";
   const minhaTurma = useCarga<Turma | null>(() => lerMinhaTurma(academia), null, Boolean(academia));
   const avisosTurma = useCarga(() => lerAvisosTurma([academia]), VAZIO_AV, Boolean(academia));
@@ -248,6 +253,28 @@ function Conteudo({ uid }: { uid: string }) {
       {aba === "resumo" && (
       <section className="panel">
         <h2>Meu progresso</h2>
+        {!equipe && p.faixa && p.faixa !== "Preta" && (() => {
+          const g = calcularGraus(presencas.dados.map((c) => c.data), p.faixaDesde, site.aulasPorGrau, site.grausPorFaixa);
+          return (
+            <div className="graus">
+              <div className="faixa-graus" aria-label={`Faixa ${p.faixa.toLowerCase()} com ${g.graus} de ${g.total} graus`}>
+                <span className="cor" style={{ background: corDaFaixa(p.faixa) }} />
+                <span className="ponta">
+                  {Array.from({ length: g.total }, (_, i) => (
+                    <i key={i} className={i < g.graus ? "on" : ""} />
+                  ))}
+                </span>
+              </div>
+              {g.pronto ? (
+                <p className="pronto-exame">🎉 Você completou os {g.total} graus! Fale com o professor sobre a avaliação para a próxima faixa.</p>
+              ) : (
+                <p className="form-help">
+                  {g.graus} de {g.total} graus · faltam {g.faltam} {g.faltam === 1 ? "aula" : "aulas"} com presença para o próximo grau ({g.porGrau} aulas por grau, contando desde que você está nesta faixa).
+                </p>
+              )}
+            </div>
+          );
+        })()}
         <p className="presencas">
           ✅ <b>{presencas.dados.length}</b> {presencas.dados.length === 1 ? "aula com presença registrada" : "aulas com presença registrada"}
           {presencas.dados[0] ? ` · última em ${dataBR(presencas.dados[0].data)}` : ""}
@@ -328,7 +355,8 @@ function Conteudo({ uid }: { uid: string }) {
       {aba === "corpo" && (
       <section className="panel">
         <h2>Peso e altura</h2>
-        <form className="form" onSubmit={novaMedida}>
+        <Recolhivel titulo="Registrar peso e altura">
+<form className="form" onSubmit={novaMedida}>
           <div className="two">
             <div className="field">
               <label htmlFor="m-peso">Peso (kg)</label>
@@ -347,6 +375,7 @@ function Conteudo({ uid }: { uid: string }) {
             Registrar
           </button>
         </form>
+</Recolhivel>
         <LineChart titulo="Peso" unidade="kg" pontos={pesos} />
         <LineChart titulo="Altura" unidade="cm" pontos={alturas} />
         {medidas.dados.length > 0 && (
@@ -371,7 +400,8 @@ function Conteudo({ uid }: { uid: string }) {
       <section className="panel">
         <h2>Minhas anotações de aula</h2>
         <p className="lead">Só você vê o que escreve aqui.</p>
-        <form className="form" onSubmit={novaNota}>
+        <Recolhivel titulo="Nova anotação">
+<form className="form" onSubmit={novaNota}>
           <div className="field">
             <label htmlFor="n-data">Data</label>
             <input id="n-data" name="data" type="date" defaultValue={hojeISO()} />
@@ -384,6 +414,7 @@ function Conteudo({ uid }: { uid: string }) {
             Salvar anotação
           </button>
         </form>
+</Recolhivel>
         <ul className="manage">
           {notas.dados.length === 0 && !notas.carregando && <li className="empty">Nenhuma anotação ainda.</li>}
           {notas.dados.map((n) => (
@@ -423,6 +454,12 @@ function Conteudo({ uid }: { uid: string }) {
       </section>
       )}
 
+      {aba === "checklist" && (
+        <section className="panel">
+          <h2>Checklist da faixa</h2>
+          <ChecklistFaixa uid={uid} nome={p.apelido || p.nome} faixasLiberadas={acesso.todas ? faixas.map((f) => f.nome) : Array.from(acesso.liberadas)} faixaInicial={faixas[idx + 1]?.nome ?? p.faixa} />
+        </section>
+      )}
       {aba === "campeonatos" && (
         <section className="panel">
           <h2>Meus campeonatos</h2>
@@ -444,6 +481,7 @@ function Conteudo({ uid }: { uid: string }) {
             <FotosConta a={p} onSalvo={perfilCompleto.recarregar} avisarAdmin={!equipe} />
           </section>
           <MeuCadastro uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
+          <TrocarEmail uid={uid} p={p} onFeito={perfilCompleto.recarregar} />
           <TrocarSenha uid={uid} onFeito={perfilCompleto.recarregar} aluno={!equipe} nome={p.apelido || p.nome} turma={p.academia} />
         </>
       )}
@@ -522,6 +560,69 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
           Para entrar você usa: <b>{p.login?.endsWith("@celular.dojoalcantara.app") ? `${p.login.split("@")[0]} (celular)` : p.login}</b>. {p.papel === "admin" ? "Para trocar o e-mail de entrada, use Equipe → Administradores com a outra conta de administrador." : "Para trocar o e-mail ou o celular de entrada, peça ao seu professor. O nome, a faixa e a turma também são o professor que muda."}
         </p>
       </form>
+    </section>
+  );
+}
+
+/** Trocar o e-mail de entrada: o Firebase manda um link para o e-mail novo; ao confirmar, a troca vale. */
+function TrocarEmail({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () => void }) {
+  const [msg, setMsg] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const atual = getAuthInstance().currentUser?.email ?? "";
+
+  // Depois que a pessoa confirma o link, o login novo passa a valer: atualiza o cadastro.
+  useEffect(() => {
+    if (atual && p.login && atual !== p.login) void atualizarLoginProprio(uid, atual).then(onFeito).catch(() => undefined);
+  }, [atual, p.login, uid, onFeito]);
+
+  async function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const novo = String(f.get("novo") ?? "").trim().toLowerCase();
+    const senha = String(f.get("senha") ?? "");
+    const u = getAuthInstance().currentUser;
+    if (!u || !u.email) return setMsg("Entre de novo para continuar.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novo)) return setMsg("Esse e-mail não parece certo. Confira.");
+    if (!senha) return setMsg("Digite a sua senha atual para confirmar que é você.");
+    setOcupado(true);
+    setMsg("Enviando…");
+    try {
+      await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, senha));
+      await verifyBeforeUpdateEmail(u, novo);
+      if (p.papel === "aluno") void registrarAtividade(uid, p.apelido || p.nome, `pediu para trocar o e-mail de entrada para ${novo}`, p.academia ?? "");
+      setMsg(`Enviamos um link para ${novo}. Abra esse e-mail e toque no link: a partir daí você entra com o e-mail novo (a senha continua a mesma). Olhe também o spam.`);
+      form.reset();
+    } catch (err) {
+      const code = typeof err === "object" && err && "code" in err ? String((err as { code: unknown }).code) : "";
+      setMsg(code === "auth/wrong-password" || code === "auth/invalid-credential" ? "Senha atual errada." : code === "auth/email-already-in-use" ? "Esse e-mail já é usado por outra conta." : mensagemErro(err));
+    }
+    setOcupado(false);
+  }
+
+  return (
+    <section className="panel">
+      <h2>E-mail de entrada</h2>
+      <p className="lead">
+        Hoje você entra com: <b>{atual.endsWith("@celular.dojoalcantara.app") ? `${atual.split("@")[0]} (celular)` : atual}</b>
+      </p>
+      <Recolhivel titulo="Trocar o e-mail de entrada">
+<form className="form" onSubmit={(e) => void enviar(e)}>
+        <div className="field">
+          <label htmlFor="te-novo">Novo e-mail para entrar</label>
+          <input id="te-novo" name="novo" type="email" autoComplete="email" />
+        </div>
+        <CampoSenha id="te-senha" name="senha" rotulo="Sua senha atual" />
+        <button className="btn btn-primary" type="submit" disabled={ocupado}>
+          Enviar link de confirmação
+        </button>
+        {msg && (
+          <p className="form-note" role="status">
+            {msg}
+          </p>
+        )}
+      </form>
+</Recolhivel>
     </section>
   );
 }

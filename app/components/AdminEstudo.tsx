@@ -9,6 +9,7 @@ import {
 } from "../lib/estudoDb";
 import type { Pergunta } from "../lib/simulados";
 import { useCarga } from "../lib/useCarga";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO_P: PalavraDoc[] = [];
 const VAZIO_L: ListaPalavras[] = [];
@@ -141,6 +142,26 @@ function PainelPalavras() {
           Criar lista
         </button>
       </form>
+      {["Azul", "Amarela", "Laranja", "Verde", "Roxa", "Marrom"].some((f) => !nomes.includes(`Faixa ${f.toLowerCase()}`)) && (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          disabled={a.ocupado}
+          onClick={() =>
+            void a.rodar(
+              async () => {
+                for (const f of ["Azul", "Amarela", "Laranja", "Verde", "Roxa", "Marrom"]) {
+                  const nome = `Faixa ${f.toLowerCase()}`;
+                  if (!nomes.includes(nome)) await addListaPalavras(nome);
+                }
+              },
+              "Listas por faixa criadas. Agora marque, em cada palavra, as faixas em que ela entra.",
+            )
+          }
+        >
+          Criar as listas por faixa (azul até marrom)
+        </button>
+      )}
       <ul className="manage">
         {listas.dados.map((l) => (
           <li key={l.id}>
@@ -156,8 +177,9 @@ function PainelPalavras() {
         {listas.dados.length === 0 && <li className="empty">Nenhuma lista criada ainda.</li>}
       </ul>
 
-      <h3 className="sub">Nova palavra</h3>
-      <FormPalavra nomesListas={nomes} rotuloBotao="Adicionar palavra" ocupado={a.ocupado} onSalvar={(p, reset) => validar(p) && void a.rodar(() => addPalavra(p), "Palavra adicionada.", reset)} />
+      <Recolhivel titulo="Nova palavra">
+        <FormPalavra nomesListas={nomes} rotuloBotao="Adicionar palavra" ocupado={a.ocupado} onSalvar={(p, reset) => validar(p) && void a.rodar(() => addPalavra(p), "Palavra adicionada.", reset)} />
+      </Recolhivel>
 
       <h3 className="sub">Palavras cadastradas</h3>
       <div className="field">
@@ -222,6 +244,7 @@ function PainelExercicios() {
           Importar a lista padrão para editar
         </button>
       )}
+      <Recolhivel titulo="Novo exercício">
       <form
         className="form tedit"
         onSubmit={(e) => {
@@ -245,6 +268,7 @@ function PainelExercicios() {
           Adicionar exercício
         </button>
       </form>
+      </Recolhivel>
       <ul className="manage">
         {ex.dados.map((e) => (
           <li key={e.id} className={editando === e.id ? "coluna" : undefined}>
@@ -384,6 +408,7 @@ function PainelSimulados() {
         </>
       )}
 
+      <Recolhivel titulo="Novo simulado">
       <form
         className="form tedit"
         onSubmit={(e) => {
@@ -408,6 +433,7 @@ function PainelSimulados() {
           Criar simulado
         </button>
       </form>
+      </Recolhivel>
 
       {sims.dados.length > 0 && (
         <div className="field">
@@ -493,8 +519,9 @@ function PainelSimulados() {
             ))}
           </ul>
 
-          <h3 className="sub">Nova pergunta</h3>
-          <FormPergunta rotuloBotao="Adicionar pergunta" ocupado={a.ocupado} onErro={a.setMsg} onSalvar={(n, reset) => void a.rodar(() => salvarPerguntas(atual.id, [...atual.perguntas, n]), "Pergunta adicionada.", reset)} />
+          <Recolhivel titulo="Nova pergunta">
+            <FormPergunta rotuloBotao="Adicionar pergunta" ocupado={a.ocupado} onErro={a.setMsg} onSalvar={(n, reset) => void a.rodar(() => salvarPerguntas(atual.id, [...atual.perguntas, n]), "Pergunta adicionada.", reset)} />
+          </Recolhivel>
 
           <button
             className="btn btn-ghost"

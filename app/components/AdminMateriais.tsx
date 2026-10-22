@@ -5,6 +5,7 @@ import { mensagemErro } from "../lib/auth";
 import { faixas } from "../lib/faixas";
 import { addMaterial, apagarMaterial, CATEGORIAS_MATERIAL, lerMateriais, salvarMaterial, TIPOS_MATERIAL, type Material } from "../lib/materiaisDb";
 import { useCarga } from "../lib/useCarga";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: Material[] = [];
 
@@ -44,7 +45,8 @@ export default function AdminMateriais() {
           {msg}
         </p>
       )}
-      <form className="form tedit" onSubmit={(e) => void salvar(e)} key={editando?.id ?? "novo"}>
+      <Recolhivel titulo="Novo material" aberto={Boolean(editando)}>
+<form className="form tedit" onSubmit={(e) => void salvar(e)} key={editando?.id ?? "novo"}>
         <strong>{editando ? `Editando “${editando.titulo}”` : "Novo material"}</strong>
         <div className="field">
           <label htmlFor="mt-titulo">Título</label>
@@ -96,6 +98,7 @@ export default function AdminMateriais() {
           )}
         </div>
       </form>
+</Recolhivel>
       <ul className="manage">
         {m.dados.length === 0 && <li className="empty">Nenhum material publicado.</li>}
         {m.dados.map((x) => (

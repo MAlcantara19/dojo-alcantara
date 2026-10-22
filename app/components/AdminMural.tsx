@@ -12,6 +12,7 @@ import AdminCalendarios from "./AdminCalendarios";
 import AdminFeriados from "./AdminFeriados";
 import CampoImagem from "./CampoImagem";
 import MenuSuspenso from "./MenuSuspenso";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO_EV: EventoDoc[] = [];
 const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Aula", "Outro"];
@@ -147,7 +148,8 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
       {sec === "avisos" && (
       <section className="panel" id="avisos">
         <h2>Avisos</h2>
-        <form className="form" onSubmit={salvarAviso} key={editAviso?.id ?? "novo-aviso"}>
+        <Recolhivel titulo="Novo aviso" aberto={Boolean(editAviso)}>
+<form className="form" onSubmit={salvarAviso} key={editAviso?.id ?? "novo-aviso"}>
           {editAviso && <p className="form-note">Editando “{editAviso.titulo}”.</p>}
           <div className="field">
             <label htmlFor="a-titulo">Título</label>
@@ -220,6 +222,15 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
               </label>
               {destino === "turmas" && (
                 <div className="checks">
+                  <label>
+                    <input
+                      type="checkbox"
+                      onChange={(e) => {
+                        e.currentTarget.form?.querySelectorAll<HTMLInputElement>('input[name="turmas"]').forEach((i) => (i.checked = e.currentTarget.checked));
+                      }}
+                    />{" "}
+                    <b>Todas as turmas</b>
+                  </label>
                   {turmas.length === 0 && <small>Você ainda não tem turmas disponíveis.</small>}
                   {turmas.map((t) => (
                     <label key={t.id}>
@@ -241,6 +252,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
             )}
           </div>
         </form>
+</Recolhivel>
         <ul className="manage">
           {av.carregando && <li className="empty">Carregando…</li>}
           {!av.carregando && av.itens.length === 0 && <li className="empty">Nenhum aviso publicado.</li>}
@@ -273,7 +285,8 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
       {sec === "eventos" && (
       <section className="panel" id="eventos">
         <h2>Eventos do calendário</h2>
-        <form className="form" onSubmit={salvarEvento} key={editEvento?.id ?? "novo-evento"}>
+        <Recolhivel titulo="Novo evento" aberto={Boolean(editEvento)}>
+<form className="form" onSubmit={salvarEvento} key={editEvento?.id ?? "novo-evento"}>
           {editEvento && <p className="form-note">Editando “{editEvento.titulo}”.</p>}
           <div className="field">
             <label htmlFor="e-titulo">Título</label>
@@ -337,6 +350,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
             )}
           </div>
         </form>
+</Recolhivel>
         <ul className="manage">
           {ev.carregando && <li className="empty">Carregando…</li>}
           {!ev.carregando && todosEventos.length === 0 && <li className="empty">Nenhum evento publicado.</li>}

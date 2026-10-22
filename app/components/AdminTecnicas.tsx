@@ -8,6 +8,8 @@ import { enderecoOk } from "../lib/katasDb";
 import { lerLinksDoTexto, linksParaTexto } from "../lib/links";
 import { ehProibida, faixaEfetiva, familias, grupos, montarCatalogo, tecnicas as tecnicasBase, type Categoria, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import CampoImagem from "./CampoImagem";
+import Img from "./Img";
+import MenuSuspenso from "./MenuSuspenso";
 
 const linkOk = (v: string) => v === "" || (/^https:\/\//.test(v) && v.length <= 300);
 const slug = (n: string) => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -20,7 +22,10 @@ export default function AdminTecnicas() {
 
   const termo = busca.trim().toLowerCase();
   const todas = montarCatalogo(bruto, true);
-  const lista = termo ? todas.filter((t) => t.nome.toLowerCase().includes(termo)).slice(0, 12) : [];
+  const [faixaFiltro, setFaixaFiltro] = useState("");
+  const [abertaId, setAbertaId] = useState<string | null>(null);
+  const faixaDe = (t: Tecnica) => faixaEfetiva(t, bruto[t.id]).faixa ?? "";
+  const lista = todas.filter((t) => (!termo || t.nome.toLowerCase().includes(termo)) && (!faixaFiltro || (faixaFiltro === "__sem" ? !faixaDe(t) : faixaDe(t) === faixaFiltro)));
 
   async function criar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,22 +64,43 @@ export default function AdminTecnicas() {
   return (
     <section className="panel" id="tecnicas">
       <h2>Técnicas</h2>
-      <p className="lead">Procure a técnica para mudar o nome, definir a faixa, a imagem, o PDF e o vídeo, ou esconder do site. Vale para todos os alunos na hora.</p>
+      <p className="lead">Todas as técnicas, de todas as faixas. Toque numa para mudar o nome, a faixa, a imagem, o PDF e o vídeo, ou esconder do site.</p>
       {msg && (
         <p className="form-note" role="status">
           {msg}
         </p>
       )}
-      <div className="field">
-        <label htmlFor="t-busca">Buscar técnica</label>
-        <input id="t-busca" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: De-ashi-harai" />
+      <div className="two">
+        <div className="field">
+          <label htmlFor="t-busca">Buscar técnica</label>
+          <input id="t-busca" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: De-ashi-harai" />
+        </div>
+        <MenuSuspenso id="t-faixa" rotulo={`Faixa (${lista.length} técnicas)`} valor={faixaFiltro} onMudar={setFaixaFiltro} opcoes={[["", "Todas as faixas"], ...faixas.map((f) => [f.nome, `Faixa ${f.nome.toLowerCase()}`] as [string, string]), ["__sem", "Sem faixa definida"]]} />
       </div>
-      <div className="manage-col">
-        {termo && lista.length === 0 && <p className="empty">Nenhuma técnica encontrada.</p>}
-        {lista.map((t) => (
-          <LinhaTecnica key={t.id} t={t} cfg={bruto[t.id]} auto={automatico[t.id]} custom={Boolean(bruto[t.id]?.custom)} onMsg={setMsg} onSalvou={recarregar} />
-        ))}
-      </div>
+      <ul className="manage tec-lista">
+        {lista.length === 0 && <li className="empty">Nenhuma técnica encontrada.</li>}
+        {lista.map((t) => {
+          const cfg = bruto[t.id];
+          const img = cfg?.imagem || automatico[t.id]?.imagem;
+          return (
+            <li key={t.id} className="coluna">
+              <button type="button" className="tec-linha" onClick={() => setAbertaId(abertaId === t.id ? null : t.id)} aria-expanded={abertaId === t.id}>
+                <span className="tec-mini">{img ? <Img src={img} alt="" largura={160} /> : <span aria-hidden="true">🥋</span>}</span>
+                <span>
+                  <strong>
+                    {t.nome} {cfg?.ocultar && <em className="selo">escondida</em>}
+                  </strong>
+                  <small>
+                    {faixaDe(t) ? `Faixa ${faixaDe(t).toLowerCase()}` : "Sem faixa"} · {cfg?.video ? "🎬 vídeo" : "sem vídeo"} · {cfg?.pdf || automatico[t.id]?.pdf ? "📄 PDF" : "sem PDF"}
+                  </small>
+                </span>
+                <span className="link-btn">{abertaId === t.id ? "Fechar" : "Editar"}</span>
+              </button>
+              {abertaId === t.id && <LinhaTecnica t={t} cfg={cfg} auto={automatico[t.id]} custom={Boolean(cfg?.custom)} onMsg={setMsg} onSalvou={recarregar} />}
+            </li>
+          );
+        })}
+      </ul>
 
       <details className="novo">
         <summary>Criar uma técnica nova</summary>
@@ -145,8 +171,14 @@ function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; c
     const links = lerLinksDoTexto(String(f.get("links") ?? "")).slice(0, 10);
     if (!linkOk(pdf) || !linkOk(video) || links.some((l) => !linkOk(l.url) || l.url === "" || l.titulo.length > 60)) return onMsg("Os links precisam começar com https:// (e o título de cada link, se houver, até 60 letras).");
     if (imagem && !enderecoOk(imagem)) return onMsg("Escolha uma imagem do celular ou cole um link que comece com https://");
+    const linhas = (k: string) =>
+      String(f.get(k) ?? "")
+        .split("\n")
+        .map((l) => l.trim().slice(0, 60))
+        .filter(Boolean)
+        .slice(0, 20);
     const original = tecnicasBase.find((x) => x.id === t.id)?.nome ?? t.nome;
-    const dados: ConfigTecnica = { faixa: g("faixa"), pdf, video, nota: g("nota").slice(0, 200), imagem, links, nome: custom ? g("nome").slice(0, 60) : g("nome") === original ? "" : g("nome").slice(0, 60), ocultar: f.get("ocultar") === "on", proibida: f.get("proibida") === "on" };
+    const dados: ConfigTecnica = { faixa: g("faixa"), pdf, video, nota: g("nota").slice(0, 200), imagem, links, nome: custom ? g("nome").slice(0, 60) : g("nome") === original ? "" : g("nome").slice(0, 60), ocultar: f.get("ocultar") === "on", proibida: f.get("proibida") === "on", sequencias: linhas(g("sequencias")), contragolpes: linhas(g("contragolpes")) };
     if (custom) Object.assign(dados, { custom: true, nome: g("nome").slice(0, 60) || t.nome, categoria: cfg?.categoria ?? t.categoria, familia: g("familia") || cfg?.familia || "", grupo: g("grupo") || cfg?.grupo || "-" });
     setOcupado(true);
     try {
@@ -237,6 +269,23 @@ function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; c
       <div className="field">
         <label>Observação (aparece com asterisco)</label>
         <input name="nota" type="text" maxLength={200} defaultValue={cfg?.nota ?? t.nota ?? ""} />
+      </div>
+      <div className="field">
+        <label>Sequências (renraku-waza), uma por linha</label>
+        <textarea name="sequencias" rows={2} maxLength={2400} defaultValue={(cfg?.sequencias ?? []).join("\n")} placeholder={`${t.nome} → O-soto-gari`} />
+      </div>
+      <div className="field">
+        <label>Contragolpes (kaeshi-waza), um por linha</label>
+        <textarea name="contragolpes" rows={2} maxLength={2400} defaultValue={(cfg?.contragolpes ?? []).join("\n")} placeholder={`${t.nome} ← O-soto-gaeshi`} />
+        <p className="form-help">Use → para sequência (desta técnica para outra) e ← para contragolpe (a técnica que responde a esta).</p>
+      </div>
+      <div className="field">
+        <label>Sequências (renraku-waza): a técnica que vem depois desta, uma por linha</label>
+        <textarea name="sequencias" rows={2} defaultValue={(cfg?.sequencias ?? []).join("\n")} placeholder={"O-soto-gari\nO-uchi-gari"} />
+      </div>
+      <div className="field">
+        <label>Contragolpes (kaeshi-waza): técnicas que respondem a esta, uma por linha</label>
+        <textarea name="contragolpes" rows={2} defaultValue={(cfg?.contragolpes ?? []).join("\n")} placeholder="O-soto-gaeshi" />
       </div>
       <label className="check-linha">
         <input type="checkbox" name="proibida" defaultChecked={ehProibida(t, cfg)} /> Técnica proibida em competições (aparece um aviso vermelho)

@@ -43,7 +43,8 @@ service cloud.firestore {
         || (ehProfessor() && resource.data.get('papel', '') == 'aluno' && request.resource.data.get('papel', '') == 'aluno'
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
         || (ehProprio(uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste', 'login'])
+            && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['login']) || request.resource.data.login == request.auth.token.email)
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
             && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 40
             && request.resource.data.get('email', '') is string && request.resource.data.get('email', '').size() <= 120
@@ -71,6 +72,13 @@ service cloud.firestore {
           && request.resource.data.get('chave', []) is list && request.resource.data.get('chave', []).size() <= 64
           && request.resource.data.get('midias', []) is list && request.resource.data.get('midias', []).size() <= 30;
         allow delete: if ehAdmin() || alunoDaMinhaTurma(uid);
+      }
+
+      // Checklist de autoavaliação da faixa: o aluno marca; o professor e o admin veem e podem marcar.
+      match /checklist/{faixa} {
+        allow read: if ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid);
+        allow write: if (ehProprio(uid) || ehAdmin() || alunoDaMinhaTurma(uid))
+          && request.resource.data.keys().hasOnly(['itens', 'ts']) && request.resource.data.itens is map;
       }
 
       // Galeria pessoal: o próprio aluno, o professor da turma e o admin colocam e tiram.
@@ -183,7 +191,9 @@ service cloud.firestore {
     match /tecnicas/{id} {
       allow read: if true;
       allow create, update: if ehEquipe()
-        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'proibida', 'ocultar', 'custom', 'categoria', 'familia', 'grupo'])
+        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'proibida', 'ocultar', 'custom', 'categoria', 'familia', 'grupo', 'sequencias', 'contragolpes'])
+        && request.resource.data.get('sequencias', []) is list && request.resource.data.get('sequencias', []).size() <= 20
+        && request.resource.data.get('contragolpes', []) is list && request.resource.data.get('contragolpes', []).size() <= 20
         && request.resource.data.faixa is string && request.resource.data.faixa.size() <= 20
         && request.resource.data.pdf is string && request.resource.data.pdf.size() <= 300
         && (request.resource.data.pdf == '' || request.resource.data.pdf.matches('^https://.*'))
@@ -364,7 +374,9 @@ service cloud.firestore {
       allow read: if ehEquipe() || (logado() && request.auth.uid in resource.data.get('presentes', []));
       allow create, update: if ehEquipe()
         && request.resource.data.turma is string && request.resource.data.data is string && request.resource.data.data.size() == 10
-        && request.resource.data.presentes is list && request.resource.data.presentes.size() <= 200;
+        && request.resource.data.presentes is list && request.resource.data.presentes.size() <= 200
+        && request.resource.data.get('obs', '') is string && request.resource.data.get('obs', '').size() <= 1000
+        && request.resource.data.get('visitantes', []) is list && request.resource.data.get('visitantes', []).size() <= 30;
       allow delete: if ehAdmin();
     }
 

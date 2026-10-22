@@ -100,7 +100,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         </button>
       )}
 
-      <div className="tabs tabs-scroll" role="tablist" aria-label="Seções do painel">
+      <div className="tabs tabs-scroll tabs-painel" role="tablist" aria-label="Seções do painel">
         {abas.map(([k, r]) => (
           <button key={k} role="tab" aria-selected={aba === k} onClick={() => setAba(k)}>
             {r}

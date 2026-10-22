@@ -9,6 +9,7 @@ import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
 import Img from "./Img";
 import Midia from "./Midia";
+import Recolhivel from "./Recolhivel";
 
 const VAZIO: ItemGaleria[] = [];
 const ehImagem = (u: string) => u.startsWith("db:") || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
@@ -39,7 +40,8 @@ export default function GaleriaAluno({ uid, autor, avisarAdmin, turma = "" }: { 
 
   return (
     <div className="galeria-aluno">
-      <form className="form tedit" onSubmit={(e) => void adicionar(e)} key={chave}>
+      <Recolhivel titulo="Adicionar foto ou vídeo">
+<form className="form tedit" onSubmit={(e) => void adicionar(e)} key={chave}>
         <CampoImagem name="url" rotulo="Foto (do celular) ou link de foto ou vídeo" onMudar={setUrl} />
         <div className="field">
           <label>Legenda (opcional)</label>
@@ -54,6 +56,7 @@ export default function GaleriaAluno({ uid, autor, avisarAdmin, turma = "" }: { 
           </p>
         )}
       </form>
+</Recolhivel>
       {g.dados.length === 0 && !g.carregando && <p className="empty">Nenhuma foto ou vídeo ainda.</p>}
       <div className="galeria-aluno-grade">
         {g.dados.map((x) => (
