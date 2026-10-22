@@ -30,6 +30,7 @@ export type SiteConfig = {
   driveChave: string;
   diasDestaque: number;
   faixasPublicas: string[];
+  agendaIcs: string;
 };
 
 export const siteBase: SiteConfig = {
@@ -49,6 +50,7 @@ export const siteBase: SiteConfig = {
   driveChave: "",
   diasDestaque: 7,
   faixasPublicas: ["Azul"],
+  agendaIcs: "",
 };
 
 let cache: Promise<Partial<SiteConfig>> | null = null;
@@ -94,6 +96,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     drivePasta: str(p.drivePasta, ""),
     driveFichas: str(p.driveFichas, ""),
     driveChave: str(p.driveChave, ""),
+    agendaIcs: str(p.agendaIcs, ""),
     faixasPublicas: Array.isArray(p.faixasPublicas) ? p.faixasPublicas.filter((x): x is string => typeof x === "string") : ["Azul"],
     diasDestaque: typeof p.diasDestaque === "number" && p.diasDestaque >= 1 && p.diasDestaque <= 60 ? Math.round(p.diasDestaque) : 7,
   };

@@ -1,35 +1,32 @@
 "use client";
 
 import { signOut } from "firebase/auth";
-import { useState } from "react";
 import { lerTurmas, type Turma } from "../lib/alunos";
 import { ehEquipe } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
 import { getAuthInstance } from "../lib/firebase";
 import { useResultadosEquipe } from "../lib/resultados";
 import { useAuth } from "../lib/useAuth";
+import Link from "next/link";
+import { useSyncExternalStore } from "react";
+import { ABAS_ADMIN, type Aba } from "../lib/abasAdmin";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
-import AdminDificuldades from "./AdminDificuldades";
 import AdminEquipe from "./AdminEquipe";
-import AdminEstudo from "./AdminEstudo";
-import AdminFichas from "./AdminFichas";
+import AdminEstudoTudo from "./AdminEstudoTudo";
 import AdminGaleria from "./AdminGaleria";
-import AdminKatas from "./AdminKatas";
-import AdminMateriais from "./AdminMateriais";
-import AdminMenu from "./AdminMenu";
 import AdminMural from "./AdminMural";
-import AdminParcerias from "./AdminParcerias";
-import AdminResultados from "./AdminResultados";
+import AdminResultadosTudo from "./AdminResultadosTudo";
 import AdminResumo from "./AdminResumo";
-import AdminRoletas from "./AdminRoletas";
-import AdminSite from "./AdminSite";
+import AdminSiteTudo from "./AdminSiteTudo";
 import AdminTurmas from "./AdminTurmas";
-import AdminTecnicas from "./AdminTecnicas";
 import LoginForm from "./LoginForm";
 
 const VAZIO_TURMAS: Turma[] = [];
-type Aba = "resumo" | "mural" | "turmas" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "equipe" | "site";
+const assinarHash = (cb: () => void) => {
+  window.addEventListener("hashchange", cb);
+  return () => window.removeEventListener("hashchange", cb);
+};
 
 export default function Admin() {
   const { carregando, user, perfil } = useAuth();
@@ -63,22 +60,17 @@ export default function Admin() {
 
 function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: string; uid: string; ehAdmin: boolean; turmas: string[] }) {
   const escopo = ehAdmin ? null : turmas;
-  const [aba, setAba] = useState<Aba>("resumo");
+  // A aba fica no endereço (/admin#alunos), assim o menu lateral leva direto a ela.
+  const hash = useSyncExternalStore(assinarHash, () => window.location.hash.slice(1), () => "");
+  const aba: Aba = ABAS_ADMIN.some(([k, , soAdmin]) => k === hash && (ehAdmin || !soAdmin)) ? (hash as Aba) : "resumo";
+  const setAba = (k: Aba) => {
+    window.location.hash = k;
+  };
   const res = useResultadosEquipe(escopo);
   const todasTurmas = useCarga(lerTurmas, VAZIO_TURMAS);
   const minhasTurmas = escopo === null ? todasTurmas.dados : todasTurmas.dados.filter((t) => escopo.includes(t.nome));
 
-  const abas: [Aba, string][] = [
-    ["resumo", "Resumo"],
-    ["mural", "Mural"],
-    ["turmas", "Turmas"],
-    ["alunos", "Alunos"],
-    ["aulas", "Aulas"],
-    ["conteudo", "Conteúdo"],
-    ["estudo", "Estudo"],
-    ["resultados", res.novos > 0 ? `Resultados (${res.novos})` : "Resultados"],
-    ...(ehAdmin ? ([["equipe", "Equipe"], ["site", "Site"]] as [Aba, string][]) : []),
-  ];
+  const abas: [Aba, string][] = ABAS_ADMIN.filter(([, , soAdmin]) => ehAdmin || !soAdmin).map(([k, r]) => [k, k === "resultados" && res.novos > 0 ? `${r} (${res.novos})` : r]);
 
   return (
     <>
@@ -89,9 +81,14 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
             Olá, {nome}.{email && !email.endsWith("@celular.dojoalcantara.app") ? ` (${email})` : ""} O que você publicar aparece no site na hora.
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
-          Sair
-        </button>
+        <span className="tool-actions">
+          <Link className="btn btn-ghost" href="/perfil#conta">
+            Meu cadastro
+          </Link>
+          <button className="btn btn-ghost" onClick={() => signOut(getAuthInstance())}>
+            Sair
+          </button>
+        </span>
       </div>
 
       {res.novos > 0 && aba !== "resultados" && (
@@ -114,31 +111,11 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} autor={nome} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
-        {aba === "conteudo" && (
-          <>
-            <AdminTecnicas />
-            <AdminFichas />
-            <AdminKatas />
-            <AdminMateriais />
-            <AdminGaleria />
-          </>
-        )}
-        {aba === "estudo" && (
-          <>
-            <AdminEstudo />
-            <AdminRoletas />
-          </>
-        )}
+        {aba === "estudo" && <AdminEstudoTudo />}
+        {aba === "galeria" && <AdminGaleria />}
+        {aba === "resultados" && <AdminResultadosTudo escopo={escopo} res={res} />}
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
-        {aba === "site" && ehAdmin && (
-          <>
-            <AdminMenu />
-            <AdminSite />
-            <AdminParcerias />
-          </>
-        )}
-        {aba === "resultados" && <AdminDificuldades escopo={escopo} />}
-        {aba === "resultados" && <AdminResultados itens={res.dados} carregando={res.carregando} erro={res.erro} visto={res.visto} marcarVisto={res.marcarVisto} />}
+        {aba === "site" && ehAdmin && <AdminSiteTudo />}
       </div>
     </>
   );

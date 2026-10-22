@@ -6,9 +6,11 @@ import { addAvisoTurma, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { apagar, atualizarAviso, atualizarEvento, criarAviso, criarEvento, useAvisos, useEventos, type AvisoDoc, type EventoDoc } from "../lib/conteudo";
 import { enderecoOk } from "../lib/katasDb";
+import AdminAgenda from "./AdminAgenda";
 import AdminCalendarios from "./AdminCalendarios";
 import AdminFeriados from "./AdminFeriados";
 import CampoImagem from "./CampoImagem";
+import MenuSuspenso from "./MenuSuspenso";
 
 const TIPOS = ["Campeonato", "Prova", "Festa", "Treino especial", "Aula", "Outro"];
 
@@ -21,6 +23,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
   const [editEvento, setEditEvento] = useState<EventoDoc | null>(null);
   const [destino, setDestino] = useState<"publico" | "turmas">("publico");
   const [noCalendario, setNoCalendario] = useState(false);
+  const [sec, setSec] = useState<"avisos" | "eventos" | "feriados" | "oficiais" | "agenda">("avisos");
 
   async function rodar(acao: () => Promise<void>, ok: string, depois: () => void) {
     setOcupado(true);
@@ -112,12 +115,30 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
 
   return (
     <>
+      <MenuSuspenso
+        id="sub-mural"
+        rotulo="O que você quer publicar ou ver?"
+        valor={sec}
+        onMudar={(v) => (setSec(v), setMsg(""))}
+        opcoes={[
+          ["avisos", `Avisos (${av.itens.length})`],
+          ["eventos", `Eventos do calendário (${ev.itens.length})`],
+          ["feriados", "Feriados locais"],
+          ...(ehAdmin
+            ? ([
+                ["oficiais", "Calendários oficiais (PDF ou imagem)"],
+                ["agenda", "Agenda do Google"],
+              ] as ["oficiais" | "agenda", string][])
+            : []),
+        ]}
+      />
       {msg && (
         <p className="form-note" role="status">
           {msg}
         </p>
       )}
 
+      {sec === "avisos" && (
       <section className="panel" id="avisos">
         <h2>Avisos</h2>
         <form className="form" onSubmit={salvarAviso} key={editAviso?.id ?? "novo-aviso"}>
@@ -234,7 +255,9 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
           ))}
         </ul>
       </section>
+      )}
 
+      {sec === "eventos" && (
       <section className="panel" id="eventos">
         <h2>Eventos do calendário</h2>
         <form className="form" onSubmit={salvarEvento} key={editEvento?.id ?? "novo-evento"}>
@@ -319,9 +342,11 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
           ))}
         </ul>
       </section>
+      )}
 
-      <AdminFeriados />
-      {ehAdmin && <AdminCalendarios />}
+      {sec === "feriados" && <AdminFeriados />}
+      {sec === "oficiais" && ehAdmin && <AdminCalendarios />}
+      {sec === "agenda" && ehAdmin && <AdminAgenda />}
     </>
   );
 }

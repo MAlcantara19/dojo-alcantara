@@ -6,6 +6,7 @@ import { addAvisoTurma, addTurma, apagarAvisoTurma, apagarTurma, lerAvisosTurma,
 import { mensagemErro } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
 import GerenciarAlunos from "./GerenciarAlunos";
+import MenuSuspenso from "./MenuSuspenso";
 
 const VAZIO_T: Turma[] = [];
 const VAZIO_A: Aluno[] = [];
@@ -20,6 +21,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
   const avisos = useCarga(() => lerAvisosTurma(escopo), VAZIO_AV);
   const [editando, setEditando] = useState<string | null>(null);
   const [gerenciando, setGerenciando] = useState<string | null>(null);
+  const [sel, setSel] = useState("");
   const [aviso, setAviso] = useState<{ onde: string; texto: string } | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -45,7 +47,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     const nome = String(new FormData(form).get("nome") ?? "").trim();
     if (!nome) return setAviso({ onde: "nova", texto: "Escreva o nome da turma." });
     if (turmas.dados.some((t) => t.nome.toLowerCase() === nome.toLowerCase())) return setAviso({ onde: "nova", texto: "Essa turma já existe." });
-    void rodar("nova", () => addTurma(nome), `Turma “${nome}” criada. Toque em Editar para preencher local e horários.`, () => (form.reset(), turmas.recarregar()));
+    void rodar("nova", () => addTurma(nome), `Turma “${nome}” criada. Escolha ela no menu “Turma” para preencher local e horários.`, () => (form.reset(), turmas.recarregar()));
   }
 
   function salvar(e: React.FormEvent<HTMLFormElement>, t: Turma) {
@@ -79,9 +81,19 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     void rodar("av" + t.id, () => addAvisoTurma({ turma: t.nome, titulo, texto, data: hojeISO() }), "Aviso publicado para a turma.", () => (form.reset(), avisos.recarregar()));
   }
 
+  const atual = sel === "__nova" ? "__nova" : visiveis.some((t) => t.id === sel) ? sel : (visiveis[0]?.id ?? (ehAdmin ? "__nova" : ""));
   return (
     <>
-      {ehAdmin && (
+      {(visiveis.length > 0 || ehAdmin) && (
+        <MenuSuspenso
+          id="sel-turma"
+          rotulo="Turma"
+          valor={atual}
+          onMudar={(v) => (setSel(v), setEditando(null), setGerenciando(null))}
+          opcoes={[...visiveis.map((t) => [t.id, `${t.apelido || t.nome} (${alunos.dados.filter((a) => a.academia === t.nome).length} alunos)`] as [string, string]), ...(ehAdmin ? ([["__nova", "+ Criar turma nova"]] as [string, string][]) : [])]}
+        />
+      )}
+      {ehAdmin && atual === "__nova" && (
         <section className="panel" id="turmas">
           <h2>Turmas</h2>
           <p className="lead">Crie a turma e depois toque em Editar para preencher apelido, descrição, local de treino, horários e o grupo de WhatsApp. Cada turma tem o seu mural de avisos.</p>
@@ -102,7 +114,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
         </section>
       )}
 
-      {visiveis.map((t) => {
+      {visiveis.filter((t) => t.id === atual).map((t) => {
         const qtd = alunos.dados.filter((a) => a.academia === t.nome).length;
         const doAviso = avisos.dados.filter((a) => a.turma === t.nome);
         const rotulo = t.apelido || t.nome;

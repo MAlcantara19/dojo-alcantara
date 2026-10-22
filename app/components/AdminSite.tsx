@@ -70,6 +70,7 @@ export default function AdminSite() {
       driveChave: g("chave"),
       diasDestaque: Math.min(60, Math.max(1, Math.round(Number(g("dias")) || 7))),
       faixasPublicas: f.getAll("faixasPublicas").map(String),
+      agendaIcs: atual.agendaIcs,
     };
     if (!novo.nome) return setMsg("O nome do dojô não pode ficar vazio.");
     if ((novo.logoUrl && !enderecoOk(novo.logoUrl)) || (novo.bannerUrl && !enderecoOk(novo.bannerUrl))) return setMsg("Logo e banner: escolha uma imagem do celular ou cole um link que comece com https://");

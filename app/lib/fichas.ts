@@ -56,12 +56,14 @@ export function montarFichas(arquivos: ArquivoFicha[]) {
   const mapa: Record<string, Ficha> = {};
   const faixas: Record<string, Ficha> = {};
   const semCorrespondencia: { name: string; sugestao?: string }[] = [];
+  const lista: { id: string; name: string; pdf: boolean; ligadoA: string; sugestao?: string }[] = [];
   let ligados = 0;
   [...arquivos].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).forEach((a) => {
     // Ficha da faixa inteira: o nome do arquivo tem “faixa” + a cor (ex.: “Fichas - Faixa Azul.pdf”).
     const k = normalizar(a.name);
     const daFaixa = listaFaixas.find((fx) => k.includes("faixa" + normalizar(fx.nome)));
     if (daFaixa) {
+      lista.push({ id: a.id, name: a.name, pdf: a.mimeType === "application/pdf", ligadoA: `Ficha da faixa ${daFaixa.nome.toLowerCase()}` });
       const ff = (faixas[daFaixa.nome] ??= {});
       if (a.mimeType === "application/pdf") ff.pdf ??= `https://drive.google.com/file/d/${a.id}/view`;
       else ff.imagem ??= `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
@@ -71,14 +73,16 @@ export function montarFichas(arquivos: ArquivoFicha[]) {
     const r = casar(a.name);
     if (!r.id) {
       semCorrespondencia.push({ name: a.name, sugestao: r.sugestao });
+      lista.push({ id: a.id, name: a.name, pdf: a.mimeType === "application/pdf", ligadoA: "", sugestao: r.sugestao });
       return;
     }
+    lista.push({ id: a.id, name: a.name, pdf: a.mimeType === "application/pdf", ligadoA: r.id });
     const f = (mapa[r.id] ??= {});
     if (a.mimeType === "application/pdf") f.pdf ??= `https://drive.google.com/file/d/${a.id}/view`;
     else f.imagem ??= `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
     ligados += 1;
   });
-  return { mapa, faixas, semCorrespondencia, ligados };
+  return { mapa, faixas, semCorrespondencia, ligados, lista };
 }
 
 /* ---------- Leitura da pasta (com cache de 5 minutos) ---------- */

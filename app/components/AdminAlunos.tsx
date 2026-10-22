@@ -14,6 +14,7 @@ import GaleriaAluno from "./GaleriaAluno";
 import Avatar from "./Avatar";
 import FotosConta from "./FotosConta";
 import MedidasAluno from "./MedidasAluno";
+import MenuSuspenso from "./MenuSuspenso";
 
 const VAZIO_A: Aluno[] = [];
 const VAZIO_T: Turma[] = [];
@@ -31,6 +32,7 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
   const [senhaDe, setSenhaDe] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [limite, setLimite] = useState(12);
+  const [sec, setSec] = useState<"lista" | "cadastrar" | "aniversarios" | "faixa">("lista");
 
   const hoje = new Date();
   const termo = busca.trim().toLowerCase();
@@ -74,19 +76,32 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
 
   return (
     <>
-      {!ehAdmin && (
+      <MenuSuspenso
+        id="sub-alunos"
+        rotulo="O que você quer ver?"
+        valor={sec}
+        onMudar={setSec}
+        opcoes={[
+          ["lista", `Alunos cadastrados (${alunos.dados.length})`],
+          ...(ehAdmin ? ([["cadastrar", "Cadastrar aluno"]] as ["cadastrar", string][]) : []),
+          ["aniversarios", `Aniversários (${aniversarios.length} nos próximos 30 dias)`],
+          ["faixa", "Tempo na faixa"],
+        ]}
+      />
+      {sec === "lista" && !ehAdmin && (
         <p className="form-help">
           {escopo && escopo.length > 0 ? `Você vê os alunos das turmas: ${escopo.map((t) => turmaDe(t)?.apelido || t).join(", ")}.` : "Você ainda não foi vinculado a nenhuma turma. Peça ao administrador."} Só o administrador cadastra e edita os dados dos alunos.
         </p>
       )}
 
-      {ehAdmin && (
+      {sec === "cadastrar" && ehAdmin && (
         <section className="panel" id="cadastro">
           <h2>Cadastrar aluno</h2>
           <FormCadastro tipo="aluno" turmas={turmas.dados} onCriado={() => (alunos.recarregar(), internos.recarregar())} />
         </section>
       )}
 
+      {sec === "lista" && (
       <section className="panel" id="alunos">
         <h2>Alunos cadastrados</h2>
         {aviso && (
@@ -258,9 +273,11 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
         </ul>
         {lista.length > 60 && <p className="form-help">Mostrando 60 de {lista.length}. Use a busca ou o filtro de turma.</p>}
       </section>
+      )}
 
-      <section className="panel" id="faixas">
-        <h2>Aniversários e tempo na faixa</h2>
+      {sec === "aniversarios" && (
+      <section className="panel" id="aniversarios">
+        <h2>Aniversários</h2>
         <h3 className="sub">Aniversariantes dos próximos 30 dias ({aniversarios.length})</h3>
         {ehAdmin && (
           <p className="tool-actions">
@@ -291,7 +308,12 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
             </li>
           ))}
         </ul>
-        <h3 className="sub">Tempo na mesma faixa ({paradosNaFaixa.length})</h3>
+      </section>
+      )}
+
+      {sec === "faixa" && (
+      <section className="panel" id="faixas">
+        <h2>Tempo na mesma faixa ({paradosNaFaixa.length})</h2>
         <div className="field">
           <label htmlFor="al-limite">Mostrar quem está há pelo menos</label>
           <select id="al-limite" value={limite} onChange={(e) => setLimite(Number(e.target.value))}>
@@ -317,6 +339,7 @@ export default function AdminAlunos({ ehAdmin, escopo, autor = "Professor" }: { 
         </ul>
         <p className="form-help">É só um aviso para você avaliar. A decisão de exame continua sendo sua e da federação.</p>
       </section>
+      )}
     </>
   );
 }

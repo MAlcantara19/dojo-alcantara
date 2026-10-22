@@ -7,6 +7,7 @@ import { useEventos, type EventoDoc } from "../lib/conteudo";
 import { feriadosNacionais, type Feriado } from "../lib/feriados";
 import { linkGoogleAgenda } from "../lib/ics";
 import { descreverLink, idDoDrive } from "../lib/links";
+import { useAgendaGoogle } from "../lib/agendaGoogle";
 import { lerAniversarios, type Aniversario } from "../lib/aniversarios";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
@@ -32,7 +33,9 @@ export default function Calendario() {
 }
 
 function CalendarioInterno({ hojeStr }: { hojeStr: string }) {
-  const ev = useEventos();
+  const evSite = useEventos();
+  const agenda = useAgendaGoogle();
+  const ev = useMemo(() => ({ itens: [...evSite.itens, ...agenda] }), [evSite.itens, agenda]);
   const locais = useCarga(lerFeriadosLocais, VAZIO_F);
   const oficiais = useCarga(lerCalendariosOficiais, VAZIO_C);
   const { user } = useAuth();

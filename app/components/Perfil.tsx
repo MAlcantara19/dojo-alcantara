@@ -4,7 +4,7 @@ import { signOut, updatePassword } from "firebase/auth";
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { anoCampeonato, dataBR, hojeISO, idade, indiceFaixa, mesesEntre, type Aluno } from "../lib/aluno";
-import { addMedida, addNota, apagarSub, atualizarMeuCadastro, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
+import { addMedida, addNota, apagarSub, atualizarMeuCadastro, atualizarNomeConta, confirmarSenhaTrocada, lerAluno, lerAvisosTurma, lerMedidas, lerMinhaTurma, lerNotas, lerResultados, type AvisoTurma, type Medida, type Nota, type Resultado, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { useTecnicas } from "../lib/conteudo";
 import { faixas } from "../lib/faixas";
@@ -464,6 +464,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
     try {
       const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") };
       await atualizarMeuCadastro(uid, novo);
+      if (p.papel === "admin" && g("nome") && g("nome") !== p.nome) await atualizarNomeConta(uid, g("nome"));
       await guardarAniversario(uid, p.nome, novo.apelido, novo.dataNascimento).catch(() => undefined);
       const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento" };
       const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
@@ -481,8 +482,8 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
       <h2>Meu cadastro</h2>
       <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}`}>
         <div className="field">
-          <label>Nome completo</label>
-          <input type="text" value={p.nome} readOnly aria-readonly="true" />
+          <label htmlFor="mc-nome">Nome completo{p.papel === "admin" ? " (aparece nas suas publicações)" : ""}</label>
+          {p.papel === "admin" ? <input id="mc-nome" name="nome" type="text" maxLength={100} defaultValue={p.nome} autoComplete="name" /> : <input id="mc-nome" type="text" value={p.nome} readOnly aria-readonly="true" />}
         </div>
         <div className="field">
           <label htmlFor="mc-ap">Apelido</label>
@@ -511,7 +512,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
           </p>
         )}
         <p className="form-help">
-          Para entrar você usa: <b>{p.login?.endsWith("@celular.dojoalcantara.app") ? `${p.login.split("@")[0]} (celular)` : p.login}</b>. Para trocar o e-mail ou o celular de entrada, peça ao seu professor. O nome, a faixa e a turma também são o professor que muda.
+          Para entrar você usa: <b>{p.login?.endsWith("@celular.dojoalcantara.app") ? `${p.login.split("@")[0]} (celular)` : p.login}</b>. {p.papel === "admin" ? "Para trocar o e-mail de entrada, use Equipe → Administradores com a outra conta de administrador." : "Para trocar o e-mail ou o celular de entrada, peça ao seu professor. O nome, a faixa e a turma também são o professor que muda."}
         </p>
       </form>
     </section>

@@ -11,7 +11,7 @@ import AdminPedidos from "./AdminPedidos";
 const VAZIO_A: Aluno[] = [];
 const VAZIO_AU: Aula[] = [];
 
-type Aba = "mural" | "alunos" | "aulas" | "conteudo" | "estudo" | "resultados" | "site";
+import type { Aba } from "../lib/abasAdmin";
 
 /** Visão rápida do dia: o que olhar primeiro ao abrir o painel. */
 export default function AdminResumo({ uid, escopo, novosResultados, ir, ehAdmin = false }: { uid: string; escopo: Escopo; novosResultados: number; ir: (a: Aba) => void; ehAdmin?: boolean }) {

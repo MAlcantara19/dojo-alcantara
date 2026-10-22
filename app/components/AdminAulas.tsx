@@ -5,6 +5,7 @@ import { dataBR, hojeISO } from "../lib/aluno";
 import { addAula, apagarAula, focos, lerAulas, type Aula } from "../lib/aulas";
 import { mensagemErro } from "../lib/auth";
 import { lerFeriadosLocais, type FeriadoLocal } from "../lib/calendarioDb";
+import { useAgendaGoogle } from "../lib/agendaGoogle";
 import { useEventos } from "../lib/conteudo";
 import { feriadosNacionais, type Feriado } from "../lib/feriados";
 import { useCarga } from "../lib/useCarga";
@@ -17,7 +18,9 @@ const iso = (a: number, m: number, d: number) => `${a}-${String(m + 1).padStart(
 
 export default function AdminAulas({ uid }: { uid: string }) {
   const aulas = useCarga(() => lerAulas(uid), VAZIO);
-  const ev = useEventos();
+  const evSite = useEventos();
+  const agenda = useAgendaGoogle();
+  const ev = useMemo(() => ({ itens: [...evSite.itens, ...agenda] }), [evSite.itens, agenda]);
   const locais = useCarga(lerFeriadosLocais, VAZIO_FER);
   const inicio = new Date();
   const [ano, setAno] = useState(inicio.getFullYear());

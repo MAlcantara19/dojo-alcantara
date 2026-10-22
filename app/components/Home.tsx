@@ -8,6 +8,7 @@ import { siglaDe, useSite } from "../lib/siteConfig";
 import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import Img, { useImagemUrl } from "./Img";
 import { estiloFoto } from "../lib/fotoAjuste";
+import { useAgendaGoogle } from "../lib/agendaGoogle";
 import Midia from "./Midia";
 import EstudoCards from "./EstudoCards";
 import Parcerias from "./Parcerias";
@@ -43,7 +44,8 @@ export default function Home() {
 
   const av = useAvisos();
   const ev = useEventos();
-  const eventos = ev.itens;
+  const agenda = useAgendaGoogle();
+  const eventos = [...ev.itens, ...agenda];
 
   const futuros = hoje
     ? eventos.filter((e) => parseData(e.data) >= hoje).sort((a, b) => parseData(a.data).getTime() - parseData(b.data).getTime())

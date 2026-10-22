@@ -1,20 +1,20 @@
-ATUALIZAÇÃO 21 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 22 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
-3. npm run build
-4. git add .
-   git commit -m "Fotos de perfil e banner, tecnicas por faixa liberada, roletas novas e aniversarios no calendario"
+2. npm run build
+3. git add .
+   git commit -m "Painel organizado em menus, agenda do Google e fichas do Drive com miniaturas"
    git push
-5. Depois de publicar: Painel > Alunos > "Colocar os aniversários no calendário" (uma vez).
+(As regras do Firestore não mudaram.)
 
 NOVIDADES
- - Roleta: escolher quantos itens entram (6, 8, 12, 16, 24 ou todos) e "Sortear outros";
-   "Mais roletas" criadas em Painel > Estudo (item | resposta, um por linha).
- - Simulados: aluno e professor veem as questões erradas (com a certa) e as certas de cada simulado.
- - Técnicas: o público vê só as faixas marcadas em Painel > Site (padrão: azul); o aluno vê até a
-   próxima faixa dele; no cadastro do aluno dá para liberar mais faixas. "Para treinar" virou
-   "Minhas técnicas", mostrando as faixas liberadas.
- - Aniversários no calendário (só para quem está logado, com apelido ou primeiro nome).
- - Foto de perfil e banner para todos (aluno, professor, administrador e o dojô), redondas com
-   borda de 2px na cor da faixa, com zoom e enquadramento.
+ - Painel com uma parte por vez (menu suspenso) em Mural, Turmas, Alunos, Estudo, Resultados,
+   Equipe e Site. "Conteúdo" e "Estudo" viraram uma aba só (Estudo); Galeria ganhou aba própria.
+ - Menu lateral: "Área do professor" com todas as abas e "Meu perfil".
+ - Botão "Meu cadastro" no painel; o administrador edita o próprio nome lá.
+ - Equipe: escolhe o professor no menu e marca as turmas dele; administradores listados.
+ - Alunos: lista, cadastrar, aniversários e tempo na faixa separados.
+ - Resultados: por aluno (com questões certas e erradas) e questões que mais erram.
+ - Fichas do Drive: miniatura de cada arquivo, a que técnica ou faixa ficou ligado, os sem ligação
+   e o botão "Abrir no Drive".
+ - Agenda do Google: Mural e calendário > Agenda do Google (instruções na tela).

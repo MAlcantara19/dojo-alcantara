@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ABAS_ADMIN } from "../lib/abasAdmin";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { useMenu } from "../lib/menuConfig";
 import { ehEquipe } from "../lib/auth";
@@ -235,33 +236,37 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             );
           })}
 
-        {user && (
-          <details className="drawer-pai" open={pathname === "/perfil" || undefined}>
-            <summary>
-              {minhaArea.rotulo}
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            </summary>
-            <div className="drawer-sub">
-              {(minhaArea.filhos ?? []).map((f) => (
-                <a
-                  key={f.rotulo}
-                  href={f.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setAberto(false);
-                    const [rota, hash] = f.href.split("#");
-                    if (pathname === rota) window.location.hash = hash;
-                    else router.push(f.href);
-                  }}
-                >
-                  {f.rotulo}
-                </a>
-              ))}
-            </div>
-          </details>
-        )}
+        {user &&
+          [
+            ...(equipe ? [{ rotulo: "Área do professor", rota: "/admin", filhos: ABAS_ADMIN.filter(([, , soAdmin]) => perfil?.papel === "admin" || !soAdmin).map(([id, r]) => ({ href: `/admin#${id}`, rotulo: r })) }] : []),
+            { rotulo: equipe ? "Meu perfil" : "Minha área", rota: "/perfil", filhos: minhaArea.filhos ?? [] },
+          ].map((g) => (
+            <details key={g.rota} className="drawer-pai" open={pathname === g.rota || undefined}>
+              <summary>
+                {g.rotulo}
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </svg>
+              </summary>
+              <div className="drawer-sub">
+                {g.filhos.map((f) => (
+                  <a
+                    key={f.href}
+                    href={f.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setAberto(false);
+                      const [rota, hash] = f.href.split("#");
+                      if (pathname === rota) window.location.hash = hash;
+                      else router.push(f.href);
+                    }}
+                  >
+                    {f.rotulo}
+                  </a>
+                ))}
+              </div>
+            </details>
+          ))}
 
         <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
           {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}

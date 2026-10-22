@@ -16,14 +16,10 @@ const VAZIO_S: SimuladoDoc[] = [];
 const VAZIO_E: ExercicioDoc[] = [];
 const LETRAS = ["A", "B", "C", "D", "E"];
 
-export default function AdminEstudo() {
-  return (
-    <>
-      <PainelPalavras />
-      <PainelExercicios />
-      <PainelSimulados />
-    </>
-  );
+export default function AdminEstudo({ secao }: { secao: "palavras" | "exercicios" | "simulados" }) {
+  if (secao === "palavras") return <PainelPalavras />;
+  if (secao === "exercicios") return <PainelExercicios />;
+  return <PainelSimulados />;
 }
 
 /* Roda uma ação e mostra o aviso logo abaixo do botão. */
@@ -218,7 +214,7 @@ function PainelExercicios() {
 
   return (
     <section className="panel" id="exercicios">
-      <h2>Exercícios da roleta de aula</h2>
+      <h2>Exercícios físicos</h2>
       <p className="lead">{ex.dados.length === 0 ? "Enquanto não houver exercícios aqui, a roleta usa a lista padrão (pena de ganso, soldadinho, canguru, corrida, pular corda e outros)." : `${ex.dados.length} exercícios cadastrados.`}</p>
       <Aviso msg={a.msg} />
       {ex.dados.length === 0 && !ex.carregando && (

@@ -878,3 +878,16 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
 .conta .avatar{width:38px!important;height:38px!important}
 .aluno-linha{display:flex;gap:10px;align-items:flex-start;min-width:0}
 .aluno-linha>span{display:grid;min-width:0}
+
+/* Menu suspenso do painel: uma parte por vez */
+.menu-suspenso{display:grid;gap:6px;margin:4px 0 14px;padding:12px 14px;border-radius:var(--r-lg);background:var(--surface);border:1.5px solid var(--bright)}
+.menu-suspenso label{font-weight:800;font-size:.95rem}
+.menu-suspenso select{font-size:1.05rem;font-weight:700;padding:.7rem .9rem}
+.passos-simples{margin:0 0 6px;padding-left:1.2rem;display:grid;gap:6px}
+.fichas-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;width:100%}
+.ficha-item{display:grid;gap:4px;align-content:start;padding:8px;border-radius:var(--r-md);border:1.5px solid #2f9e5b;background:var(--surface)}
+.ficha-item.solta{border-color:#d9a441}
+.ficha-item small{color:var(--muted);font-size:.78rem}
+.ficha-mini{position:relative;display:block;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.ficha-mini img{width:100%;height:100%;object-fit:cover}
+.ficha-pdf{position:absolute;top:6px;right:6px;padding:.1rem .45rem;border-radius:6px;background:#d9334a;color:#fff;font-size:.7rem;font-weight:800}
