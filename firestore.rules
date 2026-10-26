@@ -41,9 +41,9 @@ service cloud.firestore {
       allow create, delete: if ehAdmin();
       allow update: if ehAdmin()
         || (ehProfessor() && resource.data.get('papel', '') == 'aluno' && request.resource.data.get('papel', '') == 'aluno'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'sexo', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
         || (ehProprio(uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste', 'login'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'sexo', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste', 'login'])
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['login']) || request.resource.data.login == request.auth.token.email)
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
             && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 40

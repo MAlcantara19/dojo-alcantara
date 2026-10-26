@@ -5,12 +5,13 @@ import { dataBR, hojeISO, type Aluno } from "../lib/aluno";
 import { addAvisoTurma, addMedida, lerTurmas, listarAlunos, type Turma } from "../lib/alunos";
 import { mensagemErro } from "../lib/auth";
 import { addCampeonatoDojo, apagarCampeonatoDojo, lerCampeonatosDojo, lerComprovante, lerInscritos, salvarCampeonatoDojo, salvarComprovante, salvarInscrito, tirarComprovante, tirarInscrito, type Arquivo, type CampeonatoDojo, type Comprovante, type Inscrito } from "../lib/campeonatosDojo";
-import { classeDeIdade, pesosDaClasse, sugerirPeso, type Sexo } from "../lib/categorias";
+import { classeDeIdade, sugerirPeso, type Sexo } from "../lib/categorias";
 import { criarAviso } from "../lib/conteudo";
 import { enderecoOk } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
 import MenuSuspenso from "./MenuSuspenso";
+import TabelaPesos from "./TabelaPesos";
 
 const VAZIO_C: CampeonatoDojo[] = [];
 const VAZIO_A: Aluno[] = [];
@@ -277,7 +278,6 @@ function Inscricoes({ c, turmas, ehAdmin, minhasTurmas }: { c: CampeonatoDojo; t
   const lista = alunos.dados.filter((a) => (!filtro ? true : filtro === "__sem" ? !a.academia : a.academia === filtro)).filter((a) => !insc.dados.some((i) => i.uid === a.uid));
   const aluno = alunos.dados.find((a) => a.uid === uid) ?? null;
   const classe = classeDeIdade(aluno?.dataNascimento, ano);
-  const pesos = pesosDaClasse(classe, sexo);
   const podeVerComprovante = (turma: string) => ehAdmin || minhasTurmas.includes(turma);
 
   // Lê os comprovantes que você tem permissão de ver (administrador: todos; professor: só da turma dele).
@@ -333,7 +333,12 @@ function Inscricoes({ c, turmas, ehAdmin, minhasTurmas }: { c: CampeonatoDojo; t
             onMudar={(v) => (setFiltro(v), setUid(""))}
             opcoes={[["", "Todos os alunos"], ["__sem", "Sem turma"], ...turmas.map((t) => [t.nome, t.apelido || t.nome] as [string, string])]}
           />
-          <MenuSuspenso id="insc-aluno" rotulo={`Aluno (${lista.length})`} valor={uid} onMudar={(v) => (setUid(v), setCategoria(""))} opcoes={[["", "Escolha o aluno"], ...lista.map((a) => [a.uid, a.apelido ? `${a.apelido} · ${a.nome}` : a.nome] as [string, string])]} />
+          <MenuSuspenso id="insc-aluno" rotulo={`Aluno (${lista.length})`} valor={uid} onMudar={(v) => {
+            setUid(v);
+            setCategoria("");
+            const s = alunos.dados.find((x) => x.uid === v)?.sexo;
+            if (s === "M" || s === "F") setSexo(s);
+          }} opcoes={[["", "Escolha o aluno"], ...lista.map((a) => [a.uid, a.apelido ? `${a.apelido} · ${a.nome}` : a.nome] as [string, string])]} />
         </div>
         {aluno && (
           <>
@@ -358,20 +363,8 @@ function Inscricoes({ c, turmas, ehAdmin, minhasTurmas }: { c: CampeonatoDojo; t
                 <label>Altura em cm (opcional)</label>
                 <input type="text" inputMode="decimal" value={altura} onChange={(e) => setAltura(e.target.value)} placeholder="Ex.: 142" />
               </div>
-              <div className="field">
-                <label>Categoria de peso</label>
-                {pesos.length ? (
-                  <select value={categoria || sugerirPeso(classe, sexo, num(peso))} onChange={(e) => setCategoria(e.target.value)}>
-                    <option value="">A definir</option>
-                    {pesos.map((p) => (
-                      <option key={p}>{p}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input type="text" maxLength={30} value={categoria} onChange={(e) => setCategoria(e.target.value)} placeholder="Ex.: -30 kg (ver tabela do evento)" />
-                )}
-              </div>
             </div>
+            <TabelaPesos classe={classe} sexo={sexo} peso={num(peso)} escolhida={categoria || sugerirPeso(classe, sexo, num(peso))} onEscolher={setCategoria} />
             <CampoImagem key={chave} name="__comp" rotulo="Comprovante de pagamento ou documento (opcional; só o administrador e o professor da turma veem)" onMudar={setComprovante} />
             <button type="button" className="btn btn-primary" onClick={() => void inscrever()}>
               Inscrever

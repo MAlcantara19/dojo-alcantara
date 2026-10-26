@@ -1,18 +1,18 @@
-ATUALIZAÇÃO 26 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 27 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
 2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
 3. npm run build
 4. git add .
-   git commit -m "Checklist da faixa, graus pela chamada, sequencias e contragolpes e formularios recolhidos"
+   git commit -m "Tabela de pesos 2026, sexo do aluno, professores por turma e largura total no computador"
    git push
 
 NOVIDADES
- - Checklist da faixa (Minha área > Checklist da faixa): Sei o nome / Executo / Sei o erro,
-   com progresso, salvo sozinho e botão de imprimir. O professor vê e marca em Alunos > Checklist.
- - Graus pela chamada: 9 aulas = 1 grau e 4 graus = pronto para avaliação (mude em Site >
-   Aparência). O aluno vê a faixa com os graus; Alunos > "Graus pela chamada e exames".
- - Sequências (renraku-waza) e contragolpes (kaeshi-waza) por técnica, cadastrados em
-   Estudo > Técnicas; aparecem no detalhe da técnica nos dois sentidos, com toque para abrir.
- - Formulários começam recolhidos ("+ Novo aviso", "+ Registrar medida"...) para sobrar
-   espaço no celular, e nada mais passa da largura da tela.
+ - Tabela de pesos 2026 da Confederada Rio (10 classes, feminino e masculino), no arquivo
+   app\lib\categorias.ts. Na inscrição do campeonato: categoria pelo peso, folga até o limite,
+   quanto perder para descer e botão "Escolher" para competir em outra categoria.
+ - Sexo do aluno no cadastro, na edição e no Meu cadastro.
+ - Corpo e medidas (área do aluno): "Minha categoria de competição" pelo último peso.
+ - Turmas > Gerenciar professores; administradores também podem ser ligados a turmas.
+ - Computador: a página usa a largura toda (a faixa escura à direita só aparece quando há
+   parceiros para mostrar).

@@ -33,6 +33,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       faixa: g("faixa"),
       faixaDesde: g("desde"),
       dan: Number(g("dan")) || 0,
+      sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "",
       academia: ehAluno ? g("academia") : "",
       email: g("email"),
       celular: g("celular"),
@@ -149,6 +150,14 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
               <label htmlFor={`c-in-${tipo}`}>Apelido interno (só você vê)</label>
               <input id={`c-in-${tipo}`} name="interno" type="text" maxLength={40} autoComplete="off" />
             </div>
+          </div>
+          <div className="field">
+            <label>Sexo (para a tabela de pesos)</label>
+            <select name="sexo" defaultValue={""}>
+              <option value="">Não informado</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
           </div>
           <div className="field">
             <label htmlFor={`c-nasc-${tipo}`}>Data de nascimento (opcional)</label>

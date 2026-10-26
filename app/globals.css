@@ -802,7 +802,7 @@ a.parceiro:hover{border-color:var(--bright);translate:0 -3px}
   .parceiro.compacto{grid-template-columns:48px 1fr;justify-items:start;text-align:left;align-items:center;column-gap:10px;padding:10px}
   .parceiro.compacto .parceiro-logo,.parceiro.compacto .parceiro-sigla{width:48px;height:48px;grid-row:span 2;font-size:1rem}
   .parceiro.compacto .parceiro-desconto{grid-column:2;font-size:.72rem}
-  .page.com-lado{margin-right:270px}
+  body:has(.parc-lado) .page.com-lado{margin-right:270px}
 }
 
 .materiais{display:grid;gap:16px;width:100%}
@@ -1046,3 +1046,16 @@ span.lig-chip{cursor:default;border-style:dashed}
 .menu-suspenso{min-width:0;max-width:100%}
 .menu-suspenso select,.menu-suspenso input{width:100%;max-width:100%;min-width:0;text-overflow:ellipsis}
 .menu-suspenso label{overflow-wrap:anywhere}
+/* Tabela de pesos */
+.tabela-pesos{display:grid;gap:8px;width:100%}
+.tp-resumo{padding:10px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1.5px solid var(--bright)}
+.tp-resumo p{margin:0}
+.tp-resumo ul{margin:6px 0 0;padding-left:1.1rem;display:grid;gap:2px}
+.tp-tabela{width:100%;border-collapse:collapse;font-size:.92rem}
+.tp-tabela th{text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--muted);padding:4px 6px}
+.tp-tabela td{padding:6px;border-top:1px solid var(--line)}
+.tp-tabela tr.do-peso td{font-weight:700}
+.tp-tabela tr.escolhida td{background:color-mix(in srgb,var(--bright) 14%,transparent)}
+.tp-tabela small{color:var(--accent);font-weight:700}
+.btn.mini{padding:.3rem .7rem;font-size:.8rem}
+.btn.mini.ativo{background:var(--bright);color:#fff;border-color:var(--bright)}

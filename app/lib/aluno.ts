@@ -9,6 +9,7 @@ export type Aluno = {
   faixa: string;
   faixaDesde?: string; // AAAA-MM-DD
   dan?: number; // só para faixa preta (1 a 10)
+  sexo?: "M" | "F" | ""; // para a tabela de pesos dos campeonatos
   liberadoAte?: string; // faixa até onde as técnicas ficam liberadas (além da automática)
   foto?: string;
   fotoAjuste?: { z: number; x: number; y: number };

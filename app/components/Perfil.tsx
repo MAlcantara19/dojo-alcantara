@@ -18,7 +18,9 @@ import { guardarAniversario } from "../lib/aniversarios";
 import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
 import { useSite } from "../lib/siteConfig";
+import { classeDeIdade } from "../lib/categorias";
 import ChecklistFaixa from "./ChecklistFaixa";
+import TabelaPesos from "./TabelaPesos";
 import { registrarAtividade } from "../lib/atividades";
 import CampeonatosAluno from "./CampeonatosAluno";
 import { estiloFoto } from "../lib/fotoAjuste";
@@ -353,6 +355,25 @@ function Conteudo({ uid }: { uid: string }) {
       )}
 
       {aba === "corpo" && (
+        <section className="panel">
+          <h2>Minha categoria de competição</h2>
+          {p.sexo === "M" || p.sexo === "F" ? (
+            (() => {
+              const ultimoPeso = [...medidas.dados].reverse().find((x) => typeof x.peso === "number")?.peso ?? null;
+              const ano = Number(hojeISO().slice(0, 4));
+              return (
+                <>
+                  <p className="form-help">Pelo seu último peso registrado e pela sua idade em {ano}.</p>
+                  <TabelaPesos classe={classeDeIdade(p.dataNascimento, ano)} sexo={p.sexo} peso={ultimoPeso} />
+                </>
+              );
+            })()
+          ) : (
+            <p className="empty">Informe o sexo em Cadastro e senha (e a data de nascimento) para ver a sua categoria na tabela de pesos.</p>
+          )}
+        </section>
+      )}
+      {aba === "corpo" && (
       <section className="panel">
         <h2>Peso e altura</h2>
         <Recolhivel titulo="Registrar peso e altura">
@@ -507,11 +528,11 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
     setOcupado(true);
     setMsg("Salvando…");
     try {
-      const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc") };
+      const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc"), sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "" };
       await atualizarMeuCadastro(uid, novo);
       if (p.papel === "admin" && g("nome") && g("nome") !== p.nome) await atualizarNomeConta(uid, g("nome"));
       await guardarAniversario(uid, p.nome, novo.apelido, novo.dataNascimento).catch(() => undefined);
-      const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento" };
+      const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento", sexo: "sexo" };
       const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
       if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`, p.academia ?? "");
       setMsg("Cadastro atualizado.");
@@ -525,7 +546,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
   return (
     <section className="panel">
       <h2>Meu cadastro</h2>
-      <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}`}>
+      <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}${p.sexo}`}>
         <div className="field">
           <label htmlFor="mc-nome">Nome completo{p.papel === "admin" ? " (aparece nas suas publicações)" : ""}</label>
           {p.papel === "admin" ? <input id="mc-nome" name="nome" type="text" maxLength={100} defaultValue={p.nome} autoComplete="name" /> : <input id="mc-nome" type="text" value={p.nome} readOnly aria-readonly="true" />}
@@ -544,6 +565,14 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
             <input id="mc-cel" name="celular" type="tel" inputMode="tel" defaultValue={p.celular ?? ""} autoComplete="tel" />
           </div>
         </div>
+        <div className="field">
+          <label>Sexo (para a tabela de pesos)</label>
+          <select name="sexo" defaultValue={p.sexo ?? ""}>
+            <option value="">Não informado</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+          </div>
         <div className="field">
           <label htmlFor="mc-nasc">Data de nascimento</label>
           <input id="mc-nasc" name="nasc" type="date" max={hojeISO()} defaultValue={p.dataNascimento ?? ""} />

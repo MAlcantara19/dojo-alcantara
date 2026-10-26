@@ -73,10 +73,10 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
     }
     setAviso("Salvando…");
     try {
-      const novo = { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte"), dan: g("faixa") === "Preta" ? Number(g("dan")) || 0 : 0 };
+      const novo = { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte"), dan: g("faixa") === "Preta" ? Number(g("dan")) || 0 : 0, sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "" };
       await atualizarAluno(a.uid, novo);
       if (!ehAdmin && user) {
-        const nomes: Record<string, string> = { nome: "nome", apelido: "apelido", dataNascimento: "nascimento", faixa: "faixa", faixaDesde: "data da faixa", academia: "turma", email: "e-mail", celular: "celular", liberadoAte: "técnicas liberadas", dan: "dan" };
+        const nomes: Record<string, string> = { nome: "nome", apelido: "apelido", dataNascimento: "nascimento", faixa: "faixa", faixaDesde: "data da faixa", academia: "turma", email: "e-mail", celular: "celular", liberadoAte: "técnicas liberadas", dan: "dan", sexo: "sexo" };
         const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => String(a[k] ?? (k === "dan" ? 0 : "")) !== String(novo[k]));
         if (mudou.length) void registrarAtividade(user.uid, autor, `editou ${a.apelido || a.nome}: ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("faixa") ? ` (faixa ${a.faixa} → ${faixa})` : ""}`, novo.academia || a.academia || "");
       }
@@ -211,6 +211,14 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
                                 {d.n}º Dan · {d.jp}
                               </option>
                             ))}
+                          </select>
+                        </div>
+                  <div className="field">
+                          <label>Sexo (para a tabela de pesos)</label>
+                          <select name="sexo" defaultValue={a.sexo ?? ""}>
+                            <option value="">Não informado</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
                           </select>
                         </div>
                   <div className="field">

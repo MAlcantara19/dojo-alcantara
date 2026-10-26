@@ -25,7 +25,8 @@ export default function AdminEquipe() {
   const [s, setS] = useState<Secao>("professores");
   const [prof, setProf] = useState("");
   const [aviso, setAviso] = useState("");
-  const p = professores.dados.find((x) => x.uid === prof) ?? professores.dados[0];
+  const quemDaAula = [...professores.dados, ...admins.dados];
+  const p = quemDaAula.find((x) => x.uid === prof) ?? quemDaAula[0];
 
   async function guardar(e: React.FormEvent<HTMLFormElement>, x: Aluno) {
     e.preventDefault();
@@ -63,14 +64,14 @@ export default function AdminEquipe() {
       {s === "professores" && (
         <section className="panel" id="professores">
           <h2>Professores e suas turmas</h2>
-          <p className="lead">Cada professor vê só os alunos, os resultados e os avisos das turmas marcadas.</p>
-          {professores.dados.length === 0 ? (
+          <p className="lead">Cada professor recebe as notificações e vê os resultados das turmas marcadas. Administradores que dão aula também aparecem aqui, para você se colocar nas suas turmas.</p>
+          {quemDaAula.length === 0 ? (
             <p className="empty">Nenhum professor cadastrado ainda. Use “Cadastrar professor” no menu acima.</p>
           ) : (
             <>
-              <MenuSuspenso id="sel-prof" rotulo="Professor" valor={p?.uid ?? ""} onMudar={setProf} opcoes={professores.dados.map((x) => [x.uid, `${x.nome} (${(x.turmas ?? []).length} turmas)`])} />
+              <MenuSuspenso id="sel-prof" rotulo="Professor" valor={p?.uid ?? ""} onMudar={setProf} opcoes={quemDaAula.map((x) => [x.uid, `${x.nome}${x.papel === "admin" ? " · administrador" : ""} (${(x.turmas ?? []).length} turmas)`])} />
               {p && (
-                <form key={p.uid + (p.turmas ?? []).join()} className="tedit" onSubmit={(e) => void guardar(e, p)}>
+                <form key={p.uid + (p.turmas ?? []).join()} className="tedit" onSubmit={(e) => void guardar(e, p).then(admins.recarregar)}>
                   <span className="aluno-linha">
                     <Avatar url={p.foto} ajuste={p.fotoAjuste} nome={p.nome} faixa={p.faixa} tamanho={48} />
                     <span>
@@ -91,7 +92,7 @@ export default function AdminEquipe() {
                   <button className="btn btn-primary" type="submit">
                     Salvar turmas
                   </button>
-                  <AcoesConta uid={p.uid} nome={p.nome} onApagada={professores.recarregar} />
+                  {p.uid !== user?.uid && <AcoesConta uid={p.uid} nome={p.nome} onApagada={professores.recarregar} />}
                 </form>
               )}
             </>

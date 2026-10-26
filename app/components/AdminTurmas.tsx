@@ -7,6 +7,7 @@ import { mensagemErro } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
 import GerenciarAlunos from "./GerenciarAlunos";
 import MenuSuspenso from "./MenuSuspenso";
+import ProfessoresDaTurma from "./ProfessoresDaTurma";
 import Recolhivel from "./Recolhivel";
 
 const VAZIO_T: Turma[] = [];
@@ -208,6 +209,9 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                     <button className="btn btn-ghost" onClick={() => setGerenciando(gerenciando === t.id ? null : t.id)}>
                       {gerenciando === t.id ? "Fechar alunos" : "Gerenciar alunos"}
                     </button>
+                    <button className="btn btn-ghost" onClick={() => setGerenciando(gerenciando === "p" + t.id ? null : "p" + t.id)}>
+                      {gerenciando === "p" + t.id ? "Fechar professores" : "Gerenciar professores"}
+                    </button>
                     <button className="btn btn-ghost" disabled={ocupado} onClick={() => window.confirm(`Apagar a turma “${rotulo}”? Os alunos continuam cadastrados, mas ficam sem turma na lista.`) && void rodar(t.id, () => apagarTurma(t.id), "Turma apagada.", turmas.recarregar)}>
                       Apagar turma
                     </button>
@@ -216,6 +220,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
               </>
             )}
             {msg(t.id)}
+            {ehAdmin && gerenciando === "p" + t.id && <ProfessoresDaTurma turma={t} />}
             {ehAdmin && gerenciando === t.id && <GerenciarAlunos turma={t} turmas={turmas.dados} alunos={alunos.dados} onFeito={alunos.recarregar} />}
 
             <h3 className="sub">Avisos da turma</h3>

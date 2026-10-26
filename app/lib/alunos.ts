@@ -14,6 +14,7 @@ export type NovaConta = {
   dataNascimento: string;
   faixa: string;
   dan?: number;
+  sexo?: "M" | "F" | "";
   faixaDesde: string;
   academia: string;
   email: string;
@@ -34,6 +35,7 @@ export async function criarConta(d: NovaConta, senha: string): Promise<{ login: 
     faixa: d.faixa,
     faixaDesde: d.faixaDesde || hojeISO(),
     dan: d.faixa === "Preta" ? (d.dan ?? 0) : 0,
+    sexo: d.sexo ?? "",
     academia: d.academia,
     papel: d.papel,
     email: d.email.trim().toLowerCase(),
@@ -156,7 +158,7 @@ export async function mudarFaixa(uid: string, faixa: string) {
   await updateDoc(doc(getDb(), "users", uid), { faixa, faixaDesde: hojeISO() });
 }
 
-export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string; liberadoAte: string; dan: number };
+export type DadosAluno = { nome: string; apelido: string; dataNascimento: string; faixa: string; faixaDesde: string; academia: string; email: string; celular: string; liberadoAte: string; dan: number; sexo: "M" | "F" | "" };
 export async function atualizarAluno(uid: string, d: DadosAluno) {
   await updateDoc(doc(getDb(), "users", uid), { ...d });
 }
@@ -229,7 +231,7 @@ export async function lerResultadosEquipe(escopo: Escopo): Promise<ResultadoEqui
 export async function apagarSub(uid: string, nome: "medidas" | "notas", id: string) {
   await deleteDoc(doc(getDb(), "users", uid, nome, id));
 }
-export type MeuCadastro = { apelido: string; email: string; celular: string; dataNascimento: string };
+export type MeuCadastro = { apelido: string; email: string; celular: string; dataNascimento: string; sexo: "M" | "F" | "" };
 export async function atualizarMeuCadastro(uid: string, d: MeuCadastro) {
   await updateDoc(doc(getDb(), "users", uid), { ...d });
 }
