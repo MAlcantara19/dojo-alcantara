@@ -20,6 +20,7 @@ import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
 import { useSite } from "../lib/siteConfig";
 import { classeDeIdade } from "../lib/categorias";
+import BotaoNotificacoes from "./BotaoNotificacoes";
 import ChecklistFaixa from "./ChecklistFaixa";
 import TabelaPesos from "./TabelaPesos";
 import { registrarAtividade } from "../lib/atividades";
@@ -499,6 +500,11 @@ function Conteudo({ uid }: { uid: string }) {
       {aba === "conta" && (
         <>
           <section className="panel">
+            <h2>Notificações</h2>
+            <p className="lead">Receba no celular os avisos do dojô e da sua turma, mesmo com o site fechado.</p>
+            <BotaoNotificacoes />
+          </section>
+          <section className="panel">
             <h2>Minhas fotos</h2>
             <FotosConta a={p} onSalvo={perfilCompleto.recarregar} avisarAdmin={!equipe} />
           </section>
@@ -529,11 +535,11 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
     setOcupado(true);
     setMsg("Salvando…");
     try {
-      const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc"), sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "" };
+      const novo = { apelido: g("apelido"), email, celular: g("celular").replace(/\D/g, ""), dataNascimento: g("nasc"), sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "", responsavel: g("responsavel"), telResponsavel: g("telResponsavel").replace(/\D/g, ""), autorizaImagem: (g("autorizaImagem") === "sim" || g("autorizaImagem") === "nao" ? g("autorizaImagem") : "") as "sim" | "nao" | "" };
       await atualizarMeuCadastro(uid, novo);
       if (p.papel === "admin" && g("nome") && g("nome") !== p.nome) await atualizarNomeConta(uid, g("nome"));
       await guardarAniversario(uid, p.nome, novo.apelido, novo.dataNascimento).catch(() => undefined);
-      const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento", sexo: "sexo" };
+      const nomes: Record<string, string> = { apelido: "apelido", email: "e-mail", celular: "celular", dataNascimento: "data de nascimento", sexo: "sexo", responsavel: "responsável", telResponsavel: "telefone do responsável", autorizaImagem: "autorização de imagem" };
       const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => (p[k] ?? "") !== novo[k]);
       if (p.papel === "aluno" && mudou.length) void registrarAtividade(uid, p.apelido || p.nome, `mudou ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("apelido") ? ` (apelido agora: “${novo.apelido}”)` : ""}`, p.academia ?? "");
       setMsg("Cadastro atualizado.");
@@ -547,7 +553,7 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
   return (
     <section className="panel">
       <h2>Meu cadastro</h2>
-      <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}${p.sexo}`}>
+      <form className="form" onSubmit={(e) => void salvar(e)} key={`${p.apelido}${p.email}${p.celular}${p.dataNascimento}${p.sexo}${p.responsavel}${p.autorizaImagem}`}>
         <div className="field">
           <label htmlFor="mc-nome">Nome completo{p.papel === "admin" ? " (aparece nas suas publicações)" : ""}</label>
           {p.papel === "admin" ? <input id="mc-nome" name="nome" type="text" maxLength={100} defaultValue={p.nome} autoComplete="name" /> : <input id="mc-nome" type="text" value={p.nome} readOnly aria-readonly="true" />}
@@ -578,6 +584,28 @@ function MeuCadastro({ uid, p, onFeito }: { uid: string; p: Aluno; onFeito: () =
           <label htmlFor="mc-nasc">Data de nascimento</label>
           <input id="mc-nasc" name="nasc" type="date" max={hojeISO()} defaultValue={p.dataNascimento ?? ""} />
         </div>
+        <fieldset className="passo">
+          <legend>Responsável e uso de imagem</legend>
+          <p className="form-help">Para alunos menores de idade. Ajuda a saber quem chamar e se pode aparecer em fotos e vídeos.</p>
+          <div className="two">
+            <div className="field">
+              <label>Nome do responsável</label>
+              <input name="responsavel" type="text" maxLength={100} defaultValue={p.responsavel ?? ""} autoComplete="off" />
+            </div>
+            <div className="field">
+              <label>Telefone do responsável</label>
+              <input name="telResponsavel" type="tel" inputMode="tel" maxLength={20} defaultValue={p.telResponsavel ?? ""} autoComplete="off" />
+            </div>
+          </div>
+          <div className="field">
+            <label>Autoriza o uso de imagem (fotos e vídeos do dojô)?</label>
+            <select name="autorizaImagem" defaultValue={p.autorizaImagem ?? ""}>
+              <option value="">Não informado</option>
+              <option value="sim">Sim, autoriza</option>
+              <option value="nao">Não autoriza</option>
+            </select>
+          </div>
+          </fieldset>
         <button className="btn btn-primary" type="submit" disabled={ocupado}>
           Salvar cadastro
         </button>

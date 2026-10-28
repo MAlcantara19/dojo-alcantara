@@ -38,6 +38,7 @@ export type SiteConfig = {
   aulasPorGrau: number;
   grausPorFaixa: number;
   agendaIcs: string;
+  vapidKey: string;
 };
 
 export const siteBase: SiteConfig = {
@@ -61,6 +62,7 @@ export const siteBase: SiteConfig = {
   aulasPorGrau: 9,
   grausPorFaixa: 4,
   agendaIcs: "",
+  vapidKey: "",
 };
 
 let cache: Promise<Partial<SiteConfig>> | null = null;
@@ -107,6 +109,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     driveFichas: str(p.driveFichas, ""),
     driveChave: str(p.driveChave, ""),
     agendaIcs: str(p.agendaIcs, ""),
+    vapidKey: str(p.vapidKey, ""),
     aulasPorGrau: typeof p.aulasPorGrau === "number" && p.aulasPorGrau >= 1 ? p.aulasPorGrau : 9,
     grausPorFaixa: typeof p.grausPorFaixa === "number" && p.grausPorFaixa >= 1 ? p.grausPorFaixa : 4,
     faixasPublicasRoleta: Array.isArray(p.faixasPublicasRoleta) ? p.faixasPublicasRoleta.filter((x): x is string => typeof x === "string") : ["Azul", "Amarela"],

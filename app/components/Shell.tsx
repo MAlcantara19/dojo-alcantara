@@ -15,6 +15,7 @@ import { ParceriasLado } from "./Parcerias";
 import Avatar from "./Avatar";
 import BuscaGlobal from "./BuscaGlobal";
 import InstalarApp from "./InstalarApp";
+import PerguntaNotificacoes from "./PerguntaNotificacoes";
 import Rodape from "./Rodape";
 import Sino from "./Sino";
 import Toasts from "./Toasts";
@@ -140,6 +141,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <>
       <Abertura />
       <Toasts />
+      <PerguntaNotificacoes />
       <a className="skip" href="#conteudo">
         Ir para o conteúdo
       </a>

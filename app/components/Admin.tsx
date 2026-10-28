@@ -22,6 +22,7 @@ import AdminParcerias from "./AdminParcerias";
 import AdminResultadosTudo from "./AdminResultadosTudo";
 import AdminResumo from "./AdminResumo";
 import AdminSiteTudo from "./AdminSiteTudo";
+import AdminSugestoes from "./AdminSugestoes";
 import AdminTurmas from "./AdminTurmas";
 import LoginForm from "./LoginForm";
 
@@ -121,6 +122,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "resultados" && <AdminResultadosTudo escopo={escopo} res={res} />}
         {aba === "equipe" && ehAdmin && <AdminEquipe />}
         {aba === "parcerias" && ehAdmin && <AdminParcerias />}
+        {aba === "sugestoes" && ehAdmin && <AdminSugestoes />}
         {aba === "site" && ehAdmin && <AdminSiteTudo />}
       </div>
     </>

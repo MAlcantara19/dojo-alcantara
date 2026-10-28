@@ -19,7 +19,7 @@ export const MENU_PADRAO: SecaoMenu[] = [
     tipo: "lista",
     href: "",
     estado: "visivel",
-    itens: [item("inicio", "Início", "/"), item("avisos", "Avisos", "/#avisos"), item("calendario", "Calendário", "/calendario"), item("galeria", "Galeria", "/galeria"), item("parcerias", "Parcerias e descontos", "/parcerias"), item("sobre", "Sobre nós", "/#sobre")],
+    itens: [item("inicio", "Início", "/"), item("avisos", "Avisos", "/#avisos"), item("calendario", "Calendário", "/calendario"), item("galeria", "Galeria", "/galeria"), item("parcerias", "Parcerias e descontos", "/parcerias"), item("sugestoes", "Sugestões", "/sugestoes"), item("sobre", "Sobre nós", "/#sobre")],
   },
   {
     id: "estudo",

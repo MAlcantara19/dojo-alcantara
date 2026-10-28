@@ -1,5 +1,5 @@
 /** Abas do painel (também aparecem no menu lateral, em “Área do professor”). */
-export type Aba = "resumo" | "mural" | "turmas" | "alunos" | "chamada" | "campeonatos" | "aulas" | "estudo" | "galeria" | "resultados" | "equipe" | "parcerias" | "site";
+export type Aba = "resumo" | "mural" | "turmas" | "alunos" | "chamada" | "campeonatos" | "aulas" | "estudo" | "galeria" | "resultados" | "equipe" | "parcerias" | "sugestoes" | "site";
 export const ABAS_ADMIN: [Aba, string, boolean][] = [
   ["resumo", "Resumo", false],
   ["mural", "Mural e calendário", false],
@@ -13,5 +13,6 @@ export const ABAS_ADMIN: [Aba, string, boolean][] = [
   ["resultados", "Resultados", false],
   ["equipe", "Equipe", true],
   ["parcerias", "Parcerias", true],
+  ["sugestoes", "Sugestões", true],
   ["site", "Site", true],
 ];

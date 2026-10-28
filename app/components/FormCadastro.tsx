@@ -34,6 +34,7 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
       faixaDesde: g("desde"),
       dan: Number(g("dan")) || 0,
       sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "",
+      responsavel: g("responsavel"), telResponsavel: g("telResponsavel").replace(/\D/g, ""), autorizaImagem: (g("autorizaImagem") === "sim" || g("autorizaImagem") === "nao" ? g("autorizaImagem") : "") as "sim" | "nao" | "",
       academia: ehAluno ? g("academia") : "",
       email: g("email"),
       celular: g("celular"),
@@ -234,6 +235,30 @@ export default function FormCadastro({ tipo, turmas, onCriado }: { tipo: "aluno"
           )}
         </fieldset>
 
+        {ehAluno && (
+          <fieldset className="passo">
+            <legend>Responsável e uso de imagem</legend>
+            <p className="form-help">Para alunos menores de idade. Ajuda a saber quem chamar e se pode aparecer em fotos e vídeos.</p>
+            <div className="two">
+              <div className="field">
+                <label>Nome do responsável</label>
+                <input name="responsavel" type="text" maxLength={100} defaultValue={""} autoComplete="off" />
+              </div>
+              <div className="field">
+                <label>Telefone do responsável</label>
+                <input name="telResponsavel" type="tel" inputMode="tel" maxLength={20} defaultValue={""} autoComplete="off" />
+              </div>
+            </div>
+            <div className="field">
+              <label>Autoriza o uso de imagem (fotos e vídeos do dojô)?</label>
+              <select name="autorizaImagem" defaultValue={""}>
+                <option value="">Não informado</option>
+                <option value="sim">Sim, autoriza</option>
+                <option value="nao">Não autoriza</option>
+              </select>
+            </div>
+          </fieldset>
+        )}
         <fieldset className="passo">
           <legend>
             <b>3</b> Como a pessoa entra

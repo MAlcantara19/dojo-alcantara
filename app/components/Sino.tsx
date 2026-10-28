@@ -6,6 +6,7 @@ import { lerAvisosTurma, type AvisoTurma } from "../lib/alunos";
 import { lerAtividades, type Atividade } from "../lib/atividades";
 import { useAvisos } from "../lib/conteudo";
 import { avisoValido, useHoje } from "../lib/hoje";
+import BotaoNotificacoes from "./BotaoNotificacoes";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 
@@ -86,6 +87,7 @@ export default function Sino() {
               </li>
             ))}
           </ul>
+          <BotaoNotificacoes compacto />
           <button type="button" className="link-btn" onClick={() => (setAberto(false), marcar())}>
             Marcar como vistos e fechar
           </button>

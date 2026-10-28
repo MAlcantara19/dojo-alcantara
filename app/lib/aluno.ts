@@ -10,6 +10,9 @@ export type Aluno = {
   faixaDesde?: string; // AAAA-MM-DD
   dan?: number; // só para faixa preta (1 a 10)
   sexo?: "M" | "F" | ""; // para a tabela de pesos dos campeonatos
+  responsavel?: string; // responsável (alunos menores)
+  telResponsavel?: string;
+  autorizaImagem?: "sim" | "nao" | ""; // uso de imagem em fotos e vídeos do dojô
   liberadoAte?: string; // faixa até onde as técnicas ficam liberadas (além da automática)
   foto?: string;
   fotoAjuste?: { z: number; x: number; y: number };

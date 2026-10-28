@@ -11,6 +11,7 @@ import AdminAgenda from "./AdminAgenda";
 import AdminCalendarios from "./AdminCalendarios";
 import AdminFeriados from "./AdminFeriados";
 import CampoImagem from "./CampoImagem";
+import { notificar } from "../lib/push";
 import MenuSuspenso from "./MenuSuspenso";
 import Recolhivel from "./Recolhivel";
 
@@ -62,6 +63,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
       return void rodar(
         async () => {
           for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video, ate: a.ate });
+          void notificar({ titulo: a.titulo, texto: a.texto, link: "/perfil", turmas: escolhidas });
           if (evento) await criarEvento(evento, g("ev-cal") === "alunos");
         },
         `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}${evento ? " e marcado no calendário" : ""}.`,
@@ -73,6 +75,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
         if (alvo) await atualizarAviso(alvo.id, { ...a, autor: alvo.autor ?? autor });
         else {
           await criarAviso(a);
+          void notificar({ titulo: a.titulo, texto: a.texto, link: "/#avisos" });
           if (evento) await criarEvento(evento, g("ev-cal") === "alunos");
         }
       },

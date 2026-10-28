@@ -1,17 +1,21 @@
-ATUALIZAÇÃO 29 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 31 — PASTA "app" COMPLETA (instale só esta; já inclui a 30)
 
-1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. npm run build
-3. git add .
-   git commit -m "Busca geral, atalhos por usuario e app instalavel no celular"
+1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia de
+   segurança fora do projeto).
+2. Extraia este zip em C:\projetos\dojo-alcantara.
+3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
+4. npm run build
+5. git add .
+   git commit -m "Corrige build, pergunta de notificacoes e responsavel com autorizacao de imagem"
    git push
-(As regras do Firestore não mudaram.)
+
+NOTIFICAÇÕES (uma vez só): Firebase > engrenagem > Configurações do projeto > Cloud Messaging >
+"Certificados push da Web" > Gerar par de chaves; cole a chave em Painel > Site > Aparência >
+"Chave pública de notificações (VAPID)".
 
 NOVIDADES
- - Busca geral (lupa no topo, ou Ctrl+K / "/" no computador): técnicas, palavras com o
-   significado, katas, simulados, materiais, avisos, eventos, páginas; para a equipe também
-   alunos e turmas. Funciona sem acento. Tocar numa técnica já abre o card dela.
- - Atalhos do início conforme quem entrou: aluno (Minhas técnicas, Checklist, Simulados, Peso,
-   Calendário), professor (Chamada, Avisar, Alunos, Campeonatos, Calendário).
- - App no celular: ícone próprio (app\icon.png) e botão "Instalar o app" no menu lateral
-   (Android); no iPhone, a dica de "Adicionar à Tela de Início".
+ - Corrige o erro da Vercel (campo "mostrar até" dos avisos) e compila mesmo com arquivo antigo.
+ - Ao abrir o site com a conta, aparece a pergunta "Quer receber os avisos do dojô no celular?"
+   (Sim, quero / Agora não; pergunta de novo depois de 30 dias).
+ - Responsável (nome e telefone) e autorização de uso de imagem no cadastro, na edição e no
+   Meu cadastro. Na lista de alunos e na chamada aparece 🚫📷 para quem não autoriza.

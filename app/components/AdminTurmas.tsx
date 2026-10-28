@@ -6,6 +6,7 @@ import { addAvisoTurma, addTurma, apagarAvisoTurma, apagarTurma, lerAvisosTurma,
 import { mensagemErro } from "../lib/auth";
 import { useCarga } from "../lib/useCarga";
 import GerenciarAlunos from "./GerenciarAlunos";
+import { notificar } from "../lib/push";
 import MenuSuspenso from "./MenuSuspenso";
 import ProfessoresDaTurma from "./ProfessoresDaTurma";
 import Recolhivel from "./Recolhivel";
@@ -81,7 +82,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     const texto = String(f.get("texto") ?? "").trim();
     if (!titulo || !texto) return setAviso({ onde: "av" + t.id, texto: "Preencha o título e o texto do aviso." });
     const ate = String(f.get("ate") ?? "");
-    void rodar("av" + t.id, () => addAvisoTurma({ turma: t.nome, titulo, texto, data: hojeISO(), ate }), "Aviso publicado para a turma.", () => (form.reset(), avisos.recarregar()));
+    void rodar("av" + t.id, () => addAvisoTurma({ turma: t.nome, titulo, texto, data: hojeISO(), ate }).then(() => notificar({ titulo, texto, link: "/perfil", turmas: [t.nome] })), "Aviso publicado para a turma.", () => (form.reset(), avisos.recarregar()));
   }
 
   const atual = sel === "__nova" ? "__nova" : visiveis.some((t) => t.id === sel) ? sel : (visiveis[0]?.id ?? (ehAdmin ? "__nova" : ""));

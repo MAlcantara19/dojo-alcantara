@@ -72,6 +72,7 @@ export default function AdminSite() {
       faixasPublicas: f.getAll("faixasPublicas").map(String),
       faixasPublicasRoleta: f.getAll("faixasPublicasRoleta").map(String),
       agendaIcs: atual.agendaIcs,
+      vapidKey: g("vapidKey"),
       aulasPorGrau: Math.min(60, Math.max(1, Math.round(Number(g("aulasPorGrau")) || 9))),
       grausPorFaixa: Math.min(10, Math.max(1, Math.round(Number(g("grausPorFaixa")) || 4))),
     };
@@ -167,6 +168,11 @@ export default function AdminSite() {
             <label htmlFor="s-gpf">Graus até a avaliação de exame</label>
             <input id="s-gpf" name="grausPorFaixa" type="number" min={1} max={10} defaultValue={atual.grausPorFaixa} />
           </div>
+        </div>
+        <div className="field">
+          <label htmlFor="s-vapid">Chave pública de notificações (VAPID)</label>
+          <input id="s-vapid" name="vapidKey" type="text" autoComplete="off" spellCheck={false} defaultValue={atual.vapidKey} placeholder="B…" />
+          <p className="form-help">Firebase → engrenagem → Configurações do projeto → Cloud Messaging → “Certificados push da Web” → Gerar par de chaves. Copie a chave e cole aqui. Sem ela, o botão de notificações não aparece.</p>
         </div>
         <fieldset className="checks">
           <legend>Técnicas abertas para quem não está logado</legend>

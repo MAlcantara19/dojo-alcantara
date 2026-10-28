@@ -7,6 +7,8 @@ import { mensagemErro } from "../lib/auth";
 import { chamadasDaTurma, lerChamada, salvarChamada, type Chamada } from "../lib/chamadas";
 import { useCarga } from "../lib/useCarga";
 import Avatar from "./Avatar";
+import { notificar } from "../lib/push";
+import { baixarPlanilha } from "../lib/planilha";
 import MenuSuspenso from "./MenuSuspenso";
 
 const VAZIO_T: Turma[] = [];
@@ -55,6 +57,7 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
     try {
       await salvarChamada({ turma: t, data, presentes: presentes.filter((u) => daTurma.some((a) => a.uid === u)), total: daTurma.length, autor, ts: Date.now(), obs: obs.trim().slice(0, 1000), visitantes });
       setMsg(`Chamada de ${dataBR(data)} salva: ${presentes.length} de ${daTurma.length} presentes.`);
+      void notificar({ titulo: "✅ Presença registrada", texto: `Sua presença na aula de ${dataBR(data)} foi registrada. Bom treino!`, link: "/perfil", uids: presentes });
       historico.recarregar();
     } catch (err) {
       setMsg(mensagemErro(err));
@@ -116,7 +119,10 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
                 <button type="button" className={"chamada-item" + (ok ? " ok" : "")} onClick={() => alternar(a.uid)} aria-pressed={ok}>
                   <Avatar url={a.foto} ajuste={a.fotoAjuste} nome={a.apelido || a.nome} faixa={a.faixa} dan={a.dan} tamanho={40} />
                   <span>
-                    <strong>{a.apelido || a.nome}</strong>
+                    <strong>
+                      {a.apelido || a.nome}
+                      {a.autorizaImagem === "nao" ? " 🚫📷" : ""}
+                    </strong>
                     <small>
                       {freq(a.uid)} {freq(a.uid) === 1 ? "presença" : "presenças"} nas chamadas salvas
                     </small>
@@ -178,6 +184,25 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
 
       <section className="panel">
         <h2>Chamadas anteriores</h2>
+        {historico.dados.length > 0 && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              const datas = [...historico.dados].sort((x, y) => x.data.localeCompare(y.data));
+              baixarPlanilha(
+                `Chamadas - ${t}`,
+                ["Aluno", ...datas.map((c) => c.data.split("-").reverse().join("/")), "Presenças", "Faltas"],
+                daTurma.map((a) => {
+                  const marcas = datas.map((c) => (c.presentes.includes(a.uid) ? "P" : "F"));
+                  return [a.apelido || a.nome, ...marcas, marcas.filter((m) => m === "P").length, marcas.filter((m) => m === "F").length];
+                }),
+              );
+            }}
+          >
+            📥 Baixar planilha de presença da turma
+          </button>
+        )}
         <ul className="manage">
           {historico.dados.length === 0 && <li className="empty">Nenhuma chamada salva nesta turma.</li>}
           {historico.dados.slice(0, 20).map((c) => (

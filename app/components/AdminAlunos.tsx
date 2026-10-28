@@ -20,6 +20,7 @@ import Avatar from "./Avatar";
 import FotosConta from "./FotosConta";
 import ChecklistFaixa from "./ChecklistFaixa";
 import MedidasAluno from "./MedidasAluno";
+import { baixarPlanilha } from "../lib/planilha";
 import MenuSuspenso from "./MenuSuspenso";
 
 const VAZIO_A: Aluno[] = [];
@@ -81,10 +82,10 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
     }
     setAviso("Salvando…");
     try {
-      const novo = { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte"), dan: g("faixa") === "Preta" ? Number(g("dan")) || 0 : 0, sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "" };
+      const novo = { nome: g("nome"), apelido: g("apelido"), dataNascimento: g("nasc"), faixa, faixaDesde: desde, academia: g("academia"), email: g("email").toLowerCase(), celular: g("celular").replace(/\D/g, ""), liberadoAte: g("liberadoAte"), dan: g("faixa") === "Preta" ? Number(g("dan")) || 0 : 0, sexo: (g("sexo") === "M" || g("sexo") === "F" ? g("sexo") : "") as "M" | "F" | "", responsavel: g("responsavel"), telResponsavel: g("telResponsavel").replace(/\D/g, ""), autorizaImagem: (g("autorizaImagem") === "sim" || g("autorizaImagem") === "nao" ? g("autorizaImagem") : "") as "sim" | "nao" | "" };
       await atualizarAluno(a.uid, novo);
       if (!ehAdmin && user) {
-        const nomes: Record<string, string> = { nome: "nome", apelido: "apelido", dataNascimento: "nascimento", faixa: "faixa", faixaDesde: "data da faixa", academia: "turma", email: "e-mail", celular: "celular", liberadoAte: "técnicas liberadas", dan: "dan", sexo: "sexo" };
+        const nomes: Record<string, string> = { nome: "nome", apelido: "apelido", dataNascimento: "nascimento", faixa: "faixa", faixaDesde: "data da faixa", academia: "turma", email: "e-mail", celular: "celular", liberadoAte: "técnicas liberadas", dan: "dan", sexo: "sexo", responsavel: "responsável", telResponsavel: "telefone do responsável", autorizaImagem: "autorização de imagem" };
         const mudou = (Object.keys(novo) as (keyof typeof novo)[]).filter((k) => String(a[k] ?? (k === "dan" ? 0 : "")) !== String(novo[k]));
         if (mudou.length) void registrarAtividade(user.uid, autor, `editou ${a.apelido || a.nome}: ${mudou.map((k) => nomes[k]).join(", ")}${mudou.includes("faixa") ? ` (faixa ${a.faixa} → ${faixa})` : ""}`, novo.academia || a.academia || "");
       }
@@ -154,6 +155,21 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
           </div>
         </div>
         {alunos.erro && <p className="empty">Não consegui ler a lista de alunos.</p>}
+        {lista.length > 0 && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() =>
+              baixarPlanilha(
+                "Alunos do Dojô Alcântara",
+                ["Nome", "Apelido", "Sexo", "Nascimento", "Faixa", "Na faixa desde", "Turma", "Celular", "E-mail"],
+                lista.map((x) => [x.nome, x.apelido ?? "", x.sexo === "F" ? "Feminino" : x.sexo === "M" ? "Masculino" : "", x.dataNascimento ? x.dataNascimento.split("-").reverse().join("/") : "", faixaPorExtenso(x.faixa, x.dan), x.faixaDesde ? x.faixaDesde.split("-").reverse().join("/") : "", x.academia || "Sem turma", x.celular ?? "", x.email ?? ""]),
+              )
+            }
+          >
+            📥 Baixar planilha ({lista.length} alunos)
+          </button>
+        )}
         <ul className="manage">
           {!alunos.carregando && !alunos.erro && lista.length === 0 && <li className="empty">Nenhum aluno encontrado.</li>}
           {lista.slice(0, 60).map((a) => (
@@ -251,6 +267,28 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
                       <input name="celular" type="tel" inputMode="tel" defaultValue={a.celular ?? ""} autoComplete="off" />
                     </div>
                   </div>
+                  <fieldset className="passo">
+            <legend>Responsável e uso de imagem</legend>
+            <p className="form-help">Para alunos menores de idade. Ajuda a saber quem chamar e se pode aparecer em fotos e vídeos.</p>
+            <div className="two">
+              <div className="field">
+                <label>Nome do responsável</label>
+                <input name="responsavel" type="text" maxLength={100} defaultValue={a.responsavel ?? ""} autoComplete="off" />
+              </div>
+              <div className="field">
+                <label>Telefone do responsável</label>
+                <input name="telResponsavel" type="tel" inputMode="tel" maxLength={20} defaultValue={a.telResponsavel ?? ""} autoComplete="off" />
+              </div>
+            </div>
+            <div className="field">
+              <label>Autoriza o uso de imagem (fotos e vídeos do dojô)?</label>
+              <select name="autorizaImagem" defaultValue={a.autorizaImagem ?? ""}>
+                <option value="">Não informado</option>
+                <option value="sim">Sim, autoriza</option>
+                <option value="nao">Não autoriza</option>
+              </select>
+            </div>
+          </fieldset>
                   <p className="form-help">E-mail e celular aqui são só para contato. O login da pessoa continua sendo: {semCel(a.login)}.</p>
                   <div className="tool-actions">
                     <button className="btn btn-primary" type="submit">
@@ -272,6 +310,7 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
                       <strong>{a.apelido ? `${a.apelido} · ${a.nome}` : a.nome}</strong>
                       <small>
                         <i className="dot" style={{ background: corDaFaixa(a.faixa) }} aria-hidden="true" /> {faixaPorExtenso(a.faixa, a.dan)} · {turmaDe(a.academia)?.apelido || a.academia || "Sem turma"}
+                        {a.autorizaImagem === "nao" ? " · 🚫📷" : ""}
                       </small>
                     </span>
                     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" className={aberto === a.uid ? "virado" : ""}>
@@ -288,6 +327,14 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
                       )}
                       <small>Login: {semCel(a.login)}</small>
                       {a.celular && <small>Celular: {a.celular}</small>}
+                      {a.responsavel && (
+                        <small>
+                          Responsável: {a.responsavel}
+                          {a.telResponsavel ? ` · ${a.telResponsavel}` : ""}
+                        </small>
+                      )}
+                      {a.autorizaImagem === "nao" && <small className="selo-imagem">🚫 Não autoriza uso de imagem</small>}
+                      {!a.autorizaImagem && a.dataNascimento && idade(a.dataNascimento, hoje) < 18 && <small className="selo-imagem pendente">⚠️ Autorização de imagem não informada</small>}
                       {ehAdmin && internos.dados[a.uid] && <small>Apelido interno: {internos.dados[a.uid]}</small>}
                       <span className="tlinks">
                         <button className="btn btn-ghost" onClick={() => (setEditando(a.uid), setAviso(""))}>

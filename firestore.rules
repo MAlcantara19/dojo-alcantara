@@ -41,9 +41,9 @@ service cloud.firestore {
       allow create, delete: if ehAdmin();
       allow update: if ehAdmin()
         || (ehProfessor() && resource.data.get('papel', '') == 'aluno' && request.resource.data.get('papel', '') == 'aluno'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'sexo', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'apelido', 'dataNascimento', 'faixa', 'faixaDesde', 'dan', 'sexo', 'responsavel', 'telResponsavel', 'autorizaImagem', 'academia', 'email', 'celular', 'liberadoAte', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste']))
         || (ehProprio(uid)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'sexo', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste', 'login'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['precisaTrocarSenha', 'apelido', 'email', 'celular', 'dataNascimento', 'sexo', 'responsavel', 'telResponsavel', 'autorizaImagem', 'foto', 'fotoAjuste', 'banner', 'bannerAjuste', 'login'])
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['login']) || request.resource.data.login == request.auth.token.email)
             && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['precisaTrocarSenha']) || request.resource.data.precisaTrocarSenha == false)
             && request.resource.data.get('apelido', '') is string && request.resource.data.get('apelido', '').size() <= 40
@@ -377,6 +377,25 @@ service cloud.firestore {
         && request.resource.data.presentes is list && request.resource.data.presentes.size() <= 200
         && request.resource.data.get('obs', '') is string && request.resource.data.get('obs', '').size() <= 1000
         && request.resource.data.get('visitantes', []) is list && request.resource.data.get('visitantes', []).size() <= 30;
+      allow delete: if ehAdmin();
+    }
+
+    // Celulares que recebem notificação: cada pessoa registra o próprio; o servidor (chave de serviço) envia.
+    match /pushTokens/{token} {
+      allow create, update: if logado() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'turma', 'papel', 'ts']);
+      allow read, delete: if logado() && (resource.data.uid == request.auth.uid || ehAdmin());
+    }
+
+    // Sugestões: quem está cadastrado manda; vê as próprias; o administrador vê todas e responde.
+    match /sugestoes/{id} {
+      allow create: if temPerfil() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 2000
+        && request.resource.data.get('imagem', '') is string && request.resource.data.get('imagem', '').size() <= 300
+        && request.resource.data.get('video', '') is string && request.resource.data.get('video', '').size() <= 300
+        && request.resource.data.status == 'Nova' && request.resource.data.resposta == '';
+      allow read: if ehAdmin() || (logado() && resource.data.uid == request.auth.uid);
+      allow update: if ehAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'resposta']);
       allow delete: if ehAdmin();
     }
 

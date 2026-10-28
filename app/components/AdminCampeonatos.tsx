@@ -10,6 +10,8 @@ import { criarAviso } from "../lib/conteudo";
 import { enderecoOk } from "../lib/katasDb";
 import { useCarga } from "../lib/useCarga";
 import CampoImagem from "./CampoImagem";
+import { notificar } from "../lib/push";
+import { baixarPlanilha } from "../lib/planilha";
 import MenuSuspenso from "./MenuSuspenso";
 import TabelaPesos from "./TabelaPesos";
 
@@ -89,6 +91,7 @@ function FormCamp({ inicial, turmas, autor, onSalvo, onCancelar }: { inicial?: C
         const destinos = f.getAll("avisoTurmas").map(String);
         if (destinos.length) for (const t of destinos) await addAvisoTurma({ turma: t, titulo: `Novo campeonato: ${d.nome}`, texto, data: hojeISO(), autor });
         else await criarAviso({ titulo: `Novo campeonato: ${d.nome}`, texto, data: hojeISO(), autor });
+        void notificar({ titulo: `🏆 Novo campeonato: ${d.nome}`, texto, link: "/calendario", turmas: destinos });
       }
       onSalvo(id, inicial ? "Campeonato atualizado." : `Campeonato cadastrado${avisar ? " e aviso publicado" : ""}. Agora inscreva os alunos.`);
     } catch (err) {
@@ -318,6 +321,24 @@ function Inscricoes({ c, turmas, ehAdmin, minhasTurmas }: { c: CampeonatoDojo; t
   return (
     <section className="panel">
       <h2>Inscritos ({insc.dados.length})</h2>
+      {insc.dados.length > 0 && (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() =>
+            baixarPlanilha(
+              `Inscritos - ${c.nome}`,
+              ["Nome", "Apelido", "Turma", "Sexo", "Nascimento", "Classe", "Categoria", "Peso (kg)", "Altura (cm)", "Faixa"],
+              insc.dados.map((i) => {
+                const a = alunos.dados.find((x) => x.uid === i.uid);
+                return [a?.nome ?? i.nome, a?.apelido ?? "", i.turma, i.sexo === "F" ? "Feminino" : "Masculino", a?.dataNascimento ? a.dataNascimento.split("-").reverse().join("/") : "", i.classe, i.categoria, i.peso, i.altura, a?.faixa ?? ""];
+              }),
+            )
+          }
+        >
+          📥 Baixar planilha dos inscritos
+        </button>
+      )}
       {msg && (
         <p className="form-note" role="status">
           {msg}

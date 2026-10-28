@@ -7,8 +7,11 @@ import { montarCatalogo } from "./tecnicas";
 import { getDb } from "./firebase";
 import { avisos as avisosPadrao, eventos as eventosPadrao, type Aviso, type Evento } from "./data";
 
-export type AvisoDoc = Aviso & { id: string };
-export type EventoDoc = Evento & { id: string; interno?: boolean };
+/* Campos listados aqui também: assim compila mesmo se o data.ts do computador for de uma versão antiga. */
+export type AvisoCompleto = Aviso & { autor?: string; imagem?: string; video?: string; ts?: number; ate?: string };
+export type EventoCompleto = Evento & { autor?: string; imagem?: string; video?: string; pastaDrive?: string; descricao?: string };
+export type AvisoDoc = AvisoCompleto & { id: string };
+export type EventoDoc = EventoCompleto & { id: string; interno?: boolean };
 
 async function ler<T>(nome: string, campo: string, dir: "asc" | "desc"): Promise<(T & { id: string })[]> {
   const snap = await getDocs(query(collection(getDb(), nome), orderBy(campo, dir)));
@@ -18,17 +21,17 @@ async function ler<T>(nome: string, campo: string, dir: "asc" | "desc"): Promise
 export const lerAvisos = () => ler<Aviso>("avisos", "data", "desc");
 export const lerEventos = () => ler<Evento>("eventos", "data", "asc");
 
-export async function criarAviso(a: Aviso) {
+export async function criarAviso(a: AvisoCompleto) {
   await addDoc(collection(getDb(), "avisos"), { ...a, ts: Date.now(), criadoEm: serverTimestamp() });
 }
 /** interno = só no calendário dos alunos (quem está cadastrado). */
-export async function criarEvento(e: Evento, interno = false) {
+export async function criarEvento(e: EventoCompleto, interno = false) {
   await addDoc(collection(getDb(), interno ? "eventosInternos" : "eventos"), { ...e, criadoEm: serverTimestamp() });
 }
-export async function atualizarAviso(id: string, a: Aviso) {
+export async function atualizarAviso(id: string, a: AvisoCompleto) {
   await updateDoc(doc(getDb(), "avisos", id), { ...a });
 }
-export async function atualizarEvento(id: string, e: Evento, interno = false) {
+export async function atualizarEvento(id: string, e: EventoCompleto, interno = false) {
   await updateDoc(doc(getDb(), interno ? "eventosInternos" : "eventos", id), { ...e });
 }
 export async function lerEventosInternos(): Promise<EventoDoc[]> {

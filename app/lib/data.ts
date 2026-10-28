@@ -4,7 +4,7 @@
    editados pelo painel admin. Datas no formato AAAA-MM-DD.
    ============================================================ */
 
-export type Aviso = { titulo: string; data: string; texto: string; autor?: string; imagem?: string; video?: string; ts?: number };
+export type Aviso = { titulo: string; data: string; texto: string; autor?: string; imagem?: string; video?: string; ts?: number; ate?: string };
 export type Evento = { titulo: string; data: string; hora: string; local: string; tipo: string; autor?: string; imagem?: string; video?: string; pastaDrive?: string; descricao?: string };
 export type Foto = { legenda: string; src?: string };
 
