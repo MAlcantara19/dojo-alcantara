@@ -22,7 +22,8 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
   const visiveis = turmas.dados.filter((t) => turmasPermitidas === null || turmasPermitidas.includes(t.nome));
   const [turma, setTurma] = useState("");
   const [data, setData] = useState(hojeISO());
-  const t = turma || visiveis[0]?.nome || "";
+  const hojeDia = new Date(data + "T12:00:00").getDay();
+  const t = turma || visiveis.find((x) => x.dias.includes(hojeDia))?.nome || visiveis[0]?.nome || "";
   const historico = useCarga(() => chamadasDaTurma(t), VAZIO_C, Boolean(t));
   const [presentes, setPresentes] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
@@ -86,7 +87,7 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
   return (
     <>
       <div className="two">
-        <MenuSuspenso id="ch-turma" rotulo="Turma" valor={t} onMudar={setTurma} opcoes={visiveis.map((x) => [x.nome, x.apelido || x.nome])} />
+        <MenuSuspenso id="ch-turma" rotulo="Turma" valor={t} onMudar={setTurma} opcoes={visiveis.map((x) => [x.nome, `${x.apelido || x.nome}${x.dias.includes(hojeDia) ? " · tem aula hoje" : ""}`])} />
         <div className="menu-suspenso">
           <label htmlFor="ch-data">Data da aula</label>
           <input id="ch-data" type="date" value={data} max={hojeISO()} onChange={(e) => setData(e.target.value)} />

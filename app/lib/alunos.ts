@@ -85,7 +85,7 @@ export async function salvarTurmasProfessor(uid: string, turmas: string[]) {
 }
 
 /* ---------- Turmas ---------- */
-export type Turma = { id: string; nome: string; apelido: string; descricao: string; localNome: string; endereco: string; horarios: string; grupoWhatsApp: string };
+export type Turma = { id: string; nome: string; apelido: string; descricao: string; localNome: string; endereco: string; horarios: string; grupoWhatsApp: string; dias: number[] };
 export type DadosTurma = Omit<Turma, "id">;
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -95,7 +95,7 @@ export async function lerTurmas(): Promise<Turma[]> {
   return snap.docs
     .map((d) => {
       const r = d.data() as Record<string, unknown>;
-      return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp) };
+      return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp), dias: Array.isArray(r.dias) ? (r.dias as unknown[]).filter((x): x is number => typeof x === "number") : [] };
     })
     .filter((t) => t.nome)
     .sort((a, b) => (a.apelido || a.nome).localeCompare(b.apelido || b.nome, "pt-BR"));
@@ -105,7 +105,7 @@ export async function lerMinhaTurma(nome: string): Promise<Turma | null> {
   const d = snap.docs[0];
   if (!d) return null;
   const r = d.data() as Record<string, unknown>;
-  return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp) };
+  return { id: d.id, nome: str(r.nome), apelido: str(r.apelido), descricao: str(r.descricao), localNome: str(r.localNome), endereco: str(r.endereco), horarios: str(r.horarios), grupoWhatsApp: str(r.grupoWhatsApp), dias: Array.isArray(r.dias) ? (r.dias as unknown[]).filter((x): x is number => typeof x === "number") : [] };
 }
 
 export async function addTurma(nome: string) {

@@ -115,7 +115,7 @@ export default function Home() {
                     ["/calendario", "🗓 Calendário"],
                   ]
               : [
-                  ["/#avisos", "Avisos"],
+                  ["/aula-experimental", "🥋 Aula experimental"],
                   ["/calendario", "Calendário"],
                   ["/tecnicas", "Técnicas"],
                   ["/simulados", "Simulados"],

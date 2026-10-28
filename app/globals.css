@@ -1082,3 +1082,27 @@ span.lig-chip{cursor:default;border-style:dashed}
 .pergunta-notif small{color:var(--muted)}
 .selo-imagem{font-weight:700;color:#d9334a!important}
 .selo-imagem.pendente{color:#c48a12!important}
+.armadilha{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.ia-lista{display:grid;gap:12px;padding-left:1.2rem}
+.ia-lista>li{display:grid;gap:4px}
+.ia-lista>li.fora{opacity:.4;text-decoration:line-through}
+.ia-lista ul{margin:0;padding-left:1rem}
+.ia-lista li.certa{font-weight:700;color:#2f9e5b}
+.ia-lista small{color:var(--muted)}
+
+.conquistas summary{cursor:pointer;font-weight:800;padding:.4rem 0}
+.conquistas-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px}
+.conquista{display:grid;justify-items:center;gap:2px;padding:10px 6px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--surface-2);text-align:center;opacity:.55}
+.conquista span{font-size:1.7rem;line-height:1}
+.conquista b{font-size:.8rem}
+.conquista small{font-size:.68rem;color:var(--muted)}
+.conquista.ok{opacity:1;border-color:var(--bright);background:color-mix(in srgb,var(--bright) 12%,var(--surface))}
+.destaques{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.destaques li{display:flex;align-items:center;gap:10px}
+.destaques li>span:last-child{display:grid}
+.destaques small{color:var(--muted)}
+.destaque-pos{width:30px;text-align:center;font-size:1.2rem;font-weight:800}
+.dias-semana{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}
+.dias-semana strong{grid-column:1/-1}
+.mens-ok{margin:0;color:#2f9e5b;font-weight:600}
+.mens-aberta{margin:0;padding:.5rem .8rem;border-radius:var(--r-md);background:rgba(242,210,60,.15);border:1px solid #d9a441;font-weight:600}

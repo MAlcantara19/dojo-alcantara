@@ -136,7 +136,8 @@ service cloud.firestore {
         && request.resource.data.get('endereco', '') is string && request.resource.data.get('endereco', '').size() <= 200
         && request.resource.data.get('horarios', '') is string && request.resource.data.get('horarios', '').size() <= 400
         && request.resource.data.get('grupoWhatsApp', '') is string && request.resource.data.get('grupoWhatsApp', '').size() <= 200
-        && (request.resource.data.get('grupoWhatsApp', '') == '' || request.resource.data.get('grupoWhatsApp', '').matches('^https://.*'));
+        && (request.resource.data.get('grupoWhatsApp', '') == '' || request.resource.data.get('grupoWhatsApp', '').matches('^https://.*'))
+        && request.resource.data.get('dias', []) is list && request.resource.data.get('dias', []).size() <= 7;
       allow delete: if ehAdmin();
     }
 
@@ -396,6 +397,23 @@ service cloud.firestore {
         && request.resource.data.status == 'Nova' && request.resource.data.resposta == '';
       allow read: if ehAdmin() || (logado() && resource.data.uid == request.auth.uid);
       allow update: if ehAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'resposta']);
+      allow delete: if ehAdmin();
+    }
+
+    // Mensalidades: só o administrador marca; o aluno vê as dele.
+    match /mensalidades/{id} {
+      allow read: if ehAdmin() || (logado() && resource.data.uid == request.auth.uid);
+      allow write: if ehAdmin();
+    }
+
+    // Pedidos de aula experimental: qualquer pessoa pede (página pública); a equipe vê e acompanha.
+    match /experimentais/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['nome', 'idade', 'telefone', 'turma', 'horario', 'mensagem', 'status', 'obs', 'ts'])
+        && request.resource.data.nome is string && request.resource.data.nome.size() >= 2 && request.resource.data.nome.size() <= 100
+        && request.resource.data.telefone is string && request.resource.data.telefone.size() >= 10 && request.resource.data.telefone.size() <= 20
+        && request.resource.data.get('mensagem', '') is string && request.resource.data.get('mensagem', '').size() <= 600
+        && request.resource.data.status == 'Novo';
+      allow read, update: if ehEquipe();
       allow delete: if ehAdmin();
     }
 

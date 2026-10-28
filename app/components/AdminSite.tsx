@@ -7,6 +7,7 @@ import { testarDrive } from "../lib/fichas";
 import { idDaPastaDrive } from "../lib/links";
 import { faixas } from "../lib/faixas";
 import { lerAjuste } from "../lib/fotoAjuste";
+import { ABAS_ADMIN } from "../lib/abasAdmin";
 import EditorFoto from "./EditorFoto";
 import { lerSite, mesclar, salvarSite, TRANSICOES, type SiteConfig, type Transicao } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
@@ -73,6 +74,9 @@ export default function AdminSite() {
       faixasPublicasRoleta: f.getAll("faixasPublicasRoleta").map(String),
       agendaIcs: atual.agendaIcs,
       vapidKey: g("vapidKey"),
+      abasOcultas: f.getAll("abasOcultas").map(String),
+      mensalidadeValor: Math.max(0, Number(g("mensalidadeValor").replace(",", ".")) || 0),
+      vencimentoDia: Math.min(28, Math.max(1, Math.round(Number(g("vencimentoDia")) || 10))),
       aulasPorGrau: Math.min(60, Math.max(1, Math.round(Number(g("aulasPorGrau")) || 9))),
       grausPorFaixa: Math.min(10, Math.max(1, Math.round(Number(g("grausPorFaixa")) || 4))),
     };
@@ -169,6 +173,25 @@ export default function AdminSite() {
             <input id="s-gpf" name="grausPorFaixa" type="number" min={1} max={10} defaultValue={atual.grausPorFaixa} />
           </div>
         </div>
+        <div className="two">
+          <div className="field">
+            <label htmlFor="s-mval">Valor da mensalidade (R$)</label>
+            <input id="s-mval" name="mensalidadeValor" type="text" inputMode="decimal" defaultValue={atual.mensalidadeValor || ""} placeholder="Ex.: 120" />
+          </div>
+          <div className="field">
+            <label htmlFor="s-mvenc">Dia do vencimento</label>
+            <input id="s-mvenc" name="vencimentoDia" type="number" min={1} max={28} defaultValue={atual.vencimentoDia} />
+          </div>
+        </div>
+        <fieldset className="checks">
+          <legend>Esconder abas do painel (para todos da equipe)</legend>
+          <small>Bom para o que você ainda não usa (ex.: Mensalidades). Dá para mostrar de novo quando quiser. Resumo e Site nunca somem.</small>
+          {ABAS_ADMIN.filter(([k]) => k !== "resumo" && k !== "site").map(([k, r]) => (
+            <label key={k}>
+              <input type="checkbox" name="abasOcultas" value={k} defaultChecked={atual.abasOcultas.includes(k)} /> {r}
+            </label>
+          ))}
+        </fieldset>
         <div className="field">
           <label htmlFor="s-vapid">Chave pública de notificações (VAPID)</label>
           <input id="s-vapid" name="vapidKey" type="text" autoComplete="off" spellCheck={false} defaultValue={atual.vapidKey} placeholder="B…" />

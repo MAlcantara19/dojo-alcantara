@@ -6,6 +6,7 @@ import { lerAulas, type Aula } from "../lib/aulas";
 import { useEventos } from "../lib/conteudo";
 import { useCarga } from "../lib/useCarga";
 import AdminAtividades from "./AdminAtividades";
+import AdminDestaques from "./AdminDestaques";
 import AdminPedidos from "./AdminPedidos";
 
 const VAZIO_A: Aluno[] = [];
@@ -31,6 +32,7 @@ export default function AdminResumo({ uid, escopo, novosResultados, ir, ehAdmin 
     <>
     {ehAdmin && <AdminPedidos />}
     <AdminAtividades escopo={escopo} />
+    <AdminDestaques />
     <section className="panel" id="resumo">
       <h2>Resumo de hoje</h2>
       <div className="resumo-grid">

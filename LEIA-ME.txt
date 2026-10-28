@@ -1,21 +1,37 @@
-ATUALIZAÇÃO 31 — PASTA "app" COMPLETA (instale só esta; já inclui a 30)
+ATUALIZAÇÃO 32 — PASTA "app" COMPLETA (já inclui a 30 e a 31; instale só esta)
 
 1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia de
    segurança fora do projeto).
-2. Extraia este zip em C:\projetos\dojo-alcantara.
+2. Extraia este zip em C:\projetos\dojo-alcantara (cria a pasta app, public\firebase-messaging-sw.js,
+   firestore.rules e vercel.json).
 3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
 4. npm run build
 5. git add .
-   git commit -m "Corrige build, pergunta de notificacoes e responsavel com autorizacao de imagem"
+   git commit -m "Mensalidades, aula experimental, IA de simulados, conquistas, lembrete de chamada e copia de seguranca"
    git push
 
-NOTIFICAÇÕES (uma vez só): Firebase > engrenagem > Configurações do projeto > Cloud Messaging >
-"Certificados push da Web" > Gerar par de chaves; cole a chave em Painel > Site > Aparência >
-"Chave pública de notificações (VAPID)".
+CONFIGURAÇÕES (uma vez só; o site funciona sem elas, só essas partes ficam desligadas)
+ a) Notificações: Firebase > engrenagem > Configurações do projeto > Cloud Messaging >
+    "Certificados push da Web" > Gerar par de chaves > cole em Painel > Site > Aparência > VAPID.
+ b) Chave de serviço do Firebase na Vercel (FIREBASE_SERVICE_ACCOUNT): a mesma do "gerar senha".
+    Precisa dela para: notificações, aula experimental avisar no celular e lembrete de chamada.
+ c) IA de simulados: crie uma chave em console.anthropic.com (conta com créditos; cada simulado
+    custa centavos) e coloque na Vercel como ANTHROPIC_API_KEY. Depois faça um novo deploy.
+ d) Lembrete de chamada: em cada turma, marque os dias de aula (Turmas > Editar turma). Opcional
+    e recomendado: na Vercel, crie a variável CRON_SECRET com uma senha qualquer (só a Vercel
+    consegue chamar o lembrete). O aviso sai todo dia por volta das 17h.
 
 NOVIDADES
- - Corrige o erro da Vercel (campo "mostrar até" dos avisos) e compila mesmo com arquivo antigo.
- - Ao abrir o site com a conta, aparece a pergunta "Quer receber os avisos do dojô no celular?"
-   (Sim, quero / Agora não; pergunta de novo depois de 30 dias).
- - Responsável (nome e telefone) e autorização de uso de imagem no cadastro, na edição e no
-   Meu cadastro. Na lista de alunos e na chamada aparece 🚫📷 para quem não autoriza.
+ - Mensalidades (Painel > Mensalidades, só administrador): mês, turma, tocar para marcar pago,
+   totais e planilha. Valor e vencimento em Site > Aparência. O aluno vê um aviso discreto.
+ - Aula experimental: página pública (menu e início) com formulário; chega no Painel >
+   Aulas experimentais e no celular da equipe; botões de WhatsApp e ligar.
+ - IA: Estudo > "✨ Gerar simulado com IA": tema, público, perguntas e alternativas; você revisa
+   e cria o simulado.
+ - Conquistas do aluno (Minha área > Resumo) e Destaques do mês (Painel > Resumo).
+ - Lembrete de chamada no celular do professor nos dias de aula da turma; a Chamada já abre na
+   turma que tem aula hoje.
+ - Cópia de segurança: Site > Cópia de segurança (arquivo com tudo do banco).
+ - Esconder abas do painel: Site > Aparência > "Esconder abas do painel".
+ - Da 30 e 31: notificações e a pergunta ao abrir o site, planilhas, sugestões, ícone novo,
+   responsável e autorização de imagem, e a correção do erro da Vercel.

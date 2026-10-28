@@ -81,6 +81,10 @@ export async function lerSimulados(): Promise<SimuladoDoc[]> {
 export async function criarSimulado(titulo: string, descricao: string) {
   await addDoc(collection(getDb(), "simulados"), { titulo, descricao, perguntas: [], criadoEm: serverTimestamp() });
 }
+/** Cria um simulado já com perguntas (usado pelo gerador com IA). */
+export async function criarSimuladoCompleto(titulo: string, descricao: string, perguntas: Pergunta[]) {
+  await addDoc(collection(getDb(), "simulados"), { titulo, descricao, perguntas: limpar(perguntas), criadoEm: serverTimestamp() });
+}
 export const apagarSimulado = (id: string) => deleteDoc(doc(getDb(), "simulados", id));
 export const atualizarSimulado = (id: string, titulo: string, descricao: string) => updateDoc(doc(getDb(), "simulados", id), { titulo, descricao });
 /** O Firestore não aceita campos “undefined”: a cópia por JSON tira esses campos. */

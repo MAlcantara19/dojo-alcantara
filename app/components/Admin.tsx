@@ -10,10 +10,13 @@ import { useAuth } from "../lib/useAuth";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { ABAS_ADMIN, type Aba } from "../lib/abasAdmin";
+import { useSite } from "../lib/siteConfig";
 import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
 import AdminCampeonatos from "./AdminCampeonatos";
 import AdminChamada from "./AdminChamada";
+import AdminExperimentais from "./AdminExperimentais";
+import AdminMensalidades from "./AdminMensalidades";
 import AdminEquipe from "./AdminEquipe";
 import AdminEstudoTudo from "./AdminEstudoTudo";
 import AdminGaleria from "./AdminGaleria";
@@ -74,7 +77,8 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
   const todasTurmas = useCarga(lerTurmas, VAZIO_TURMAS);
   const minhasTurmas = escopo === null ? todasTurmas.dados : todasTurmas.dados.filter((t) => escopo.includes(t.nome));
 
-  const abas: [Aba, string][] = ABAS_ADMIN.filter(([, , soAdmin]) => ehAdmin || !soAdmin).map(([k, r]) => [k, k === "resultados" && res.novos > 0 ? `${r} (${res.novos})` : r]);
+  const site = useSite();
+  const abas: [Aba, string][] = ABAS_ADMIN.filter(([k, , soAdmin]) => (ehAdmin || !soAdmin) && (!site.abasOcultas.includes(k) || k === "site")).map(([k, r]) => [k, k === "resultados" && res.novos > 0 ? `${r} (${res.novos})` : r]);
 
   return (
     <>
@@ -115,6 +119,8 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         {aba === "turmas" && <AdminTurmas ehAdmin={ehAdmin} escopo={escopo} />}
         {aba === "alunos" && <AdminAlunos ehAdmin={ehAdmin} escopo={escopo} autor={nome} />}
         {aba === "chamada" && <AdminChamada autor={nome} turmasPermitidas={escopo} />}
+        {aba === "experimentais" && <AdminExperimentais />}
+        {aba === "mensalidades" && ehAdmin && <AdminMensalidades />}
         {aba === "campeonatos" && <AdminCampeonatos autor={nome} ehAdmin={ehAdmin} minhasTurmas={turmas} />}
         {aba === "aulas" && <AdminAulas uid={uid} />}
         {aba === "estudo" && <AdminEstudoTudo />}

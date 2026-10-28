@@ -18,6 +18,9 @@ import { guardarAniversario } from "../lib/aniversarios";
 import { avisoValido } from "../lib/hoje";
 import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
+import { lerCampeonatos, type Campeonato } from "../lib/campeonatos";
+import { calcularConquistas } from "../lib/conquistas";
+import { minhasMensalidades, nomeMes, type Mensalidade } from "../lib/mensalidades";
 import { useSite } from "../lib/siteConfig";
 import { classeDeIdade } from "../lib/categorias";
 import BotaoNotificacoes from "./BotaoNotificacoes";
@@ -40,6 +43,8 @@ import Recolhivel from "./Recolhivel";
 
 const VAZIO_AV: AvisoTurma[] = [];
 const VAZIO_CH: Chamada[] = [];
+const VAZIO_CAMP: Campeonato[] = [];
+const VAZIO_MENS: Mensalidade[] = [];
 const VAZIO_M: Medida[] = [];
 const VAZIO_N: Nota[] = [];
 const VAZIO_R: Resultado[] = [];
@@ -90,6 +95,9 @@ function Conteudo({ uid }: { uid: string }) {
   const acesso = useAcessoTecnicas();
   const presencas = useCarga(() => minhasPresencas(uid), VAZIO_CH);
   const site = useSite();
+  const camps = useCarga(() => lerCampeonatos(uid), VAZIO_CAMP);
+  const usaMensalidade = site.mensalidadeValor > 0 && !site.abasOcultas.includes("mensalidades");
+  const mens = useCarga(() => minhasMensalidades(uid), VAZIO_MENS, usaMensalidade);
   const academia = perfilCompleto.dados?.academia ?? "";
   const minhaTurma = useCarga<Turma | null>(() => lerMinhaTurma(academia), null, Boolean(academia));
   const avisosTurma = useCarga(() => lerAvisosTurma([academia]), VAZIO_AV, Boolean(academia));
@@ -278,6 +286,35 @@ function Conteudo({ uid }: { uid: string }) {
               )}
             </div>
           );
+        })()}
+        {!equipe && (() => {
+          const g = calcularGraus(presencas.dados.map((c) => c.data), p.faixaDesde, site.aulasPorGrau, site.grausPorFaixa);
+          const lista = calcularConquistas({ presencas: presencas.dados.length, simulados: resultados.dados, graus: g.graus, grausTotal: g.total, checklist100: false, campeonatos: camps.dados });
+          const feitas = lista.filter((c) => c.ok).length;
+          return (
+            <details className="conquistas" open>
+              <summary>
+                🏅 Minhas conquistas · {feitas} de {lista.length}
+              </summary>
+              <div className="conquistas-grade">
+                {lista.map((c) => (
+                  <div key={c.nome} className={"conquista" + (c.ok ? " ok" : "")} title={c.desc}>
+                    <span aria-hidden="true">{c.ok ? c.icone : "🔒"}</span>
+                    <b>{c.nome}</b>
+                    <small>{c.desc}</small>
+                  </div>
+                ))}
+              </div>
+            </details>
+          );
+        })()}
+        {!equipe && usaMensalidade && !mens.carregando && (() => {
+          const hoje = hojeISO();
+          const mes = hoje.slice(0, 7);
+          const paga = mens.dados.find((m) => m.mes === mes)?.pago;
+          if (paga) return <p className="mens-ok">💳 Mensalidade de {nomeMes(mes)}: paga. Obrigado!</p>;
+          if (Number(hoje.slice(8, 10)) <= site.vencimentoDia) return <p className="form-help">💳 Mensalidade de {nomeMes(mes)} vence dia {site.vencimentoDia}.</p>;
+          return <p className="mens-aberta">💳 Mensalidade de {nomeMes(mes)} em aberto (venceu dia {site.vencimentoDia}). Se já pagou, avise o sensei.</p>;
         })()}
         <p className="presencas">
           ✅ <b>{presencas.dados.length}</b> {presencas.dados.length === 1 ? "aula com presença registrada" : "aulas com presença registrada"}

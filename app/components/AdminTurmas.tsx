@@ -62,7 +62,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     if (nome !== t.nome && turmas.dados.some((x) => x.id !== t.id && x.nome.toLowerCase() === nome.toLowerCase())) return setAviso({ onde: t.id, texto: "Já existe outra turma com esse nome." });
     const grupo = g("grupo");
     if (grupo && !/^https:\/\//.test(grupo)) return setAviso({ onde: t.id, texto: "O link do grupo de WhatsApp precisa começar com https://" });
-    const dados = { nome, apelido: g("apelido"), descricao: g("descricao"), localNome: g("local"), endereco: g("endereco"), horarios: g("horarios"), grupoWhatsApp: grupo };
+    const dados = { nome, apelido: g("apelido"), descricao: g("descricao"), localNome: g("local"), endereco: g("endereco"), horarios: g("horarios"), grupoWhatsApp: grupo, dias: f.getAll("dias").map(Number).filter((n) => n >= 0 && n <= 6) };
     void rodar(
       t.id,
       async () => {
@@ -148,6 +148,14 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                 <div className="field">
                   <label>Endereço (para abrir no Google Maps)</label>
                   <input name="endereco" type="text" maxLength={200} defaultValue={t.endereco} placeholder="Rua, número, bairro, cidade" autoComplete="off" />
+                </div>
+                <div className="checks dias-semana">
+                  <strong>Dias de aula (para o lembrete de chamada)</strong>
+                  {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d, i) => (
+                    <label key={d}>
+                      <input type="checkbox" name="dias" value={i} defaultChecked={t.dias.includes(i)} /> {d}
+                    </label>
+                  ))}
                 </div>
                 <div className="field">
                   <label>Horários (um por linha)</label>

@@ -274,7 +274,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
         {user &&
           [
-            ...(equipe ? [{ rotulo: "Área do professor", rota: "/admin", filhos: ABAS_ADMIN.filter(([, , soAdmin]) => perfil?.papel === "admin" || !soAdmin).map(([id, r]) => ({ href: `/admin#${id}`, rotulo: r })) }] : []),
+            ...(equipe ? [{ rotulo: "Área do professor", rota: "/admin", filhos: ABAS_ADMIN.filter(([id, , soAdmin]) => (perfil?.papel === "admin" || !soAdmin) && !site.abasOcultas.includes(id)).map(([id, r]) => ({ href: `/admin#${id}`, rotulo: r })) }] : []),
             { rotulo: equipe ? "Meu perfil" : "Minha área", rota: "/perfil", filhos: minhaArea.filhos ?? [] },
           ].map((g) => (
             <details key={g.rota} className="drawer-pai" open={pathname === g.rota || undefined}>

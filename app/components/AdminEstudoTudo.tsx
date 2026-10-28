@@ -3,13 +3,14 @@
 import { useState } from "react";
 import AdminEstudo from "./AdminEstudo";
 import AdminFichas from "./AdminFichas";
+import AdminIA from "./AdminIA";
 import AdminKatas from "./AdminKatas";
 import AdminMateriais from "./AdminMateriais";
 import AdminRoletas from "./AdminRoletas";
 import AdminTecnicas from "./AdminTecnicas";
 import MenuSuspenso from "./MenuSuspenso";
 
-type Secao = "tecnicas" | "fichas" | "katas" | "materiais" | "palavras" | "exercicios" | "simulados" | "roletas";
+type Secao = "ia" | "tecnicas" | "fichas" | "katas" | "materiais" | "palavras" | "exercicios" | "simulados" | "roletas";
 const OPCOES: [Secao, string][] = [
   ["tecnicas", "Técnicas"],
   ["fichas", "Fichas do Drive"],
@@ -18,6 +19,7 @@ const OPCOES: [Secao, string][] = [
   ["palavras", "Palavras da roleta"],
   ["exercicios", "Exercícios físicos"],
   ["simulados", "Simulados"],
+  ["ia", "✨ Gerar simulado com IA"],
   ["roletas", "Criar nova roleta"],
 ];
 
@@ -33,6 +35,7 @@ export default function AdminEstudoTudo() {
       {s === "materiais" && <AdminMateriais />}
       {(s === "palavras" || s === "exercicios" || s === "simulados") && <AdminEstudo secao={s} />}
       {s === "roletas" && <AdminRoletas />}
+      {s === "ia" && <AdminIA />}
     </>
   );
 }
