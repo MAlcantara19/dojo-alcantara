@@ -20,7 +20,7 @@ import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
 import { lerCampeonatos, type Campeonato } from "../lib/campeonatos";
 import { calcularConquistas } from "../lib/conquistas";
-import { minhasMensalidades, nomeMes, type Mensalidade } from "../lib/mensalidades";
+import { calcularDevido, minhasMensalidades, nomeMes, real, type Mensalidade } from "../lib/mensalidades";
 import { useSite } from "../lib/siteConfig";
 import { classeDeIdade } from "../lib/categorias";
 import BotaoNotificacoes from "./BotaoNotificacoes";
@@ -314,7 +314,12 @@ function Conteudo({ uid }: { uid: string }) {
           const paga = mens.dados.find((m) => m.mes === mes)?.pago;
           if (paga) return <p className="mens-ok">💳 Mensalidade de {nomeMes(mes)}: paga. Obrigado!</p>;
           if (Number(hoje.slice(8, 10)) <= site.vencimentoDia) return <p className="form-help">💳 Mensalidade de {nomeMes(mes)} vence dia {site.vencimentoDia}.</p>;
-          return <p className="mens-aberta">💳 Mensalidade de {nomeMes(mes)} em aberto (venceu dia {site.vencimentoDia}). Se já pagou, avise o sensei.</p>;
+          const dv = calcularDevido(mes, { valor: site.mensalidadeValor, dia: site.vencimentoDia, multaPct: site.multaPct, jurosMesPct: site.jurosMesPct }, hoje);
+          return (
+            <p className="mens-aberta">
+              💳 Mensalidade de {nomeMes(mes)} em aberto (venceu dia {site.vencimentoDia}). Valor hoje: {real(dv.total)}{dv.diasAtraso ? `, com ${dv.diasAtraso} dias de atraso` : ""}. Se já pagou, avise o sensei.
+            </p>
+          );
         })()}
         <p className="presencas">
           ✅ <b>{presencas.dados.length}</b> {presencas.dados.length === 1 ? "aula com presença registrada" : "aulas com presença registrada"}

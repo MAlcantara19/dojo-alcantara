@@ -1106,3 +1106,27 @@ span.lig-chip{cursor:default;border-style:dashed}
 .dias-semana strong{grid-column:1/-1}
 .mens-ok{margin:0;color:#2f9e5b;font-weight:600}
 .mens-aberta{margin:0;padding:.5rem .8rem;border-radius:var(--r-md);background:rgba(242,210,60,.15);border:1px solid #d9a441;font-weight:600}
+.chamada-item.atraso{border-color:#d9a441;background:color-mix(in srgb,#f2d23c 10%,var(--surface))}
+.pagamento{margin:6px 0 4px}
+.alerta-mens{display:grid;gap:6px;padding:12px 14px;border-radius:var(--r-lg);border:1.5px solid #d9a441;background:color-mix(in srgb,#f2d23c 14%,var(--surface));margin-bottom:12px}
+.alerta-mens p{margin:0}
+.alerta-mens small{color:var(--muted)}
+/* Carrossel de imagens e vídeos */
+.carrossel{position:relative;width:100%}
+.carrossel-trilho{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:var(--r-md);background:var(--surface-2);overscroll-behavior-x:contain}
+.carrossel-trilho::-webkit-scrollbar{display:none}
+.carrossel-item{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center;min-height:160px}
+.carrossel-img{width:100%;height:auto;max-height:min(62vh,560px);object-fit:contain;display:block}
+.carrossel-item .midia-video{width:100%}
+.carrossel-link{padding:2rem;font-weight:700}
+.carrossel-seta{position:absolute;top:50%;translate:0 -50%;width:40px;height:40px;border-radius:50%;border:0;background:rgba(10,4,20,.6);color:#fff;font-size:1.6rem;cursor:pointer;display:grid;place-items:center}
+.carrossel-seta:disabled{opacity:.25;cursor:default}
+.carrossel-seta.esq{left:8px}
+.carrossel-seta.dir{right:8px}
+.carrossel-pontos{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.carrossel-pontos button{width:8px;height:8px;padding:0;border-radius:50%;border:0;background:var(--line);cursor:pointer}
+.carrossel-pontos button.ativo{background:var(--bright);width:20px;border-radius:4px}
+/* Card (modal) flexível: mais largo no computador */
+.modal{width:min(100%,560px)}
+@media (min-width:900px){.modal{width:min(92vw,760px)}}
+.zap-direto{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px}

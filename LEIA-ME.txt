@@ -1,37 +1,30 @@
-ATUALIZAÇÃO 32 — PASTA "app" COMPLETA (já inclui a 30 e a 31; instale só esta)
+ATUALIZAÇÃO 33 — PASTA "app" COMPLETA (já inclui 30, 31 e 32; instale só esta)
 
-1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia de
-   segurança fora do projeto).
-2. Extraia este zip em C:\projetos\dojo-alcantara (cria a pasta app, public\firebase-messaging-sw.js,
+1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia fora do projeto).
+2. Extraia este zip em C:\projetos\dojo-alcantara (app, public\firebase-messaging-sw.js,
    firestore.rules e vercel.json).
 3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
 4. npm run build
 5. git add .
-   git commit -m "Mensalidades, aula experimental, IA de simulados, conquistas, lembrete de chamada e copia de seguranca"
+   git commit -m "Juros e data de pagamento, aviso de atraso, carrossel nas tecnicas e aula experimental com responsavel"
    git push
 
-CONFIGURAÇÕES (uma vez só; o site funciona sem elas, só essas partes ficam desligadas)
- a) Notificações: Firebase > engrenagem > Configurações do projeto > Cloud Messaging >
-    "Certificados push da Web" > Gerar par de chaves > cole em Painel > Site > Aparência > VAPID.
- b) Chave de serviço do Firebase na Vercel (FIREBASE_SERVICE_ACCOUNT): a mesma do "gerar senha".
-    Precisa dela para: notificações, aula experimental avisar no celular e lembrete de chamada.
- c) IA de simulados: crie uma chave em console.anthropic.com (conta com créditos; cada simulado
-    custa centavos) e coloque na Vercel como ANTHROPIC_API_KEY. Depois faça um novo deploy.
- d) Lembrete de chamada: em cada turma, marque os dias de aula (Turmas > Editar turma). Opcional
-    e recomendado: na Vercel, crie a variável CRON_SECRET com uma senha qualquer (só a Vercel
-    consegue chamar o lembrete). O aviso sai todo dia por volta das 17h.
+WHATSAPP AUTOMÁTICO NO SEU CELULAR (opcional, grátis, serviço CallMeBot)
+ a) Salve o número +34 644 71 81 99 nos contatos do seu WhatsApp.
+ b) Mande para ele a mensagem: I allow callmebot to send me messages
+ c) Ele responde com a sua "apikey" (número).
+ d) Na Vercel > Settings > Environment Variables, crie:
+      CALLMEBOT_PHONE  = 5524992924519   (seu número, com 55 e DDD)
+      CALLMEBOT_APIKEY = (o número que ele mandou)
+    e faça um novo deploy. Cada pedido de aula experimental chega como mensagem no seu WhatsApp.
+ (Confira o número do CallMeBot no site callmebot.com antes; é um serviço de terceiros.)
 
 NOVIDADES
- - Mensalidades (Painel > Mensalidades, só administrador): mês, turma, tocar para marcar pago,
-   totais e planilha. Valor e vencimento em Site > Aparência. O aluno vê um aviso discreto.
- - Aula experimental: página pública (menu e início) com formulário; chega no Painel >
-   Aulas experimentais e no celular da equipe; botões de WhatsApp e ligar.
- - IA: Estudo > "✨ Gerar simulado com IA": tema, público, perguntas e alternativas; você revisa
-   e cria o simulado.
- - Conquistas do aluno (Minha área > Resumo) e Destaques do mês (Painel > Resumo).
- - Lembrete de chamada no celular do professor nos dias de aula da turma; a Chamada já abre na
-   turma que tem aula hoje.
- - Cópia de segurança: Site > Cópia de segurança (arquivo com tudo do banco).
- - Esconder abas do painel: Site > Aparência > "Esconder abas do painel".
- - Da 30 e 31: notificações e a pergunta ao abrir o site, planilhas, sugestões, ícone novo,
-   responsável e autorização de imagem, e a correção do erro da Vercel.
+ - Mensalidades: data do pagamento e valor recebido; multa e juros por dia de atraso a partir do
+   vencimento (dia 10 por padrão; multa 2% e juros 1% ao mês, tudo mudável em Site > Aparência).
+   O aluno vê o valor do dia. Aviso para o administrador X dias depois do vencimento (no Resumo
+   e no celular, repetindo toda semana).
+ - Card da técnica: mais largo no computador, ajustado ao celular e com carrossel (setas ou
+   arrastar) de imagens e vídeos. Em Estudo > Técnicas: "Mais imagens e vídeos".
+ - Aula experimental: "É menor de idade" com nome e telefone do responsável; botão "Chamar no
+   WhatsApp" do dojô e, depois de enviar, "Mande também no WhatsApp" com os dados preenchidos.

@@ -6,6 +6,7 @@ import { lerAulas, type Aula } from "../lib/aulas";
 import { useEventos } from "../lib/conteudo";
 import { useCarga } from "../lib/useCarga";
 import AdminAtividades from "./AdminAtividades";
+import AlertaMensalidades from "./AlertaMensalidades";
 import AdminDestaques from "./AdminDestaques";
 import AdminPedidos from "./AdminPedidos";
 
@@ -30,6 +31,7 @@ export default function AdminResumo({ uid, escopo, novosResultados, ir, ehAdmin 
 
   return (
     <>
+    {ehAdmin && <AlertaMensalidades />}
     {ehAdmin && <AdminPedidos />}
     <AdminAtividades escopo={escopo} />
     <AdminDestaques />

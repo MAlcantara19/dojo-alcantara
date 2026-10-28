@@ -3,7 +3,7 @@
 import { descreverLink } from "../lib/links";
 import Img from "./Img";
 
-function idYoutube(url: string): string | null {
+export function idYoutube(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/))([\w-]{11})/);
   return m ? m[1] : null;
 }

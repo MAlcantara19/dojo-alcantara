@@ -159,6 +159,9 @@ export default function AdminTecnicas() {
 }
 
 function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; cfg?: ConfigTecnica; auto?: { imagem?: string; pdf?: string }; custom: boolean; onMsg: (m: string) => void; onSalvou: () => void }) {
+  const [midiasTxt, setMidiasTxt] = useState((cfg?.midias ?? []).join("\n"));
+  const [novaMidia, setNovaMidia] = useState("");
+  const [chaveMidia, setChaveMidia] = useState(0);
   const [ocupado, setOcupado] = useState(false);
 
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
@@ -254,6 +257,24 @@ function LinhaTecnica({ t, cfg, auto, custom, onMsg, onSalvou }: { t: Tecnica; c
         </div>
       )}
       <CampoImagem name="imagem" rotulo="Imagem da técnica" valorInicial={cfg?.imagem ?? ""} ajuda="Escolha do celular ou cole o link (inclusive de arquivo do Drive)." />
+      <div className="field">
+        <label>Mais imagens e vídeos (aparecem em carrossel; um link por linha)</label>
+        <textarea rows={3} value={midiasTxt} onChange={(e) => setMidiasTxt(e.target.value)} placeholder={"https://youtu.be/…\nhttps://drive.google.com/file/d/…"} />
+      </div>
+      <CampoImagem key={chaveMidia} name="__midia" rotulo="Adicionar imagem do celular ao carrossel" onMudar={setNovaMidia} />
+      {novaMidia && (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            setMidiasTxt((t) => (t.trim() ? t.trim() + "\n" : "") + novaMidia);
+            setNovaMidia("");
+            setChaveMidia((k) => k + 1);
+          }}
+        >
+          + Colocar no carrossel
+        </button>
+      )}
       <div className="field">
         <label>Link do PDF (ou do Drive)</label>
         <input name="pdf" type="url" inputMode="url" placeholder="https://…" defaultValue={cfg?.pdf ?? ""} />

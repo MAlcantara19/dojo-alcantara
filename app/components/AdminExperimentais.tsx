@@ -35,6 +35,12 @@ export default function AdminExperimentais() {
                 {x.idade ? ` · ${x.idade}` : ""} <em className="selo">{x.status}</em>
               </strong>
               <small>{[x.turma, x.horario, new Date(x.ts).toLocaleDateString("pt-BR")].filter(Boolean).join(" · ")}</small>
+              {x.menor && (
+                <small>
+                  👨‍👧 Menor de idade · responsável: {x.responsavel || "não informado"}
+                  {x.telResponsavel ? ` · ${x.telResponsavel}` : ""}
+                </small>
+              )}
               {x.mensagem && <small className="pre">{x.mensagem}</small>}
             </span>
             <span className="tlinks">

@@ -77,6 +77,10 @@ export default function AdminSite() {
       abasOcultas: f.getAll("abasOcultas").map(String),
       mensalidadeValor: Math.max(0, Number(g("mensalidadeValor").replace(",", ".")) || 0),
       vencimentoDia: Math.min(28, Math.max(1, Math.round(Number(g("vencimentoDia")) || 10))),
+      multaPct: Math.min(20, Math.max(0, Number(g("multaPct").replace(",", ".")) || 0)),
+      jurosMesPct: Math.min(20, Math.max(0, Number(g("jurosMesPct").replace(",", ".")) || 0)),
+      avisoAtrasoDias: Math.min(60, Math.max(0, Math.round(Number(g("avisoAtrasoDias")) || 0))),
+      callmebot: atual.callmebot,
       aulasPorGrau: Math.min(60, Math.max(1, Math.round(Number(g("aulasPorGrau")) || 9))),
       grausPorFaixa: Math.min(10, Math.max(1, Math.round(Number(g("grausPorFaixa")) || 4))),
     };
@@ -182,6 +186,21 @@ export default function AdminSite() {
             <label htmlFor="s-mvenc">Dia do vencimento</label>
             <input id="s-mvenc" name="vencimentoDia" type="number" min={1} max={28} defaultValue={atual.vencimentoDia} />
           </div>
+        </div>
+        <div className="two">
+          <div className="field">
+            <label htmlFor="s-multa">Multa por atraso (%)</label>
+            <input id="s-multa" name="multaPct" type="text" inputMode="decimal" defaultValue={String(atual.multaPct).replace(".", ",")} />
+          </div>
+          <div className="field">
+            <label htmlFor="s-juros">Juros ao mês (%), cobrados por dia</label>
+            <input id="s-juros" name="jurosMesPct" type="text" inputMode="decimal" defaultValue={String(atual.jurosMesPct).replace(".", ",")} />
+          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="s-aviso">Avisar o administrador quantos dias depois do vencimento?</label>
+          <input id="s-aviso" name="avisoAtrasoDias" type="number" min={0} max={60} defaultValue={atual.avisoAtrasoDias} />
+          <p className="form-help">Padrão: multa de 2% e juros de 1% ao mês (o costume no Brasil; a multa em mensalidades costuma ficar limitada a 2%). Coloque 0 para não cobrar.</p>
         </div>
         <fieldset className="checks">
           <legend>Esconder abas do painel (para todos da equipe)</legend>

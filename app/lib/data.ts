@@ -13,7 +13,7 @@ export const dojo = {
   slogan: "Judô para todas as idades",
   contato: {
     instagram: "", // ex.: "dojoalcantara"
-    whatsapp: "", // ex.: "5524999999999"
+    whatsapp: "5524992924519", // WhatsApp do dojô (também editável em Painel > Site)
   },
 };
 

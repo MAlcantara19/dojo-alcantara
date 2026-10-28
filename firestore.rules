@@ -192,7 +192,8 @@ service cloud.firestore {
     match /tecnicas/{id} {
       allow read: if true;
       allow create, update: if ehEquipe()
-        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'proibida', 'ocultar', 'custom', 'categoria', 'familia', 'grupo', 'sequencias', 'contragolpes'])
+        && request.resource.data.keys().hasOnly(['faixa', 'pdf', 'video', 'nota', 'imagem', 'links', 'nome', 'proibida', 'ocultar', 'custom', 'categoria', 'familia', 'grupo', 'sequencias', 'contragolpes', 'midias'])
+        && request.resource.data.get('midias', []) is list && request.resource.data.get('midias', []).size() <= 12
         && request.resource.data.get('sequencias', []) is list && request.resource.data.get('sequencias', []).size() <= 20
         && request.resource.data.get('contragolpes', []) is list && request.resource.data.get('contragolpes', []).size() <= 20
         && request.resource.data.faixa is string && request.resource.data.faixa.size() <= 20
@@ -408,7 +409,7 @@ service cloud.firestore {
 
     // Pedidos de aula experimental: qualquer pessoa pede (página pública); a equipe vê e acompanha.
     match /experimentais/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['nome', 'idade', 'telefone', 'turma', 'horario', 'mensagem', 'status', 'obs', 'ts'])
+      allow create: if request.resource.data.keys().hasOnly(['nome', 'idade', 'telefone', 'turma', 'horario', 'mensagem', 'menor', 'responsavel', 'telResponsavel', 'status', 'obs', 'ts'])
         && request.resource.data.nome is string && request.resource.data.nome.size() >= 2 && request.resource.data.nome.size() <= 100
         && request.resource.data.telefone is string && request.resource.data.telefone.size() >= 10 && request.resource.data.telefone.size() <= 20
         && request.resource.data.get('mensagem', '') is string && request.resource.data.get('mensagem', '').size() <= 600

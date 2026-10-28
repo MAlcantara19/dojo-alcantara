@@ -6,7 +6,9 @@ import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { useFichas } from "../lib/fichas";
 import Link from "next/link";
 import { corDaFaixa, faixas } from "../lib/faixas";
+import Carrossel from "./Carrossel";
 import Img from "./Img";
+import { idYoutube } from "./Midia";
 import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
@@ -178,7 +180,12 @@ export default function Tecnicas() {
           </p>
           {ehProibida(atual, mapa[atual.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
           <LinkBtns nome={atual.nome} cfg={mapa[atual.id]} />
-          {mapa[atual.id]?.imagem && <Img className="modal-img" src={mapa[atual.id].imagem as string} alt={`Imagem da técnica ${atual.nome}`} largura={1000} eager />}
+          <Carrossel
+            itens={[mapa[atual.id]?.imagem, ...(mapa[atual.id]?.midias ?? []), mapa[atual.id]?.video && idYoutube(mapa[atual.id]?.video ?? "") ? mapa[atual.id]?.video : "", ...(mapa[atual.id]?.links ?? []).map((l) => (idYoutube(l.url) ? l.url : ""))]
+              .filter((s): s is string => Boolean(s))
+              .filter((s, i, l) => l.indexOf(s) === i)
+              .map((src, i) => ({ src, alt: `${atual.nome} (${i + 1})` }))}
+          />
           {atual.nota && <p className="tnota">* {atual.nota}</p>}
           <Ligacoes t={atual} catalogo={catalogo} mapa={mapa} abrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />
           {(() => {
