@@ -15,6 +15,7 @@ import { useCarga } from "../lib/useCarga";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { guardarAniversario } from "../lib/aniversarios";
+import { avisoValido } from "../lib/hoje";
 import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
 import { useSite } from "../lib/siteConfig";
@@ -237,7 +238,7 @@ function Conteudo({ uid }: { uid: string }) {
           <h3 className="sub">Avisos da turma</h3>
           <ul className="manage">
             {avisosTurma.dados.length === 0 && <li className="empty">Nenhum aviso da sua turma por enquanto.</li>}
-            {avisosTurma.dados.slice(0, 8).map((a) => (
+            {avisosTurma.dados.filter((a) => avisoValido(a, hojeISO())).slice(0, 8).map((a) => (
               <li key={a.id}>
                 <span>
                   <strong>{a.titulo}</strong>

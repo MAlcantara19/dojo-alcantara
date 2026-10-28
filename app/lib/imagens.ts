@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocFromCache } from "firebase/firestore";
 import { getDb } from "./firebase";
 
 /* Imagens enviadas pelo celular ficam no próprio banco (coleção "imagens"), já reduzidas.
@@ -58,8 +58,11 @@ const cache = new Map<string, Promise<string | null>>();
 export function lerImagemDb(ref: string): Promise<string | null> {
   let p = cache.get(ref);
   if (!p) {
-    p = getDoc(doc(getDb(), "imagens", ref.slice(3)))
-      .then((s) => (s.exists() ? String((s.data() as { dados?: string }).dados ?? "") || null : null))
+    const r = doc(getDb(), "imagens", ref.slice(3));
+    const dados = (s: { exists: () => boolean; data: () => unknown }) => (s.exists() ? String((s.data() as { dados?: string }).dados ?? "") || null : null);
+    p = getDocFromCache(r)
+      .then(dados)
+      .catch(() => getDoc(r).then(dados))
       .catch(() => null);
     cache.set(ref, p);
   }

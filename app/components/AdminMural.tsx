@@ -50,7 +50,8 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
     const g = (k: string) => String(f.get(k) ?? "").trim();
     const video = g("video");
     const imagem = g("imagem");
-    const a = { titulo: g("titulo"), texto: g("texto"), data: g("data"), autor, imagem, video };
+    const a = { titulo: g("titulo"), texto: g("texto"), data: g("data"), autor, imagem, video, ate: g("ate") };
+    if (a.ate && a.ate < a.data) return setMsg("A data “mostrar até” não pode ser antes da data do aviso.");
     if (!a.titulo || !a.texto || !a.data) return setMsg("Preencha título, texto e data do aviso.");
     if ((video && !/^https:\/\//.test(video)) || (imagem && !enderecoOk(imagem))) return setMsg("O link do vídeo precisa começar com https:// e a imagem deve ser enviada do celular ou ser um link https://.");
     const alvo = editAviso;
@@ -60,7 +61,7 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
       if (escolhidas.length === 0) return setMsg("Marque pelo menos uma turma, ou escolha “Todos”.");
       return void rodar(
         async () => {
-          for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video });
+          for (const t of escolhidas) await addAvisoTurma({ turma: t, titulo: a.titulo, texto: a.texto, data: a.data, autor, imagem, video, ate: a.ate });
           if (evento) await criarEvento(evento, g("ev-cal") === "alunos");
         },
         `Aviso enviado para ${escolhidas.length} ${escolhidas.length === 1 ? "turma" : "turmas"}${evento ? " e marcado no calendário" : ""}.`,
@@ -159,10 +160,17 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
             <label htmlFor="a-texto">Texto</label>
             <textarea id="a-texto" name="texto" rows={3} maxLength={600} defaultValue={editAviso?.texto ?? ""} />
           </div>
-          <div className="field">
-            <label htmlFor="a-data">Data</label>
-            <input id="a-data" name="data" type="date" defaultValue={editAviso?.data ?? hojeISO()} />
+          <div className="two">
+            <div className="field">
+              <label htmlFor="a-data">Data</label>
+              <input id="a-data" name="data" type="date" defaultValue={editAviso?.data ?? hojeISO()} />
+            </div>
+            <div className="field">
+              <label htmlFor="a-ate">Mostrar até (opcional)</label>
+              <input id="a-ate" name="ate" type="date" defaultValue={editAviso?.ate ?? ""} />
+            </div>
           </div>
+          <p className="form-help">Depois do dia em “mostrar até”, o aviso some do site sozinho (continua aqui no painel, marcado como expirado).</p>
           <CampoImagem name="imagem" rotulo="Imagem (opcional)" valorInicial={editAviso?.imagem ?? ""} />
           <div className="field">
             <label htmlFor="a-video">Vídeo (opcional): link do YouTube ou do Drive</label>
@@ -263,7 +271,9 @@ export default function AdminMural({ turmas, autor, ehAdmin }: { turmas: Turma[]
                 <strong>{a.titulo}</strong>
                 <small>
                   {a.data}
+                  {a.ate ? ` · até ${a.ate}` : ""}
                   {a.autor ? ` · por ${a.autor}` : ""}
+                  {a.ate && a.ate < hojeISO() ? " · expirado" : ""}
                 </small>
               </span>
               {!av.erro && (

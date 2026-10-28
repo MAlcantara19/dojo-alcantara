@@ -5,12 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ABAS_ADMIN } from "../lib/abasAdmin";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
+import { useAcessoTecnicas } from "../lib/acesso";
+import { faixas } from "../lib/faixas";
 import { useMenu } from "../lib/menuConfig";
 import { ehEquipe } from "../lib/auth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import Abertura from "./Abertura";
 import { ParceriasLado } from "./Parcerias";
 import Avatar from "./Avatar";
+import BuscaGlobal from "./BuscaGlobal";
+import InstalarApp from "./InstalarApp";
 import Rodape from "./Rodape";
 import Sino from "./Sino";
 import Toasts from "./Toasts";
@@ -28,6 +32,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const site = useSite();
   const equipe = ehEquipe(perfil);
   const { menu } = useMenu();
+  const acessoMenu = useAcessoTecnicas();
+  const faixasDoMenu = faixas.filter((f) => acessoMenu.todas || acessoMenu.liberadas.has(f.nome));
+  // Link com “#” (abre a parte certa da página, mesmo se você já estiver nela)
+  const irComHash = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    setAberto(false);
+    const [rota, hash] = href.split("#");
+    if (pathname === rota) {
+      history.pushState(null, "", "#" + hash);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    } else router.push(href);
+  };
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -143,6 +159,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </button>
         <Link href="/" className="topbar-title" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>{site.nome}</Link>
         <div className="top-actions">
+          <BuscaGlobal />
           <Sino />
           {user ? (
             <>
@@ -232,7 +249,22 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                   <Link href={sec.href} aria-current={sec.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
                     Visão geral
                   </Link>
-                  {itens.map(linha)}
+                  {itens.map((i) =>
+                    i.id === "tecnicas" && i.estado === "visivel" ? (
+                      <div key={i.id} className="drawer-com-netos">
+                        {linha(i)}
+                        <div className="drawer-netos">
+                          {faixasDoMenu.map((f) => (
+                            <a key={f.nome} href={`/tecnicas#faixa-${f.nome.toLowerCase()}`} onClick={(e) => irComHash(e, `/tecnicas#faixa-${f.nome.toLowerCase()}`)}>
+                              <i className="dot" style={{ background: f.cor }} aria-hidden="true" /> Faixa {f.nome.toLowerCase()}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      linha(i)
+                    ),
+                  )}
                 </div>
               </details>
             );
@@ -270,6 +302,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </details>
           ))}
 
+        <InstalarApp />
         <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
           {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}
         </Link>

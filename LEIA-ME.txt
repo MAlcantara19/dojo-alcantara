@@ -1,18 +1,17 @@
-ATUALIZAÇÃO 27 (inclui tudo das anteriores — instale só esta)
+ATUALIZAÇÃO 29 (inclui tudo das anteriores — instale só esta)
 
 1. Extraia este zip em C:\projetos\dojo-alcantara, substituindo tudo.
-2. Firebase > Firestore > Regras: apague tudo, cole o firestore.rules deste zip e PUBLICAR.
-3. npm run build
-4. git add .
-   git commit -m "Tabela de pesos 2026, sexo do aluno, professores por turma e largura total no computador"
+2. npm run build
+3. git add .
+   git commit -m "Busca geral, atalhos por usuario e app instalavel no celular"
    git push
+(As regras do Firestore não mudaram.)
 
 NOVIDADES
- - Tabela de pesos 2026 da Confederada Rio (10 classes, feminino e masculino), no arquivo
-   app\lib\categorias.ts. Na inscrição do campeonato: categoria pelo peso, folga até o limite,
-   quanto perder para descer e botão "Escolher" para competir em outra categoria.
- - Sexo do aluno no cadastro, na edição e no Meu cadastro.
- - Corpo e medidas (área do aluno): "Minha categoria de competição" pelo último peso.
- - Turmas > Gerenciar professores; administradores também podem ser ligados a turmas.
- - Computador: a página usa a largura toda (a faixa escura à direita só aparece quando há
-   parceiros para mostrar).
+ - Busca geral (lupa no topo, ou Ctrl+K / "/" no computador): técnicas, palavras com o
+   significado, katas, simulados, materiais, avisos, eventos, páginas; para a equipe também
+   alunos e turmas. Funciona sem acento. Tocar numa técnica já abre o card dela.
+ - Atalhos do início conforme quem entrou: aluno (Minhas técnicas, Checklist, Simulados, Peso,
+   Calendário), professor (Chamada, Avisar, Alunos, Campeonatos, Calendário).
+ - App no celular: ícone próprio (app\icon.png) e botão "Instalar o app" no menu lateral
+   (Android); no iPhone, a dica de "Adicionar à Tela de Início".

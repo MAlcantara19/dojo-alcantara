@@ -16,7 +16,7 @@ const semAssinatura = () => () => {};
 const agoraNoNavegador = () => Math.floor(Date.now() / 3600000) * 3600000;
 
 function Foto({ f }: { f: FotoSite }) {
-  return <>{f.src && <Img src={f.src} alt="Foto da galeria" largura={500} />}</>;
+  return <>{f.src && <Img src={f.src} alt="Foto da galeria" largura={360} />}</>;
 }
 
 /** Foto em tela cheia, com anterior/próxima (botões, setas do teclado ou deslizar o dedo). */

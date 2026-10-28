@@ -1,6 +1,6 @@
 import { deleteApp, getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { createUserWithEmailAndPassword, getAuth, signOut, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type Firestore } from "firebase/firestore";
 
 /* Estas chaves do app web NÃO são segredo (todo site que usa Firebase as mostra
    no navegador). Quem protege os dados são as regras do Firestore. */
@@ -18,8 +18,16 @@ function app(): FirebaseApp {
 }
 
 // Só chame estas funções dentro de efeitos ou cliques (no navegador).
+let db: Firestore | null = null;
 export function getDb(): Firestore {
-  return getFirestore(app());
+  if (db) return db;
+  try {
+    // Guarda no aparelho o que já foi lido (fotos, técnicas, avisos): a próxima visita abre mais rápido.
+    db = initializeFirestore(app(), { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    db = getFirestore(app());
+  }
+  return db;
 }
 export function getAuthInstance(): Auth {
   return getAuth(app());

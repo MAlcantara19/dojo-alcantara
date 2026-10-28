@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTecnicas } from "../lib/conteudo";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { useFichas } from "../lib/fichas";
@@ -11,6 +11,11 @@ import LinkBtns from "./LinkBtns";
 import Modal from "./Modal";
 import TiltCard from "./TiltCard";
 import { ehProibida, faixaEfetiva, familias, grupos, tituloGrupoComFaixa, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
+
+const assinarHash = (cb: () => void) => {
+  window.addEventListener("hashchange", cb);
+  return () => window.removeEventListener("hashchange", cb);
+};
 
 type Aba = "todas" | "nage" | "katame";
 type Modo = "grupo" | "familia" | "faixa";
@@ -30,6 +35,8 @@ export default function Tecnicas() {
 
   const termo = busca.trim().toLowerCase();
   const acesso = useAcessoTecnicas();
+  const hash = useSyncExternalStore(assinarHash, () => decodeURIComponent(window.location.hash.slice(1)), () => "");
+  const faixaDoEndereco = hash.startsWith("faixa-") ? (faixas.find((f) => "faixa-" + f.nome.toLowerCase() === hash)?.nome ?? "") : "";
   const bloqueadas = catalogo.filter((t) => !podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)).length;
   const lista: Item[] = catalogo
     .filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa))
@@ -38,7 +45,8 @@ export default function Tecnicas() {
       return { ...t, nota: mapa[t.id]?.nota || t.nota, faixaFinal: f.faixa, sugerida: f.sugerida };
     })
     .filter((t) => (aba === "todas" ? true : aba === "nage" ? t.categoria === "Nage-waza" : t.categoria === "Katame-waza"))
-    .filter((t) => t.nome.toLowerCase().includes(termo));
+    .filter((t) => t.nome.toLowerCase().includes(termo))
+    .filter((t) => !faixaDoEndereco || t.faixaFinal === faixaDoEndereco);
 
   function blocos(): Bloco[] {
     if (modo === "grupo") {
@@ -63,9 +71,28 @@ export default function Tecnicas() {
   }
 
   const grupoBlocos = blocos();
+  const doEndereco = hash.startsWith("tec-") ? (lista.find((t) => "tec-" + t.id === hash) ?? null) : null;
+  const atual = aberta ?? doEndereco;
+  const fecharCard = () => {
+    setAberta(null);
+    if (hash.startsWith("tec-")) {
+      history.replaceState(null, "", location.pathname);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+  };
 
   return (
     <div className="tool">
+      {faixaDoEndereco && (
+        <div className="filtro-faixa">
+          <span>
+            <i className="dot" style={{ background: faixas.find((f) => f.nome === faixaDoEndereco)?.cor }} aria-hidden="true" /> Mostrando só a <b>faixa {faixaDoEndereco.toLowerCase()}</b> ({lista.length} técnicas)
+          </span>
+          <a href="#" className="link-btn" onClick={(e) => (e.preventDefault(), history.replaceState(null, "", location.pathname), window.dispatchEvent(new HashChangeEvent("hashchange")))}>
+            Ver todas
+          </a>
+        </div>
+      )}
       {!acesso.carregando && bloqueadas > 0 && (
         <div className="aviso-dia aviso-acesso" role="note">
           {acesso.logado ? (
@@ -124,7 +151,7 @@ export default function Tecnicas() {
               return (
                 <TiltCard key={t.id} className="tcard3d" onClick={() => setAberta(t)} rotulo={`Abrir ${t.nome}${ehProibida(t, cfg) ? " (proibida em competição)" : ""}`}>
                   {ehProibida(t, cfg) && <span className="selo-proibida">Proibida</span>}
-                  {img && <Img src={img} alt="" largura={600} />}
+                  {img && <Img src={img} alt="" largura={360} />}
                   <span className="tcard-info">
                     <strong>{t.nome}</strong>
                     <small>
@@ -141,12 +168,21 @@ export default function Tecnicas() {
       ))}
       </div>
 
-      {aberta && (
-        <Modal titulo={aberta.nome} onFechar={() => setAberta(null)}>
-          {mapa[aberta.id]?.imagem && <Img className="modal-img" src={mapa[aberta.id].imagem as string} alt={`Imagem da técnica ${aberta.nome}`} largura={1200} eager />}
-          <h3 className="modal-titulo">{aberta.nome}</h3>
+      {atual && (
+        <Modal titulo={atual.nome} onFechar={fecharCard}>
+          <h3 className="modal-titulo">{atual.nome}</h3>
+          <p className="tmeta">
+            {atual.familia ?? "Nage-waza"}
+            {atual.grupo === "S" && " · Shinmeisho"}
+            {atual.faixaFinal && ` · Faixa ${atual.faixaFinal.toLowerCase()}${atual.sugerida ? " (padrão do grupo)" : ""}`}
+          </p>
+          {ehProibida(atual, mapa[atual.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
+          <LinkBtns nome={atual.nome} cfg={mapa[atual.id]} />
+          {mapa[atual.id]?.imagem && <Img className="modal-img" src={mapa[atual.id].imagem as string} alt={`Imagem da técnica ${atual.nome}`} largura={1000} eager />}
+          {atual.nota && <p className="tnota">* {atual.nota}</p>}
+          <Ligacoes t={atual} catalogo={catalogo} mapa={mapa} abrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />
           {(() => {
-            const fx = faixaEfetiva(aberta, mapa[aberta.id]).faixa;
+            const fx = faixaEfetiva(atual, mapa[atual.id]).faixa;
             const ff = fx ? fichasDrive.faixas[fx] : undefined;
             const url = ff?.pdf ?? ff?.imagem;
             return url ? (
@@ -155,39 +191,6 @@ export default function Tecnicas() {
               </a>
             ) : null;
           })()}
-          {((mapa[aberta.id]?.sequencias ?? []).length > 0 || (mapa[aberta.id]?.contragolpes ?? []).length > 0) && (
-            <div className="seq-contra">
-              {(mapa[aberta.id]?.sequencias ?? []).length > 0 && (
-                <div>
-                  <strong>Sequências (renraku-waza)</strong>
-                  <ul>
-                    {(mapa[aberta.id]?.sequencias ?? []).map((s) => (
-                      <li key={s}>{s}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {(mapa[aberta.id]?.contragolpes ?? []).length > 0 && (
-                <div>
-                  <strong>Contragolpes (kaeshi-waza)</strong>
-                  <ul>
-                    {(mapa[aberta.id]?.contragolpes ?? []).map((s) => (
-                      <li key={s}>{s}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-          <Ligacoes t={aberta} catalogo={catalogo} mapa={mapa} abrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />
-          {ehProibida(aberta, mapa[aberta.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
-          <p className="tmeta">
-            {aberta.familia ?? "Nage-waza"}
-            {aberta.grupo === "S" && " · Shinmeisho"}
-            {aberta.faixaFinal && ` · Faixa ${aberta.faixaFinal.toLowerCase()}${aberta.sugerida ? " (padrão do grupo)" : ""}`}
-          </p>
-          {aberta.nota && <p className="tnota">* {aberta.nota}</p>}
-          <LinkBtns nome={aberta.nome} cfg={mapa[aberta.id]} />
         </Modal>
       )}
 

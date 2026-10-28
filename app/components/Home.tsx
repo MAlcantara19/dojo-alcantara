@@ -9,6 +9,7 @@ import { DestaqueFotos, GaleriaGrid } from "./Galeria";
 import Img, { useImagemUrl } from "./Img";
 import { estiloFoto } from "../lib/fotoAjuste";
 import { useAgendaGoogle } from "../lib/agendaGoogle";
+import { avisoValido, useHoje } from "../lib/hoje";
 import Midia from "./Midia";
 import EstudoCards from "./EstudoCards";
 import Parcerias from "./Parcerias";
@@ -42,7 +43,9 @@ export default function Home() {
   const hojeStr = useSyncExternalStore(semAssinatura, hojeTexto, () => "");
   const hoje = hojeStr ? parseData(hojeStr) : null;
 
-  const av = useAvisos();
+  const avTodos = useAvisos();
+  const hojeIso = useHoje();
+  const av = { ...avTodos, itens: avTodos.itens.filter((a) => avisoValido(a, hojeIso)) };
   const ev = useEventos();
   const agenda = useAgendaGoogle();
   const eventos = [...ev.itens, ...agenda];
@@ -95,11 +98,34 @@ export default function Home() {
             {user ? (ehEquipe(perfil) ? "Abrir a área do professor" : "Abrir a minha área") : "Entrar"}
           </Link>
           <div className="shortcuts">
-            <Link href="/#avisos">Avisos</Link>
-            <Link href="/#calendario">Calendário</Link>
-            <Link href="/tecnicas">Técnicas</Link>
-            <Link href="/simulados">Simulados</Link>
-            <Link href="/roleta">Roleta</Link>
+            {(user
+              ? ehEquipe(perfil)
+                ? [
+                    ["/admin#chamada", "✅ Chamada"],
+                    ["/admin#mural", "📣 Avisar"],
+                    ["/admin#alunos", "👥 Alunos"],
+                    ["/admin#campeonatos", "🏆 Campeonatos"],
+                    ["/calendario", "🗓 Calendário"],
+                  ]
+                : [
+                    ["/perfil#tecnicas", "🥋 Minhas técnicas"],
+                    ["/perfil#checklist", "✅ Checklist"],
+                    ["/simulados", "📝 Simulados"],
+                    ["/perfil#corpo", "⚖️ Peso"],
+                    ["/calendario", "🗓 Calendário"],
+                  ]
+              : [
+                  ["/#avisos", "Avisos"],
+                  ["/calendario", "Calendário"],
+                  ["/tecnicas", "Técnicas"],
+                  ["/simulados", "Simulados"],
+                  ["/roleta", "Roleta"],
+                ]
+            ).map(([href, rotulo]) => (
+              <Link key={href} href={href}>
+                {rotulo}
+              </Link>
+            ))}
           </div>
         </div>
         <div className="belts" aria-hidden="true">

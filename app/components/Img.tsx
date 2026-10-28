@@ -44,7 +44,7 @@ export default function Img({ src, alt, className, largura = 1000, eager = false
   if (falhou) return null;
   const url = ehRefDb(src) ? (db && db.ref === src ? db.url : VAZIA) : imagemDireta(src, largura);
   // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={ref} src={url} alt={alt} className={className} style={style} loading={eager ? "eager" : "lazy"} referrerPolicy="no-referrer" onError={() => setFalhou(true)} />;
+  return <img ref={ref} src={url} alt={alt} className={className} style={style} loading={eager ? "eager" : "lazy"} decoding="async" referrerPolicy="no-referrer" onError={() => setFalhou(true)} />;
 }
 
 /** Para fundos (banner): devolve o endereço pronto para usar em CSS, ou "" enquanto carrega. */

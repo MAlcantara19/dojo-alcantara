@@ -32,7 +32,15 @@ export default function AdminAlunos({ ehAdmin, autor = "Professor" }: { ehAdmin:
   const { user } = useAuth();
   const turmas = useCarga(lerTurmas, VAZIO_T);
   const internos = useCarga(lerInternos, VAZIO_I, ehAdmin);
-  const [busca, setBusca] = useState("");
+  const [busca, setBusca] = useState(() => {
+    try {
+      const v = sessionStorage.getItem("dojo-busca-aluno") ?? "";
+      sessionStorage.removeItem("dojo-busca-aluno");
+      return v;
+    } catch {
+      return "";
+    }
+  });
   const [filtro, setFiltro] = useState("");
   const [editando, setEditando] = useState<string | null>(null);
   const [medidas, setMedidas] = useState<string | null>(null);

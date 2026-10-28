@@ -80,7 +80,8 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     const titulo = String(f.get("titulo") ?? "").trim();
     const texto = String(f.get("texto") ?? "").trim();
     if (!titulo || !texto) return setAviso({ onde: "av" + t.id, texto: "Preencha o título e o texto do aviso." });
-    void rodar("av" + t.id, () => addAvisoTurma({ turma: t.nome, titulo, texto, data: hojeISO() }), "Aviso publicado para a turma.", () => (form.reset(), avisos.recarregar()));
+    const ate = String(f.get("ate") ?? "");
+    void rodar("av" + t.id, () => addAvisoTurma({ turma: t.nome, titulo, texto, data: hojeISO(), ate }), "Aviso publicado para a turma.", () => (form.reset(), avisos.recarregar()));
   }
 
   const atual = sel === "__nova" ? "__nova" : visiveis.some((t) => t.id === sel) ? sel : (visiveis[0]?.id ?? (ehAdmin ? "__nova" : ""));
@@ -234,6 +235,10 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                 <label>Texto</label>
                 <textarea name="texto" rows={2} maxLength={600} />
               </div>
+              <div className="field">
+                <label>Mostrar até (opcional)</label>
+                <input name="ate" type="date" />
+              </div>
               <button className="btn btn-primary" type="submit" disabled={ocupado}>
                 Publicar para a turma
               </button>
@@ -246,7 +251,10 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                 <li key={a.id}>
                   <span>
                     <strong>{a.titulo}</strong>
-                    <small>{dataBR(a.data)}</small>
+                    <small>
+                      {dataBR(a.data)}
+                      {a.ate ? ` · até ${dataBR(a.ate)}${a.ate < hojeISO() ? " (expirado)" : ""}` : ""}
+                    </small>
                     <small className="pre">{a.texto}</small>
                   </span>
                   <span className="tlinks">

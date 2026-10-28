@@ -130,7 +130,7 @@ export async function renomearTurma(id: string, antigo: string, novo: string) {
 }
 
 /* ---------- Avisos de cada turma ---------- */
-export type AvisoTurma = { id: string; turma: string; titulo: string; texto: string; data: string; autor?: string; imagem?: string; video?: string; ts?: number };
+export type AvisoTurma = { id: string; turma: string; titulo: string; texto: string; data: string; autor?: string; imagem?: string; video?: string; ts?: number; ate?: string };
 
 /** null = admin (todos); lista = só as turmas dadas (professor ou aluno). */
 export async function lerAvisosTurma(turmas: string[] | null): Promise<AvisoTurma[]> {
