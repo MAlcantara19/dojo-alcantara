@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
 import { lerMeuDesempenho, registrarPalavra, type Desempenho } from "../lib/desempenho";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
+import { LISTA_60, NOME_LISTA_60 } from "../lib/lista60";
 import { amostra, lerRoletas, type RoletaDoc } from "../lib/roletasDb";
 import { useAuth } from "../lib/useAuth";
 import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opcoesDePalavras, type ExercicioDoc, type ListaPalavras, type PalavraDoc } from "../lib/estudoDb";
@@ -15,7 +16,7 @@ import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
 
 type Modo = "palavras" | "tecnicas" | "exercicios" | "mais";
-type Jogo = "falar" | "escolher";
+type Jogo = "falar" | "escolher" | "inverso" | "inverso-escolher";
 const VAZIO_PAL: PalavraDoc[] = [];
 const VAZIO_EXE: ExercicioDoc[] = [];
 const VAZIO_LISTAS: ListaPalavras[] = [];
@@ -44,10 +45,11 @@ function embaralhar<T>(a: T[]): T[] {
   return b;
 }
 
-/** A resposta certa mais duas erradas, em ordem aleatória. */
-function montarEscolhas(lista: Palavra[], i: number): { texto: string; certa: boolean }[] {
-  const certa = lista[i].significado;
-  const outras = embaralhar(Array.from(new Set(lista.filter((_, j) => j !== i).map((p) => p.significado))).filter((t) => t !== certa)).slice(0, 2);
+/** A resposta certa mais duas erradas, em ordem aleatória (no modo inverso, as opções são as palavras). */
+function montarEscolhas(lista: Palavra[], i: number, inverso = false): { texto: string; certa: boolean }[] {
+  const campo = (p: Palavra) => (inverso ? p.termo : p.significado);
+  const certa = campo(lista[i]);
+  const outras = embaralhar(Array.from(new Set(lista.filter((_, j) => j !== i).map(campo))).filter((t) => t !== certa)).slice(0, 2);
   return embaralhar([{ texto: certa, certa: true }, ...outras.map((texto) => ({ texto, certa: false }))]);
 }
 
@@ -74,12 +76,20 @@ export default function Roleta() {
   const dbPalavras = useCarga(lerPalavras, VAZIO_PAL);
   const dbExe = useCarga(lerExercicios, VAZIO_EXE);
   const dbListas = useCarga(lerListasPalavras, VAZIO_LISTAS);
-  const opcoesPal = useMemo(() => opcoesDePalavras(dbPalavras.dados, dbListas.dados), [dbPalavras.dados, dbListas.dados]);
+  const opcoesPal = useMemo(() => {
+    const base = opcoesDePalavras(dbPalavras.dados, dbListas.dados);
+    const l60 = { nome: NOME_LISTA_60, itens: LISTA_60.map((p) => ({ termo: p.termo, significado: p.atual, folha: p.folha, original: p.original })) };
+    return [base[0], l60, ...base.slice(1)].filter(Boolean);
+  }, [dbPalavras.dados, dbListas.dados]);
+  const inverso = jogo === "inverso" || jogo === "inverso-escolher";
   const escolhida = opcoesPal.find((o) => o.nome === lista) ?? opcoesPal[Math.min(1, opcoesPal.length - 1)] ?? opcoesPal[0];
   const exercicios = useMemo(() => exerciciosOuPadrao(dbExe.dados), [dbExe.dados]);
 
   const todasPalavras: Palavra[] = escolhida.itens;
-  const palavras: Palavra[] = todasPalavras;
+  const [semRepetir, setSemRepetir] = useState(false);
+  const [sorteadas, setSorteadas] = useState<string[]>([]);
+  const restantes = semRepetir ? todasPalavras.filter((p) => !sorteadas.includes(p.termo)) : todasPalavras;
+  const palavras: Palavra[] = restantes.length ? restantes : todasPalavras;
   const acesso = useAcessoTecnicas("roleta");
   const liberadas = useMemo(() => catalogo.filter((t) => podeVer(acesso, faixaEfetiva(t, mapa[t.id]).faixa)), [catalogo, acesso, mapa]);
   const opcoesVisiveis = opcoesTecnicas.filter((o) => liberadas.some(o.filtro));
@@ -91,14 +101,14 @@ export default function Roleta() {
 
   const fatias: Fatia[] =
     modo === "palavras"
-      ? palavras.map((p, i) => ({ rotulo: p.termo, cor: PALETA[i % PALETA.length] }))
+      ? palavras.map((p, i) => ({ rotulo: inverso ? String(i + 1) : p.termo, cor: PALETA[i % PALETA.length] }))
       : modo === "tecnicas"
         ? tecs.map((t) => ({ rotulo: t.nome, cor: corDe(t) }))
         : modo === "mais"
           ? itensMais.map((x, i) => ({ rotulo: x.texto, cor: PALETA[i % PALETA.length] }))
           : exercicios.map((e, i) => ({ rotulo: e.nome, cor: PALETA_EXE[i % PALETA_EXE.length] }));
 
-  const chave = (modo === "palavras" ? "p-" + escolhida.nome : modo === "tecnicas" ? "t-" + filtro : modo === "mais" ? "m-" + (roletaMais?.id ?? "") : "e-" + exercicios.length) + `-${qtd}-${semente}`;
+  const chave = (modo === "palavras" ? "p-" + escolhida.nome + "-" + palavras.length : modo === "tecnicas" ? "t-" + filtro : modo === "mais" ? "m-" + (roletaMais?.id ?? "") : "e-" + exercicios.length) + `-${qtd}-${semente}`;
   const tec = modo === "tecnicas" && resultado !== null ? tecs[resultado] : null;
   const pal = modo === "palavras" && resultado !== null ? palavras[resultado] : null;
   const exe = modo === "exercicios" && resultado !== null ? exercicios[resultado] : null;
@@ -116,7 +126,8 @@ export default function Roleta() {
   function terminou(i: number) {
     setResultado(i);
     setGirando(false);
-    if (modo === "palavras" && jogo === "escolher") setEscolhas(montarEscolhas(todasPalavras, todasPalavras.indexOf(palavras[i])));
+    if (modo === "palavras" && semRepetir && palavras[i]) setSorteadas((s) => [...s, palavras[i].termo]);
+    if (modo === "palavras" && (jogo === "escolher" || jogo === "inverso-escolher")) setEscolhas(montarEscolhas(todasPalavras, todasPalavras.indexOf(palavras[i]), jogo === "inverso-escolher"));
   }
 
   function responder(k: number) {
@@ -183,9 +194,24 @@ export default function Roleta() {
           <div className="field">
             <label htmlFor="jogo">Como jogar</label>
             <select id="jogo" value={jogo} onChange={(e) => (setJogo(e.target.value as Jogo), limpar())} disabled={girando}>
-              <option value="falar">Dizer em voz alta</option>
-              <option value="escolher">Escolher entre A, B e C</option>
+              <option value="falar">Ver a palavra e dizer o significado</option>
+              <option value="escolher">Ver a palavra e escolher o significado (A, B, C)</option>
+              <option value="inverso">Inverso: ouvir o significado e dizer a palavra</option>
+              <option value="inverso-escolher">Inverso: ver o significado e escolher a palavra (A, B, C)</option>
             </select>
+          </div>
+          <div className="field">
+            <label className="check-linha">
+              <input type="checkbox" checked={semRepetir} onChange={(e) => (setSemRepetir(e.target.checked), setSorteadas([]), limpar())} disabled={girando} /> Não repetir as que já saíram
+            </label>
+            {semRepetir && (
+              <p className="form-help">
+                Saíram {sorteadas.length} de {todasPalavras.length}.{" "}
+                <button type="button" className="link-btn" onClick={() => (setSorteadas([]), limpar())} disabled={girando}>
+                  Recomeçar
+                </button>
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -225,10 +251,20 @@ export default function Roleta() {
           </>
         ) : pal ? (
           <>
-            <strong className="result-word">{pal.termo}</strong>
-            {jogo === "escolher" ? (
+            {inverso ? (
               <>
-                <p className="form-help">O que significa?</p>
+                <p className="form-help">O que é?</p>
+                <strong className="result-word result-significado">{pal.significado}</strong>
+              </>
+            ) : (
+              <>
+                <strong className="result-word">{pal.termo}</strong>
+                {pal.folha && pal.folha.toLowerCase() !== pal.termo.toLowerCase() && <small className="na-folha">Na folha: {pal.folha}</small>}
+              </>
+            )}
+            {jogo === "escolher" || jogo === "inverso-escolher" ? (
+              <>
+                <p className="form-help">{inverso ? "Qual é a palavra?" : "O que significa?"}</p>
                 <div className="options">
                   {escolhas.map((e, k) => (
                     <button
@@ -244,6 +280,7 @@ export default function Roleta() {
                 {marcada !== null && (
                   <p className="feedback" role="status">
                     <strong>{escolhas[marcada].certa ? "Certo!" : "Não foi dessa vez."}</strong> {pal.termo}: {pal.significado}
+                    {pal.original && <small className="na-folha"> · Na folha: “{pal.original}”</small>}
                   </p>
                 )}
                 <p className="form-help">
@@ -254,13 +291,23 @@ export default function Roleta() {
             ) : (
               <>
                 {mostrar ? (
-                  <span className="reel-meaning-dark">{pal.significado}</span>
+                  inverso ? (
+                    <span className="reel-meaning-dark">
+                      <b>{pal.termo}</b>
+                      {pal.folha && pal.folha.toLowerCase() !== pal.termo.toLowerCase() ? ` (na folha: ${pal.folha})` : ""}
+                    </span>
+                  ) : (
+                    <span className="reel-meaning-dark">
+                      {pal.significado}
+                      {pal.original && pal.original !== pal.significado && <small className="na-folha">Na folha: “{pal.original}”</small>}
+                    </span>
+                  )
                 ) : (
                   <button className="btn btn-ghost" onClick={() => setMostrar(true)}>
-                    Ver significado
+                    {inverso ? "Ver a palavra" : "Ver significado"}
                   </button>
                 )}
-                <p className="form-help">Diga o que a palavra significa antes de tocar em “Ver significado”.</p>
+                <p className="form-help">{inverso ? "Diga a palavra em japonês antes de tocar em “Ver a palavra”." : "Diga o que a palavra significa antes de tocar em “Ver significado”."}</p>
               </>
             )}
           </>
@@ -284,6 +331,40 @@ export default function Roleta() {
           </>
         ) : null}
       </div>
+      {modo === "palavras" && escolhida.nome === NOME_LISTA_60 && (
+        <details className="tabela-60">
+          <summary>📄 Ver as 60 palavras (folha e uso atual)</summary>
+          <button type="button" className="btn btn-ghost so-tela" onClick={() => window.print()}>
+            🖨️ Imprimir
+          </button>
+          <div className="tabela-rolagem">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Na folha</th>
+                  <th>Significado na folha</th>
+                  <th>Hoje</th>
+                  <th>Uso atual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {LISTA_60.map((p) => (
+                  <tr key={p.n}>
+                    <td>{p.n}</td>
+                    <td>{p.folha}</td>
+                    <td>{p.original}</td>
+                    <td>
+                      <b>{p.termo}</b>
+                    </td>
+                    <td>{p.atual}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { basica } from "./palavras";
 import { simulados as basicos, type Pergunta } from "./simulados";
 import { faixas } from "./faixas";
+import { LISTA_60 } from "./lista60";
 import { familias, grupos, tecnicas, type Familia, type GrupoId, type Tecnica } from "./tecnicas";
 
 /* Simulados padrão, montados a partir das listas do site (vocabulário, famílias, grupos do Gokyo e
@@ -157,3 +158,37 @@ export function simuladosPorFaixa(lista: Tecnica[], faixaDe: (t: Tecnica) => str
 }
 
 export const simuladosPadraoCompletos = (): SimuladoBase[] => [...basicos, vocabulario(), familiasSim(), gokyoSim(), soloSim()];
+
+/** Simulados das 60 palavras da folha: normal (palavra → significado) e inverso (significado → palavra). */
+export function simulados60(): SimuladoBase[] {
+  const normal = criar(60);
+  const inverso = criar(61);
+  const significados = LISTA_60.map((p) => p.atual);
+  const termos = LISTA_60.map((p) => p.termo);
+  const porTermo = (t: string) => LISTA_60.find((p) => p.termo === t);
+  const porSignificado = (s: string) => LISTA_60.find((p) => p.atual === s);
+  return [
+    {
+      id: "palavras-60",
+      titulo: "As 60 palavras",
+      descricao: "A palavra aparece e você escolhe o significado (lista da folha da academia).",
+      perguntas: normal.embaralhar(LISTA_60).slice(0, 20).map((p) =>
+        normal.pergunta(`O que significa “${p.termo}”?`, p.atual, significados, `${p.termo}: ${p.atual}. Na folha: ${p.folha} (${p.original}).`, (op) => {
+          const outra = porSignificado(op);
+          return outra ? `Isso é o significado de “${outra.termo}”.` : "Não é esse o significado.";
+        }),
+      ),
+    },
+    {
+      id: "palavras-60-inverso",
+      titulo: "As 60 palavras (inverso)",
+      descricao: "O significado aparece e você escolhe a palavra em japonês.",
+      perguntas: inverso.embaralhar(LISTA_60).slice(0, 20).map((p) =>
+        inverso.pergunta(`Qual palavra quer dizer: “${p.atual}”?`, p.termo, termos, `${p.termo} quer dizer: ${p.atual}.`, (op) => {
+          const outra = porTermo(op);
+          return outra ? `${outra.termo} quer dizer: ${outra.atual}.` : "Não é essa a palavra.";
+        }),
+      ),
+    },
+  ];
+}

@@ -2,7 +2,8 @@
    "basica" = as palavras que o dojô usa hoje (troque pela sua lista de 60).
    "ampliada" = a lista maior, com vocabulário extra. */
 
-export type Palavra = { termo: string; significado: string };
+/** folha/original: como estava escrito na folha antiga da academia (lista das 60). */
+export type Palavra = { termo: string; significado: string; folha?: string; original?: string };
 
 export const basica: Palavra[] = [
   { termo: "Rei", significado: "Saudação (cumprimento)" },

@@ -1130,3 +1130,25 @@ span.lig-chip{cursor:default;border-style:dashed}
 .modal{width:min(100%,560px)}
 @media (min-width:900px){.modal{width:min(92vw,760px)}}
 .zap-direto{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px}
+.na-folha{display:block;font-size:.8rem;opacity:.75;font-weight:500;margin-top:4px}
+.result-significado{font-size:1.3rem!important;line-height:1.3}
+
+.tabela-60{margin-top:14px}
+.tabela-60 summary{cursor:pointer;font-weight:800;color:var(--accent);padding:.4rem 0}
+.tabela-rolagem{overflow-x:auto;margin-top:8px}
+.tabela-60 table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:620px}
+.tabela-60 th{text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);padding:6px}
+.tabela-60 td{padding:6px;border-top:1px solid var(--line);vertical-align:top}
+@media print{.tabela-60{display:block}.tabela-60 table{min-width:0;color:#000}.wheel-box,.tabs,.reel-result,.field{display:none!important}}
+.tabela-60,.tabela-rolagem{max-width:100%;min-width:0;width:100%}
+.tool>*{min-width:0;max-width:100%}
+
+/* Menu lateral: o nome abre a página; a setinha abre e fecha (bom para o dedo no celular) */
+.drawer-pai-cabeca{display:flex;align-items:center;gap:4px}
+.drawer-pai-cabeca>a{flex:1;font-weight:700}
+.drawer-pai-cabeca.neto>a{font-weight:500}
+.drawer-seta{flex:none;width:44px;height:44px;border-radius:12px;border:0;background:rgba(255,255,255,.06);color:inherit;display:grid;place-items:center;cursor:pointer}
+.drawer-seta:hover{background:rgba(255,255,255,.14)}
+.drawer-seta[aria-expanded="true"] svg{transform:rotate(180deg)}
+.drawer-seta svg{transition:transform .2s}
+.drawer-pai-cabeca.neto .drawer-seta{width:38px;height:38px}

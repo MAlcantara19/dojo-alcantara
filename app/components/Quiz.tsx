@@ -7,7 +7,7 @@ import { useAcessoTecnicas } from "../lib/acesso";
 import { useTecnicas } from "../lib/conteudo";
 import { lerSimulados, simuladosOuPadrao, type SimuladoDoc } from "../lib/estudoDb";
 import type { Pergunta } from "../lib/simulados";
-import { simuladosPorFaixa } from "../lib/simuladosPadrao";
+import { simulados60, simuladosPorFaixa } from "../lib/simuladosPadrao";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
@@ -68,7 +68,8 @@ export default function Quiz() {
   const { mapa, lista } = useTecnicas();
   const acesso = useAcessoTecnicas();
   const porFaixa = useMemo(() => simuladosPorFaixa(lista, (t) => faixaEfetiva(t, mapa[t.id]).faixa).filter((s) => acesso.todas || Array.from(acesso.liberadas).some((f) => s.id === `faixa-${f.toLowerCase()}`)), [lista, mapa, acesso]);
-  const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...porFaixa];
+  const sim60 = useMemo(() => simulados60(), []);
+  const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...sim60, ...porFaixa];
   const [numAlt, setNumAlt] = useState(0);
   const [salvo, setSalvo] = useState("");
   const [respostas, setRespostas] = useState<Resp[]>([]);

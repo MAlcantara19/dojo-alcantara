@@ -33,6 +33,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const site = useSite();
   const equipe = ehEquipe(perfil);
   const { menu } = useMenu();
+  const [secAberta, setSecAberta] = useState<Record<string, boolean>>({});
+  const [faixasAbertas, setFaixasAbertas] = useState(false);
   const acessoMenu = useAcessoTecnicas();
   const faixasDoMenu = faixas.filter((f) => acessoMenu.todas || acessoMenu.liberadas.has(f.nome));
   // Link com “#” (abre a parte certa da página, mesmo se você já estiver nela)
@@ -239,36 +241,52 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 </div>
               );
             const ativo = pathname === sec.href || itens.some((f) => f.href === pathname);
+            const abertaSec = secAberta[sec.id] ?? ativo;
             return (
-              <details className="drawer-pai" key={sec.id} open={ativo || undefined}>
-                <summary>
-                  {sec.titulo}
-                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-                  </svg>
-                </summary>
-                <div className="drawer-sub">
-                  <Link href={sec.href} aria-current={sec.href === pathname ? "page" : undefined} onClick={() => setAberto(false)}>
-                    Visão geral
+              <div className={"drawer-pai" + (abertaSec ? " aberto" : "")} key={sec.id}>
+                {/* Tocar no nome abre a visão geral E mostra as páginas; a setinha só abre e fecha */}
+                <div className="drawer-pai-cabeca">
+                  <Link href={sec.href} aria-current={sec.href === pathname ? "page" : undefined} onClick={() => setSecAberta((m) => ({ ...m, [sec.id]: true }))}>
+                    {sec.titulo}
                   </Link>
-                  {itens.map((i) =>
-                    i.id === "tecnicas" && i.estado === "visivel" ? (
-                      <div key={i.id} className="drawer-com-netos">
-                        {linha(i)}
-                        <div className="drawer-netos">
-                          {faixasDoMenu.map((f) => (
-                            <a key={f.nome} href={`/tecnicas#faixa-${f.nome.toLowerCase()}`} onClick={(e) => irComHash(e, `/tecnicas#faixa-${f.nome.toLowerCase()}`)}>
-                              <i className="dot" style={{ background: f.cor }} aria-hidden="true" /> Faixa {f.nome.toLowerCase()}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      linha(i)
-                    ),
-                  )}
+                  <button type="button" className="drawer-seta" aria-expanded={abertaSec} aria-label={abertaSec ? `Fechar ${sec.titulo}` : `Abrir ${sec.titulo}`} onClick={() => setSecAberta((m) => ({ ...m, [sec.id]: !abertaSec }))}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    </svg>
+                  </button>
                 </div>
-              </details>
+                {abertaSec && (
+                  <div className="drawer-sub">
+                    {itens.map((i) =>
+                      i.id === "tecnicas" && i.estado === "visivel" ? (
+                        <div key={i.id} className="drawer-com-netos">
+                          <div className="drawer-pai-cabeca neto">
+                            {linha(i)}
+                            {faixasDoMenu.length > 0 && (
+                              <button type="button" className="drawer-seta" aria-expanded={faixasAbertas} aria-label={faixasAbertas ? "Fechar as faixas" : "Ver as técnicas por faixa"} onClick={() => setFaixasAbertas((v) => !v)}>
+                                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                          {faixasAbertas && (
+                            <div className="drawer-netos">
+                              {faixasDoMenu.map((f) => (
+                                <a key={f.nome} href={`/tecnicas#faixa-${f.nome.toLowerCase()}`} onClick={(e) => irComHash(e, `/tecnicas#faixa-${f.nome.toLowerCase()}`)}>
+                                  <i className="dot" style={{ background: f.cor }} aria-hidden="true" /> Faixa {f.nome.toLowerCase()}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        linha(i)
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
 

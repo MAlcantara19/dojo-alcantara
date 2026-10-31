@@ -1,30 +1,16 @@
-ATUALIZAÇÃO 33 — PASTA "app" COMPLETA (já inclui 30, 31 e 32; instale só esta)
+ATUALIZAÇÃO 35 — PASTA "app" COMPLETA (já inclui da 30 até a 34; instale só esta)
 
 1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia fora do projeto).
-2. Extraia este zip em C:\projetos\dojo-alcantara (app, public\firebase-messaging-sw.js,
-   firestore.rules e vercel.json).
+2. Extraia este zip em C:\projetos\dojo-alcantara.
 3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
 4. npm run build
 5. git add .
-   git commit -m "Juros e data de pagamento, aviso de atraso, carrossel nas tecnicas e aula experimental com responsavel"
+   git commit -m "Lista das 60 palavras, roleta inversa, simulados das 60 e menu lateral melhor no celular"
    git push
 
-WHATSAPP AUTOMÁTICO NO SEU CELULAR (opcional, grátis, serviço CallMeBot)
- a) Salve o número +34 644 71 81 99 nos contatos do seu WhatsApp.
- b) Mande para ele a mensagem: I allow callmebot to send me messages
- c) Ele responde com a sua "apikey" (número).
- d) Na Vercel > Settings > Environment Variables, crie:
-      CALLMEBOT_PHONE  = 5524992924519   (seu número, com 55 e DDD)
-      CALLMEBOT_APIKEY = (o número que ele mandou)
-    e faça um novo deploy. Cada pedido de aula experimental chega como mensagem no seu WhatsApp.
- (Confira o número do CallMeBot no site callmebot.com antes; é um serviço de terceiros.)
-
 NOVIDADES
- - Mensalidades: data do pagamento e valor recebido; multa e juros por dia de atraso a partir do
-   vencimento (dia 10 por padrão; multa 2% e juros 1% ao mês, tudo mudável em Site > Aparência).
-   O aluno vê o valor do dia. Aviso para o administrador X dias depois do vencimento (no Resumo
-   e no celular, repetindo toda semana).
- - Card da técnica: mais largo no computador, ajustado ao celular e com carrossel (setas ou
-   arrastar) de imagens e vídeos. Em Estudo > Técnicas: "Mais imagens e vídeos".
- - Aula experimental: "É menor de idade" com nome e telefone do responsável; botão "Chamar no
-   WhatsApp" do dojô e, depois de enviar, "Mande também no WhatsApp" com os dados preenchidos.
+ - Roleta: "Lista das 60 palavras (folha da academia)" com a grafia e o significado da folha e o
+   uso de hoje; modos inversos (ouvir o significado e dizer a palavra; ou escolher entre A, B, C).
+ - Simulados novos: "As 60 palavras" e "As 60 palavras (inverso)", com explicação de cada erro.
+ - Menu lateral: tocar em "Estudo do Judô" abre a visão geral e já mostra as páginas; a setinha
+   ao lado só abre e fecha. As faixas embaixo de Técnicas ficam fechadas e abrem na setinha.
