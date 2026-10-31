@@ -62,7 +62,7 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
     if (nome !== t.nome && turmas.dados.some((x) => x.id !== t.id && x.nome.toLowerCase() === nome.toLowerCase())) return setAviso({ onde: t.id, texto: "Já existe outra turma com esse nome." });
     const grupo = g("grupo");
     if (grupo && !/^https:\/\//.test(grupo)) return setAviso({ onde: t.id, texto: "O link do grupo de WhatsApp precisa começar com https://" });
-    const dados = { nome, apelido: g("apelido"), descricao: g("descricao"), localNome: g("local"), endereco: g("endereco"), horarios: g("horarios"), grupoWhatsApp: grupo, dias: f.getAll("dias").map(Number).filter((n) => n >= 0 && n <= 6) };
+    const dados = { nome, apelido: g("apelido"), descricao: g("descricao"), localNome: g("local"), endereco: g("endereco"), horarios: g("horarios"), grupoWhatsApp: grupo, pastaFotos: g("pastaFotos"), dias: f.getAll("dias").map(Number).filter((n) => n >= 0 && n <= 6) };
     void rodar(
       t.id,
       async () => {
@@ -160,6 +160,11 @@ export default function AdminTurmas({ ehAdmin, escopo }: { ehAdmin: boolean; esc
                 <div className="field">
                   <label>Horários (um por linha)</label>
                   <textarea name="horarios" rows={3} maxLength={400} defaultValue={t.horarios} placeholder={"Terça e quinta, 19h às 20h30\nSábado, 9h às 10h30"} />
+                </div>
+                <div className="field">
+                  <label>Pasta do Drive com as fotos da turma (opcional)</label>
+                  <input name="pastaFotos" type="text" inputMode="url" maxLength={300} defaultValue={t.pastaFotos} placeholder="https://drive.google.com/drive/folders/…" autoComplete="off" />
+                  <p className="form-help">No site, só os alunos desta turma (e a equipe) veem estas fotos, na área deles. A pasta precisa estar compartilhada com “qualquer pessoa com o link” (quem tiver o link do Drive também consegue abrir).</p>
                 </div>
                 <div className="field">
                   <label>Link do grupo de WhatsApp (convite, opcional)</label>

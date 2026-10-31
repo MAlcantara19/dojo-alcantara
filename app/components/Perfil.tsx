@@ -20,11 +20,13 @@ import { minhasPresencas, type Chamada } from "../lib/chamadas";
 import { calcularGraus } from "../lib/graus";
 import { lerCampeonatos, type Campeonato } from "../lib/campeonatos";
 import { calcularConquistas } from "../lib/conquistas";
+import { lerExames, type Exame } from "../lib/exames";
 import { calcularDevido, minhasMensalidades, nomeMes, real, type Mensalidade } from "../lib/mensalidades";
 import { useSite } from "../lib/siteConfig";
 import { classeDeIdade } from "../lib/categorias";
 import BotaoNotificacoes from "./BotaoNotificacoes";
 import ChecklistFaixa from "./ChecklistFaixa";
+import { FotosDaPasta } from "./Galeria";
 import TabelaPesos from "./TabelaPesos";
 import { registrarAtividade } from "../lib/atividades";
 import CampeonatosAluno from "./CampeonatosAluno";
@@ -44,6 +46,7 @@ import Recolhivel from "./Recolhivel";
 const VAZIO_AV: AvisoTurma[] = [];
 const VAZIO_CH: Chamada[] = [];
 const VAZIO_CAMP: Campeonato[] = [];
+const VAZIO_EX: Exame[] = [];
 const VAZIO_MENS: Mensalidade[] = [];
 const VAZIO_M: Medida[] = [];
 const VAZIO_N: Nota[] = [];
@@ -96,6 +99,7 @@ function Conteudo({ uid }: { uid: string }) {
   const presencas = useCarga(() => minhasPresencas(uid), VAZIO_CH);
   const site = useSite();
   const camps = useCarga(() => lerCampeonatos(uid), VAZIO_CAMP);
+  const exames = useCarga(lerExames, VAZIO_EX, site.extras.includes("exames"));
   const usaMensalidade = site.mensalidadeValor > 0 && !site.abasOcultas.includes("mensalidades");
   const mens = useCarga(() => minhasMensalidades(uid), VAZIO_MENS, usaMensalidade);
   const academia = perfilCompleto.dados?.academia ?? "";
@@ -244,6 +248,12 @@ function Conteudo({ uid }: { uid: string }) {
               </li>
             )}
           </ul>
+          {minhaTurma.dados?.pastaFotos && (
+            <details className="fotos-turma">
+              <summary>📷 Fotos da turma</summary>
+              <FotosDaPasta pasta={minhaTurma.dados.pastaFotos} vazio="Ainda não há fotos da turma." />
+            </details>
+          )}
           <h3 className="sub">Avisos da turma</h3>
           <ul className="manage">
             {avisosTurma.dados.length === 0 && <li className="empty">Nenhum aviso da sua turma por enquanto.</li>}
@@ -319,6 +329,24 @@ function Conteudo({ uid }: { uid: string }) {
             <p className="mens-aberta">
               💳 Mensalidade de {nomeMes(mes)} em aberto (venceu dia {site.vencimentoDia}). Valor hoje: {real(dv.total)}{dv.diasAtraso ? `, com ${dv.diasAtraso} dias de atraso` : ""}. Se já pagou, avise o sensei.
             </p>
+          );
+        })()}
+        {!equipe && site.extras.includes("exames") && (() => {
+          const hoje = hojeISO();
+          const prox = exames.dados.find((x) => x.data >= hoje && (!x.turmas.length || x.turmas.includes(p.academia ?? "")));
+          if (!prox) return null;
+          const dias = Math.round((Date.parse(prox.data + "T12:00:00") - Date.parse(hoje + "T12:00:00")) / 86400000);
+          return (
+            <div className="exame-aviso">
+              <p>
+                🥋 <b>Exame de faixa {dias === 0 ? "é hoje!" : `em ${dias} ${dias === 1 ? "dia" : "dias"}`}</b> · {dataBR(prox.data)}
+                {prox.local ? ` · ${prox.local}` : ""}
+              </p>
+              {prox.obs && <small className="pre">{prox.obs}</small>}
+              <a className="btn btn-ghost mini" href="#checklist">
+                Revisar o checklist da faixa
+              </a>
+            </div>
           );
         })()}
         <p className="presencas">

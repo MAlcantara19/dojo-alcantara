@@ -7,7 +7,7 @@ import { testarDrive } from "../lib/fichas";
 import { idDaPastaDrive } from "../lib/links";
 import { faixas } from "../lib/faixas";
 import { lerAjuste } from "../lib/fotoAjuste";
-import { ABAS_ADMIN } from "../lib/abasAdmin";
+import { ABAS_ADMIN, EXTRAS } from "../lib/abasAdmin";
 import EditorFoto from "./EditorFoto";
 import { lerSite, mesclar, salvarSite, TRANSICOES, type SiteConfig, type Transicao } from "../lib/siteConfig";
 import { useCarga } from "../lib/useCarga";
@@ -81,6 +81,7 @@ export default function AdminSite() {
       jurosMesPct: Math.min(20, Math.max(0, Number(g("jurosMesPct").replace(",", ".")) || 0)),
       avisoAtrasoDias: Math.min(60, Math.max(0, Math.round(Number(g("avisoAtrasoDias")) || 0))),
       callmebot: atual.callmebot,
+      extras: f.getAll("extras").map(String),
       aulasPorGrau: Math.min(60, Math.max(1, Math.round(Number(g("aulasPorGrau")) || 9))),
       grausPorFaixa: Math.min(10, Math.max(1, Math.round(Number(g("grausPorFaixa")) || 4))),
     };
@@ -202,6 +203,14 @@ export default function AdminSite() {
           <input id="s-aviso" name="avisoAtrasoDias" type="number" min={0} max={60} defaultValue={atual.avisoAtrasoDias} />
           <p className="form-help">Padrão: multa de 2% e juros de 1% ao mês (o costume no Brasil; a multa em mensalidades costuma ficar limitada a 2%). Coloque 0 para não cobrar.</p>
         </div>
+        <fieldset className="checks">
+          <legend>Em preparação (deixe desligado até preparar o conteúdo)</legend>
+          {EXTRAS.map(([k, r]) => (
+            <label key={k}>
+              <input type="checkbox" name="extras" value={k} defaultChecked={atual.extras.includes(k)} /> {r}
+            </label>
+          ))}
+        </fieldset>
         <fieldset className="checks">
           <legend>Esconder abas do painel (para todos da equipe)</legend>
           <small>Bom para o que você ainda não usa (ex.: Mensalidades). Dá para mostrar de novo quando quiser. Resumo e Site nunca somem.</small>

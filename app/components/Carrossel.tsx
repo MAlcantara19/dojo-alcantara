@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { descreverLink } from "../lib/links";
 import Img from "./Img";
+import VideoYoutube from "./VideoYoutube";
 import { idYoutube } from "./Midia";
 
 export type ItemMidia = { src: string; alt: string };
@@ -29,9 +30,7 @@ export default function Carrossel({ itens }: { itens: ItemMidia[] }) {
           return (
             <div className="carrossel-item" key={i} aria-label={`${i + 1} de ${itens.length}`}>
               {yt ? (
-                <div className="midia-video">
-                  <iframe src={`https://www.youtube-nocookie.com/embed/${yt}`} title={it.alt} loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
-                </div>
+                <VideoYoutube id={yt} titulo={it.alt} />
               ) : ehVideo(it.src) ? (
                 <a className="carrossel-link" href={it.src} target="_blank" rel="noopener noreferrer">
                   {descreverLink(it.src).icone} Assistir ao vídeo

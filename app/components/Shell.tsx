@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ABAS_ADMIN } from "../lib/abasAdmin";
+import { abaLigada, ABAS_ADMIN } from "../lib/abasAdmin";
 import { ABAS_PERFIL } from "../lib/abasPerfil";
 import { useAcessoTecnicas } from "../lib/acesso";
 import { faixas } from "../lib/faixas";
@@ -12,7 +12,9 @@ import { ehEquipe } from "../lib/auth";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import Abertura from "./Abertura";
 import { ParceriasLado } from "./Parcerias";
+import { useModoLeve } from "../lib/leve";
 import Avatar from "./Avatar";
+import BotaoModoLeve from "./BotaoModoLeve";
 import BuscaGlobal from "./BuscaGlobal";
 import InstalarApp from "./InstalarApp";
 import PerguntaNotificacoes from "./PerguntaNotificacoes";
@@ -31,6 +33,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, perfil } = useAuth();
   const site = useSite();
+  const leve = useModoLeve();
   const equipe = ehEquipe(perfil);
   const { menu } = useMenu();
   const [secAberta, setSecAberta] = useState<Record<string, boolean>>({});
@@ -87,11 +90,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     r.dataset.brilho = site.efeitos.brilho ? "on" : "off";
     r.dataset.tilt = site.efeitos.tilt ? "on" : "off";
     r.dataset.rolagem = site.efeitos.rolagem ? "on" : "off";
-    r.dataset.transicao = site.efeitos.transicao;
-  }, [site.efeitos.movimento, site.efeitos.kanji, site.efeitos.brilho, site.efeitos.tilt, site.efeitos.rolagem, site.efeitos.transicao]);
+    r.dataset.transicao = leve.ativo ? "nenhuma" : site.efeitos.transicao;
+    r.dataset.leve = leve.ativo ? "on" : "off";
+  }, [site.efeitos.movimento, site.efeitos.kanji, site.efeitos.brilho, site.efeitos.tilt, site.efeitos.rolagem, site.efeitos.transicao, leve.ativo]);
 
   // Onda ao tocar em botões, cartões e categorias
-  const ondinha = site.efeitos.ondinha && site.efeitos.movimento;
+  const ondinha = site.efeitos.ondinha && site.efeitos.movimento && !leve.ativo;
   useEffect(() => {
     if (!ondinha || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const alvos = ".btn, .tilt, .pill, .tabs button, .option, .resumo-card, .study-card, .shortcuts a, .drawer a, .jump a, .tlinks a";
@@ -292,7 +296,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
         {user &&
           [
-            ...(equipe ? [{ rotulo: "Área do professor", rota: "/admin", filhos: ABAS_ADMIN.filter(([id, , soAdmin]) => (perfil?.papel === "admin" || !soAdmin) && !site.abasOcultas.includes(id)).map(([id, r]) => ({ href: `/admin#${id}`, rotulo: r })) }] : []),
+            ...(equipe ? [{ rotulo: "Área do professor", rota: "/admin", filhos: ABAS_ADMIN.filter(([id, , soAdmin]) => (perfil?.papel === "admin" || !soAdmin) && !site.abasOcultas.includes(id) && abaLigada(id, site.extras)).map(([id, r]) => ({ href: `/admin#${id}`, rotulo: r })) }] : []),
             { rotulo: equipe ? "Meu perfil" : "Minha área", rota: "/perfil", filhos: minhaArea.filhos ?? [] },
           ].map((g) => (
             <details key={g.rota} className="drawer-pai" open={pathname === g.rota || undefined}>
@@ -322,6 +326,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </details>
           ))}
 
+        <BotaoModoLeve />
         <InstalarApp />
         <Link href={user ? (equipe ? "/admin" : "/perfil") : "/entrar"} className="drawer-cta" onClick={() => setAberto(false)}>
           {user ? (equipe ? "Área do professor" : "Área do aluno") : "Entrar"}

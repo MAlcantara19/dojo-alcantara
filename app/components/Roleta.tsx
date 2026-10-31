@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTecnicas } from "../lib/conteudo";
 import { lerMeuDesempenho, registrarPalavra, type Desempenho } from "../lib/desempenho";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
@@ -59,6 +59,11 @@ export default function Roleta() {
   const [filtro, setFiltro] = useState("todas");
   const [jogo, setJogo] = useState<Jogo>("falar");
   const [resultado, setResultado] = useState<number | null>(null);
+  const [apresentacao, setApresentacao] = useState(false);
+  const [som, setSom] = useState(true);
+  const [equipes, setEquipes] = useState<{ nome: string; pontos: number }[]>([]);
+  const [vez, setVez] = useState(0);
+  const caixa = useRef<HTMLDivElement>(null);
   const [girando, setGirando] = useState(false);
   const [mostrar, setMostrar] = useState(false);
   const [escolhas, setEscolhas] = useState<{ texto: string; certa: boolean }[]>([]);
@@ -123,8 +128,40 @@ export default function Roleta() {
     setMarcada(null);
   }
 
+  function tocarSom() {
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      [660, 880, 1320].forEach((f, k) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.frequency.value = f;
+        o.type = "triangle";
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + k * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + k * 0.12 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + k * 0.12 + 0.35);
+        o.connect(g).connect(ctx.destination);
+        o.start(ctx.currentTime + k * 0.12);
+        o.stop(ctx.currentTime + k * 0.12 + 0.4);
+      });
+      setTimeout(() => void ctx.close(), 1200);
+    } catch {}
+  }
+
+  async function alternarApresentacao() {
+    const el = caixa.current;
+    if (!apresentacao) {
+      setApresentacao(true);
+      await el?.requestFullscreen?.().catch(() => undefined);
+    } else {
+      setApresentacao(false);
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+    }
+  }
+
   function terminou(i: number) {
     setResultado(i);
+    if (som) tocarSom();
     setGirando(false);
     if (modo === "palavras" && semRepetir && palavras[i]) setSorteadas((s) => [...s, palavras[i].termo]);
     if (modo === "palavras" && (jogo === "escolher" || jogo === "inverso-escolher")) setEscolhas(montarEscolhas(todasPalavras, todasPalavras.indexOf(palavras[i]), jogo === "inverso-escolher"));
@@ -134,11 +171,57 @@ export default function Roleta() {
     if (marcada !== null) return;
     setMarcada(k);
     setPlacarSessao((p) => ({ acertos: p.acertos + (escolhas[k].certa ? 1 : 0), jogadas: p.jogadas + 1 }));
+    if (equipes.length && escolhas[k].certa) setEquipes((l) => l.map((e, j) => (j === vez ? { ...e, pontos: e.pontos + 1 } : e)));
     if (user && pal) void registrarPalavra(user.uid, perfil?.academia ?? "", pal.termo, escolhas[k].certa).catch(() => undefined);
   }
 
   return (
-    <div className="tool">
+    <div className={"tool roleta" + (apresentacao ? " apresentacao" : "")} ref={caixa}>
+      <div className="roleta-controles">
+        <button type="button" className="btn btn-ghost mini" onClick={() => void alternarApresentacao()}>
+          {apresentacao ? "✕ Sair da apresentação" : "📺 Modo apresentação"}
+        </button>
+        <button type="button" className="btn btn-ghost mini" onClick={() => setSom((v) => !v)} aria-pressed={som}>
+          {som ? "🔔 Som ligado" : "🔕 Som desligado"}
+        </button>
+        {!equipes.length && (
+          <button type="button" className="btn btn-ghost mini" onClick={() => (setEquipes([{ nome: "Equipe 1", pontos: 0 }, { nome: "Equipe 2", pontos: 0 }]), setVez(0))}>
+            🏆 Jogar em equipes
+          </button>
+        )}
+      </div>
+      {equipes.length > 0 && (
+        <div className="placar-equipes" aria-live="polite">
+          {equipes.map((e, j) => (
+            <div key={j} className={"equipe" + (j === vez ? " vez" : "")}>
+              <input value={e.nome} maxLength={20} aria-label="Nome da equipe" onChange={(ev) => setEquipes((l) => l.map((x, k) => (k === j ? { ...x, nome: ev.target.value } : x)))} />
+              <b>{e.pontos}</b>
+              <span className="equipe-botoes">
+                <button type="button" aria-label="Menos um ponto" onClick={() => setEquipes((l) => l.map((x, k) => (k === j ? { ...x, pontos: Math.max(0, x.pontos - 1) } : x)))}>
+                  −
+                </button>
+                <button type="button" aria-label="Mais um ponto" onClick={() => setEquipes((l) => l.map((x, k) => (k === j ? { ...x, pontos: x.pontos + 1 } : x)))}>
+                  +
+                </button>
+              </span>
+              {j === vez && <small>é a vez!</small>}
+            </div>
+          ))}
+          <div className="equipe-acoes">
+            <button type="button" className="link-btn" onClick={() => setVez((v) => (v + 1) % equipes.length)}>
+              Passar a vez
+            </button>
+            {equipes.length < 6 && (
+              <button type="button" className="link-btn" onClick={() => setEquipes((l) => [...l, { nome: `Equipe ${l.length + 1}`, pontos: 0 }])}>
+                + Equipe
+              </button>
+            )}
+            <button type="button" className="link-btn" onClick={() => window.confirm("Encerrar o jogo em equipes?") && (setEquipes([]), setVez(0))}>
+              Encerrar
+            </button>
+          </div>
+        </div>
+      )}
       <div className="tabs" role="tablist" aria-label="Tipo de roleta">
         {(["palavras", "tecnicas", "exercicios", ...(dbRoletas.dados.length ? ["mais"] : [])] as Modo[]).map((m) => (
           <button key={m} role="tab" aria-selected={modo === m} onClick={() => (setModo(m), limpar())}>
@@ -232,7 +315,7 @@ export default function Roleta() {
         </div>
       )}
 
-      <Wheel key={chave} fatias={fatias} onInicio={() => (setResultado(null), setMostrar(false), setEscolhas([]), setMarcada(null), setGirando(true))} onResultado={terminou} />
+      <Wheel key={chave} fatias={fatias} onInicio={() => (setResultado(null), setMostrar(false), setEscolhas([]), setMarcada(null), setGirando(true), resultado !== null && equipes.length > 1 && setVez((v) => (v + 1) % equipes.length))} onResultado={terminou} />
 
       <div className="result-card" aria-live="polite" style={{ borderColor: tec ? corDe(tec) : undefined }}>
         {resultado === null ? (

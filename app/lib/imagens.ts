@@ -24,8 +24,8 @@ function carregar(file: File): Promise<HTMLImageElement> {
   });
 }
 
-/** Reduz a foto (lado maior até 1200 px, JPEG) até caber no limite. */
-export async function prepararImagem(file: File, maxLado = 1200): Promise<string> {
+/** Reduz a foto (lado maior até 1000 px, JPEG) até caber no limite: abre rápido mesmo com internet fraca. */
+export async function prepararImagem(file: File, maxLado = 1000): Promise<string> {
   if (!file.type.startsWith("image/")) throw new Error("nao-e-imagem");
   const img = await carregar(file);
   let lado = maxLado;
@@ -39,7 +39,7 @@ export async function prepararImagem(file: File, maxLado = 1200): Promise<string
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.drawImage(img, 0, 0, c.width, c.height);
-    for (const q of [0.82, 0.7, 0.58]) {
+    for (const q of [0.74, 0.64, 0.54]) {
       const dados = c.toDataURL("image/jpeg", q);
       if (dados.length <= LIMITE) return dados;
     }

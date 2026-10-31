@@ -137,7 +137,8 @@ service cloud.firestore {
         && request.resource.data.get('horarios', '') is string && request.resource.data.get('horarios', '').size() <= 400
         && request.resource.data.get('grupoWhatsApp', '') is string && request.resource.data.get('grupoWhatsApp', '').size() <= 200
         && (request.resource.data.get('grupoWhatsApp', '') == '' || request.resource.data.get('grupoWhatsApp', '').matches('^https://.*'))
-        && request.resource.data.get('dias', []) is list && request.resource.data.get('dias', []).size() <= 7;
+        && request.resource.data.get('dias', []) is list && request.resource.data.get('dias', []).size() <= 7
+        && request.resource.data.get('pastaFotos', '') is string && request.resource.data.get('pastaFotos', '').size() <= 300;
       allow delete: if ehAdmin();
     }
 
@@ -416,6 +417,14 @@ service cloud.firestore {
         && request.resource.data.status == 'Novo';
       allow read, update: if ehEquipe();
       allow delete: if ehAdmin();
+    }
+
+    // Exames de faixa: quem está cadastrado vê; a equipe marca.
+    match /exames/{id} {
+      allow read: if temPerfil();
+      allow create, update: if ehEquipe() && request.resource.data.data is string && request.resource.data.data.size() == 10
+        && request.resource.data.get('turmas', []) is list && request.resource.data.get('turmas', []).size() <= 30;
+      allow delete: if ehEquipe();
     }
 
     // Atividades: cada pessoa registra o que ela mesma mudou; só o admin lê e apaga.

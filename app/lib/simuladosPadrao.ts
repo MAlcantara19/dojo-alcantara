@@ -192,3 +192,22 @@ export function simulados60(): SimuladoBase[] {
     },
   ];
 }
+
+/** Simulado de uma lista de palavras (ex.: “Faixa azul”): palavra → significado. */
+export function simuladoDePalavras(id: string, titulo: string, lista: { termo: string; significado: string }[]): SimuladoBase {
+  const { embaralhar, pergunta } = criar(id.length * 7 + lista.length);
+  const significados = lista.map((p) => p.significado);
+  return {
+    id,
+    titulo,
+    descricao: "As palavras desta faixa: escolha o significado.",
+    perguntas: embaralhar(lista)
+      .slice(0, 15)
+      .map((p) =>
+        pergunta(`O que significa “${p.termo}”?`, p.significado, significados, `${p.termo}: ${p.significado}.`, (op) => {
+          const outra = lista.find((x) => x.significado === op);
+          return outra ? `Isso é o significado de “${outra.termo}”.` : "Não é esse o significado.";
+        }),
+      ),
+  };
+}

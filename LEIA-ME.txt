@@ -1,16 +1,23 @@
-ATUALIZAÇÃO 35 — PASTA "app" COMPLETA (já inclui da 30 até a 34; instale só esta)
+ATUALIZAÇÃO 36 — PASTA "app" COMPLETA (já inclui da 30 até a 35; instale só esta)
 
 1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia fora do projeto).
 2. Extraia este zip em C:\projetos\dojo-alcantara.
 3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
 4. npm run build
 5. git add .
-   git commit -m "Lista das 60 palavras, roleta inversa, simulados das 60 e menu lateral melhor no celular"
+   git commit -m "Modo leve para internet fraca, roleta em apresentacao e equipes, fotos por turma"
    git push
 
 NOVIDADES
- - Roleta: "Lista das 60 palavras (folha da academia)" com a grafia e o significado da folha e o
-   uso de hoje; modos inversos (ouvir o significado e dizer a palavra; ou escolher entre A, B, C).
- - Simulados novos: "As 60 palavras" e "As 60 palavras (inverso)", com explicação de cada erro.
- - Menu lateral: tocar em "Estudo do Judô" abre a visão geral e já mostra as páginas; a setinha
-   ao lado só abre e fecha. As faixas embaixo de Técnicas ficam fechadas e abrem na setinha.
+ - Internet fraca: "📶 Economizar dados" no menu lateral (automático, ligado ou desligado). No
+   automático ele liga sozinho em 2G/3G ou quando o celular pede economia: sem animações, sem
+   abertura e sem efeitos pesados.
+ - Vídeos do YouTube mostram só a capa; o player só carrega quando a pessoa toca (economiza
+   bastante dado). Fotos enviadas pelo celular ficam menores (1000 px).
+ - Roleta: "📺 Modo apresentação" (tela cheia, letras grandes, para TV/projetor), som ao parar
+   (liga/desliga) e "🏆 Jogar em equipes" (até 6 equipes, vez de cada uma, +1/−1; nas
+   alternativas o acerto soma sozinho para a equipe da vez).
+ - Fotos por turma: em Turmas > Editar turma, cole a pasta do Drive; os alunos da turma veem em
+   Minha área > Resumo > Minha turma > "Fotos da turma".
+ - Em preparação (DESLIGADOS): Exames de faixa e Simulados de palavras por faixa. Para ligar
+   quando estiver pronto: Painel > Site > Aparência > "Em preparação".

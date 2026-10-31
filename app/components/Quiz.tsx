@@ -5,14 +5,17 @@ import { hojeISO } from "../lib/aluno";
 import { addResultado, lerAluno, publicarResultado, type Resp } from "../lib/alunos";
 import { useAcessoTecnicas } from "../lib/acesso";
 import { useTecnicas } from "../lib/conteudo";
-import { lerSimulados, simuladosOuPadrao, type SimuladoDoc } from "../lib/estudoDb";
+import { lerListasPalavras, lerPalavras, lerSimulados, opcoesDePalavras, simuladosOuPadrao, type ListaPalavras, type PalavraDoc, type SimuladoDoc } from "../lib/estudoDb";
+import { useSite } from "../lib/siteConfig";
 import type { Pergunta } from "../lib/simulados";
-import { simulados60, simuladosPorFaixa } from "../lib/simuladosPadrao";
+import { simulados60, simuladoDePalavras, simuladosPorFaixa } from "../lib/simuladosPadrao";
 import { faixaEfetiva } from "../lib/tecnicas";
 import { useAuth } from "../lib/useAuth";
 import { useCarga } from "../lib/useCarga";
 
 const VAZIO_SIM: SimuladoDoc[] = [];
+const VAZIO_PAL: PalavraDoc[] = [];
+const VAZIO_LIS: ListaPalavras[] = [];
 const LETRAS = ["A", "B", "C", "D", "E"];
 
 /* ---------- Simulado em aberto: o progresso fica guardado neste aparelho ---------- */
@@ -69,7 +72,20 @@ export default function Quiz() {
   const acesso = useAcessoTecnicas();
   const porFaixa = useMemo(() => simuladosPorFaixa(lista, (t) => faixaEfetiva(t, mapa[t.id]).faixa).filter((s) => acesso.todas || Array.from(acesso.liberadas).some((f) => s.id === `faixa-${f.toLowerCase()}`)), [lista, mapa, acesso]);
   const sim60 = useMemo(() => simulados60(), []);
-  const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...sim60, ...porFaixa];
+  const site = useSite();
+  const ligadoPalFaixa = site.extras.includes("palavrasFaixa");
+  const palDb = useCarga(lerPalavras, VAZIO_PAL, ligadoPalFaixa);
+  const listasDb = useCarga(lerListasPalavras, VAZIO_LIS, ligadoPalFaixa);
+  const palFaixa = useMemo(
+    () =>
+      !ligadoPalFaixa
+        ? []
+        : opcoesDePalavras(palDb.dados, listasDb.dados)
+            .filter((o) => /^faixa /i.test(o.nome) && o.itens.length >= 4)
+            .map((o) => simuladoDePalavras(`palavras-${o.nome.toLowerCase().replace(/\s+/g, "-")}`, `Palavras · ${o.nome}`, o.itens)),
+    [ligadoPalFaixa, palDb.dados, listasDb.dados],
+  );
+  const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...sim60, ...porFaixa, ...palFaixa];
   const [numAlt, setNumAlt] = useState(0);
   const [salvo, setSalvo] = useState("");
   const [respostas, setRespostas] = useState<Resp[]>([]);

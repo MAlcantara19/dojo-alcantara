@@ -1152,3 +1152,36 @@ span.lig-chip{cursor:default;border-style:dashed}
 .drawer-seta[aria-expanded="true"] svg{transform:rotate(180deg)}
 .drawer-seta svg{transition:transform .2s}
 .drawer-pai-cabeca.neto .drawer-seta{width:38px;height:38px}
+
+.video-capa{position:absolute;inset:0;padding:0;border:0;background:#000;cursor:pointer}
+.video-capa img{width:100%;height:100%;object-fit:cover;opacity:.85}
+.video-play{position:absolute;left:50%;top:50%;translate:-50% -50%;width:64px;height:46px;border-radius:14px;background:#d9334a;color:#fff;font-size:1.4rem;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+
+/* Modo leve (economizar dados / internet fraca) */
+html[data-leve="on"] *,html[data-leve="on"] *::before,html[data-leve="on"] *::after{animation:none!important;transition:none!important}
+html[data-leve="on"] .tilt{transform:none!important}
+html[data-leve="on"] .kanji,html[data-leve="on"] .parc-fundo,html[data-leve="on"] .abertura{display:none!important}
+html[data-leve="on"] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.drawer-leve{width:100%;margin:0 0 8px;padding:.6rem 1rem;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-size:.88rem;text-align:left;cursor:pointer}
+
+/* Roleta: controles, equipes e modo apresentação (TV/projetor) */
+.roleta-controles{display:flex;flex-wrap:wrap;gap:6px}
+.placar-equipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.equipe{display:grid;justify-items:center;gap:4px;padding:10px;border-radius:var(--r-md);border:1.5px solid var(--line);background:var(--surface)}
+.equipe.vez{border-color:var(--bright);box-shadow:0 0 0 3px color-mix(in srgb,var(--bright) 30%,transparent)}
+.equipe input{width:100%;text-align:center;font-weight:700;border:0;background:transparent;color:var(--text)}
+.equipe b{font:800 2rem "Bricolage Grotesque",sans-serif}
+.equipe small{color:var(--accent);font-weight:700}
+.equipe-botoes{display:flex;gap:6px}
+.equipe-botoes button{width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);color:var(--text);font-size:1.2rem;cursor:pointer}
+.equipe-acoes{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.roleta.apresentacao{position:fixed;inset:0;z-index:600;overflow-y:auto;padding:18px;background:linear-gradient(160deg,#0b0414,#2b0f57 60%,#6a35c9);color:#fff;align-content:start}
+.roleta.apresentacao .result-card{font-size:1.4rem;background:rgba(255,255,255,.08);color:#fff}
+.roleta.apresentacao .result-word{font-size:clamp(2.4rem,7vw,5rem)}
+.roleta.apresentacao .result-mean,.roleta.apresentacao .result-significado{font-size:clamp(1.4rem,4vw,2.6rem)}
+.roleta.apresentacao .field,.roleta.apresentacao .two,.roleta.apresentacao .form-help,.roleta.apresentacao .qtd-roleta,.roleta.apresentacao .tabela-60{display:none}
+.roleta.apresentacao .equipe{background:rgba(255,255,255,.08);color:#fff}
+.roleta.apresentacao .equipe input{color:#fff}
+.fotos-turma summary{cursor:pointer;font-weight:700;padding:.5rem 0}
+.exame-aviso{display:grid;gap:6px;padding:10px 12px;border-radius:var(--r-md);border:1.5px solid var(--bright);background:var(--surface-2);margin-bottom:8px}
+.exame-aviso p{margin:0}

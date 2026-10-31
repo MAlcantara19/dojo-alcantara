@@ -46,6 +46,7 @@ export type SiteConfig = {
   jurosMesPct: number;
   avisoAtrasoDias: number;
   callmebot: boolean;
+  extras: string[];
 };
 
 export const siteBase: SiteConfig = {
@@ -77,6 +78,7 @@ export const siteBase: SiteConfig = {
   jurosMesPct: 1,
   avisoAtrasoDias: 5,
   callmebot: false,
+  extras: [],
 };
 
 let cache: Promise<Partial<SiteConfig>> | null = null;
@@ -130,6 +132,7 @@ export function mesclar(p: Partial<SiteConfig>): SiteConfig {
     jurosMesPct: typeof p.jurosMesPct === "number" && p.jurosMesPct >= 0 && p.jurosMesPct <= 20 ? p.jurosMesPct : 1,
     avisoAtrasoDias: typeof p.avisoAtrasoDias === "number" && p.avisoAtrasoDias >= 0 && p.avisoAtrasoDias <= 60 ? p.avisoAtrasoDias : 5,
     callmebot: p.callmebot === true,
+    extras: Array.isArray(p.extras) ? p.extras.filter((x): x is string => typeof x === "string") : [],
     vencimentoDia: typeof p.vencimentoDia === "number" && p.vencimentoDia >= 1 && p.vencimentoDia <= 28 ? p.vencimentoDia : 10,
     aulasPorGrau: typeof p.aulasPorGrau === "number" && p.aulasPorGrau >= 1 ? p.aulasPorGrau : 9,
     grausPorFaixa: typeof p.grausPorFaixa === "number" && p.grausPorFaixa >= 1 ? p.grausPorFaixa : 4,

@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { siglaDe, useSite } from "../lib/siteConfig";
 import { estiloFoto } from "../lib/fotoAjuste";
+import { modoLeveAtivo } from "../lib/leve";
 import Img from "./Img";
 
 const CHAVE = "dojoAbertura";
@@ -23,7 +24,7 @@ const visto = () => {
 export default function Abertura() {
   const site = useSite();
   const jaVisto = useSyncExternalStore(assinar, visto, () => "1");
-  if (!site.efeitos.intro || !site.efeitos.movimento || jaVisto) return null;
+  if (!site.efeitos.intro || !site.efeitos.movimento || jaVisto || modoLeveAtivo()) return null;
 
   function fim() {
     try {

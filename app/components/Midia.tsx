@@ -2,6 +2,7 @@
 
 import { descreverLink } from "../lib/links";
 import Img from "./Img";
+import VideoYoutube from "./VideoYoutube";
 
 export function idYoutube(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/))([\w-]{11})/);
@@ -17,9 +18,7 @@ export default function Midia({ imagem, video, alt }: { imagem?: string; video?:
     <div className="midia">
       {imagem && <Img className="midia-img" src={imagem} alt={alt} largura={1000} />}
       {yt && (
-        <div className="midia-video">
-          <iframe src={`https://www.youtube-nocookie.com/embed/${yt}`} title={`Vídeo: ${alt}`} loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
-        </div>
+        <VideoYoutube id={yt} titulo={`Vídeo: ${alt}`} />
       )}
       {video && !yt && d && (
         <a className="btn btn-ghost" href={video} target="_blank" rel="noopener noreferrer">
