@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { podeVer, useAcessoTecnicas } from "../lib/acesso";
 import { corDaFaixa, faixas } from "../lib/faixas";
 import { useFichas } from "../lib/fichas";
 import { idDoDrive } from "../lib/links";
@@ -15,11 +16,14 @@ const abrir = (u: string) => (idDoDrive(u) && !u.includes("/folders/") ? `https:
 export default function Materiais() {
   const m = useCarga(lerMateriais, VAZIO);
   const fichasDrive = useFichas();
-  const daFaixa = faixas.filter((f) => fichasDrive.faixas[f.nome]);
+  const acesso = useAcessoTecnicas();
+  // Sem a faixa branca (quem é branca já estuda a azul) e só as faixas liberadas para quem está vendo.
+  const faixasVisiveis = faixas.filter((f) => f.nome !== "Branca" && podeVer(acesso, f.nome));
+  const daFaixa = faixasVisiveis.filter((f) => fichasDrive.faixas[f.nome]);
   const [faixa, setFaixa] = useState("");
   const [busca, setBusca] = useState("");
   const termo = busca.trim().toLowerCase();
-  const lista = m.dados.filter((x) => (!faixa || x.faixa === faixa || !x.faixa) && (!termo || x.titulo.toLowerCase().includes(termo) || x.descricao.toLowerCase().includes(termo)));
+  const lista = m.dados.filter((x) => (!x.faixa || podeVer(acesso, x.faixa)) && (!faixa || x.faixa === faixa || !x.faixa) && (!termo || x.titulo.toLowerCase().includes(termo) || x.descricao.toLowerCase().includes(termo)));
   const categorias = Array.from(new Set(lista.map((x) => x.categoria || "Outros")));
 
   if (m.carregando) return <p className="form-help">Carregando materiais…</p>;
@@ -37,7 +41,7 @@ export default function Materiais() {
           <label htmlFor="mat-faixa">Faixa</label>
           <select id="mat-faixa" value={faixa} onChange={(e) => setFaixa(e.target.value)}>
             <option value="">Todas as faixas</option>
-            {faixas.map((f) => (
+            {faixasVisiveis.map((f) => (
               <option key={f.nome}>{f.nome}</option>
             ))}
           </select>
@@ -46,6 +50,7 @@ export default function Materiais() {
       {daFaixa.length > 0 && (
         <section className="mat-grupo">
           <h2 className="sub">Fichas por faixa</h2>
+          {!acesso.logado && !acesso.carregando && <p className="form-help">🔒 Aqui aparecem as fichas abertas a todos. Entre com a sua conta para ver as da sua faixa.</p>}
           <div className="mat-lista">
             {daFaixa
               .filter((f) => !faixa || f.nome === faixa)

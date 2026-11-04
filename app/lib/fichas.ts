@@ -9,7 +9,7 @@ import { useSite } from "./siteConfig";
 import { tecnicas } from "./tecnicas";
 import { useCarga } from "./useCarga";
 
-export type Ficha = { imagem?: string; pdf?: string };
+export type Ficha = { imagem?: string; pdf?: string; imagens?: string[] };
 export type ArquivoFicha = { id: string; name: string; mimeType: string };
 
 /** Tira acento, extensão, “(1)”, “cópia” e símbolos: “Kesa Gatame (2).JPG” vira “kesagatame”. */
@@ -19,6 +19,7 @@ export function normalizar(nome: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/\.[a-z0-9]{2,5}$/, "")
+    .replace(/[\s_-]+(\d{1,2}|v\d{1,2})$/, "") // “harai-goshi 2”, “harai-goshi-2”: segunda ficha da mesma técnica
     .replace(/\(\d+\)/g, "")
     .replace(/\bcopia\b|\bcopy\b/g, "")
     .replace(/barai/g, "harai")
@@ -79,7 +80,11 @@ export function montarFichas(arquivos: ArquivoFicha[]) {
     lista.push({ id: a.id, name: a.name, pdf: a.mimeType === "application/pdf", ligadoA: r.id });
     const f = (mapa[r.id] ??= {});
     if (a.mimeType === "application/pdf") f.pdf ??= `https://drive.google.com/file/d/${a.id}/view`;
-    else f.imagem ??= `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
+    else {
+      const url = `https://drive.google.com/thumbnail?id=${a.id}&sz=w1000`;
+      f.imagem ??= url;
+      (f.imagens ??= []).push(url); // todas as fichas da técnica aparecem no carrossel
+    }
     ligados += 1;
   });
   return { mapa, faixas, semCorrespondencia, ligados, lista };

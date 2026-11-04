@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { descreverLink } from "../lib/links";
 import Img from "./Img";
+import ZoomImagem from "./ZoomImagem";
 import VideoYoutube from "./VideoYoutube";
 import { idYoutube } from "./Midia";
 
@@ -13,6 +14,8 @@ const ehVideo = (s: string) => Boolean(idYoutube(s)) || /\.(mp4|webm)(\?|$)/i.te
 export default function Carrossel({ itens }: { itens: ItemMidia[] }) {
   const trilho = useRef<HTMLDivElement>(null);
   const [atual, setAtual] = useState(0);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const soFotos = itens.filter((it) => !idYoutube(it.src) && !ehVideo(it.src));
   if (!itens.length) return null;
 
   const ir = (i: number) => {
@@ -36,12 +39,18 @@ export default function Carrossel({ itens }: { itens: ItemMidia[] }) {
                   {descreverLink(it.src).icone} Assistir ao vídeo
                 </a>
               ) : (
-                <Img className="carrossel-img" src={it.src} alt={it.alt} largura={1200} eager={i === 0} />
+                <button type="button" className="carrossel-abrir" onClick={() => setZoom(Math.max(0, soFotos.indexOf(it)))} aria-label={`Abrir ${it.alt} em tela cheia`}>
+                  <Img className="carrossel-img" src={it.src} alt={it.alt} largura={1200} eager={i === 0} />
+                  <span className="carrossel-lupa" aria-hidden="true">
+                    🔍
+                  </span>
+                </button>
               )}
             </div>
           );
         })}
       </div>
+      {zoom !== null && <ZoomImagem fotos={soFotos} inicio={zoom} onFechar={() => setZoom(null)} />}
       {itens.length > 1 && (
         <>
           <button type="button" className="carrossel-seta esq" onClick={() => ir(atual - 1)} disabled={atual === 0} aria-label="Anterior">

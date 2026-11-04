@@ -56,7 +56,7 @@ export default function AdminChamada({ autor, turmasPermitidas }: { autor: strin
   async function salvar() {
     setMsg("Salvando…");
     try {
-      await salvarChamada({ turma: t, data, presentes: presentes.filter((u) => daTurma.some((a) => a.uid === u)), total: daTurma.length, autor, ts: Date.now(), obs: obs.trim().slice(0, 1000), visitantes });
+      await salvarChamada({ turma: t, data, presentes: presentes.filter((u) => daTurma.some((a) => a.uid === u)), total: daTurma.length, autor, ts: Date.now(), obs: obs.trim().slice(0, 1000), visitantes, nomes: Object.fromEntries(daTurma.filter((a) => presentes.includes(a.uid)).map((a) => [a.uid, a.apelido || a.nome.split(" ")[0]])) });
       setMsg(`Chamada de ${dataBR(data)} salva: ${presentes.length} de ${daTurma.length} presentes.`);
       void notificar({ titulo: "✅ Presença registrada", texto: `Sua presença na aula de ${dataBR(data)} foi registrada. Bom treino!`, link: "/perfil", uids: presentes });
       historico.recarregar();

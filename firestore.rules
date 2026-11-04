@@ -374,8 +374,10 @@ service cloud.firestore {
 
     // Chamadas: a equipe faz; o aluno vê as chamadas em que está presente.
     match /chamadas/{id} {
-      allow read: if ehEquipe() || (logado() && request.auth.uid in resource.data.get('presentes', []));
+      // A turma vê as chamadas da própria turma (para os destaques de presença do mês).
+      allow read: if ehEquipe() || (logado() && request.auth.uid in resource.data.get('presentes', [])) || (temPerfil() && perfil().get('academia', '') == resource.data.turma);
       allow create, update: if ehEquipe()
+        && request.resource.data.get('nomes', {}) is map
         && request.resource.data.turma is string && request.resource.data.data is string && request.resource.data.data.size() == 10
         && request.resource.data.presentes is list && request.resource.data.presentes.size() <= 200
         && request.resource.data.get('obs', '') is string && request.resource.data.get('obs', '').size() <= 1000
@@ -424,6 +426,15 @@ service cloud.firestore {
       allow read: if temPerfil();
       allow create, update: if ehEquipe() && request.resource.data.data is string && request.resource.data.data.size() == 10
         && request.resource.data.get('turmas', []) is list && request.resource.data.get('turmas', []).size() <= 30;
+      allow delete: if ehEquipe();
+    }
+
+    // Destaques do mês (competições internas: corrida da faixa, circuito…): a equipe registra; quem está cadastrado vê.
+    match /destaques/{id} {
+      allow read: if temPerfil();
+      allow create, update: if ehEquipe() && request.resource.data.titulo is string && request.resource.data.titulo.size() <= 100
+        && request.resource.data.mes is string && request.resource.data.mes.size() == 7
+        && request.resource.data.get('obs', '') is string && request.resource.data.get('obs', '').size() <= 300;
       allow delete: if ehEquipe();
     }
 

@@ -79,7 +79,7 @@ export const useAvisos = () => useColecao<AvisoDoc>(lerAvisos, avisosPadrao.map(
 export const useEventos = () => useColecao<EventoDoc>(lerEventos, eventosPadrao.map((e, i) => ({ ...e, id: "p" + i })));
 
 /* ---------- Técnicas: faixa, PDF e vídeo editados pelo painel ---------- */
-export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[]; nome?: string; proibida?: boolean; ocultar?: boolean; custom?: boolean; sequencias?: string[]; contragolpes?: string[]; midias?: string[]; categoria?: string; familia?: string; grupo?: string };
+export type ConfigTecnica = { faixa?: string; pdf?: string; video?: string; nota?: string; imagem?: string; links?: { titulo: string; url: string }[]; nome?: string; proibida?: boolean; ocultar?: boolean; custom?: boolean; sequencias?: string[]; contragolpes?: string[]; midias?: string[]; fichasImagens?: string[]; categoria?: string; familia?: string; grupo?: string };
 export type MapaConfig = Record<string, ConfigTecnica>;
 
 export async function lerConfigTecnicas(): Promise<MapaConfig> {
@@ -116,7 +116,7 @@ export function useConfigTecnicas() {
     const m: MapaConfig = { ...bruto };
     Object.entries(fichas.mapa).forEach(([id, f]) => {
       const c = m[id] ?? {};
-      m[id] = { ...c, imagem: c.imagem || f.imagem, pdf: c.pdf || f.pdf };
+      m[id] = { ...c, imagem: c.imagem || f.imagem, pdf: c.pdf || f.pdf, fichasImagens: f.imagens ?? [] };
     });
     return m;
   }, [bruto, fichas.mapa]);

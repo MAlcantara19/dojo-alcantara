@@ -26,6 +26,8 @@ import { useSite } from "../lib/siteConfig";
 import { classeDeIdade } from "../lib/categorias";
 import BotaoNotificacoes from "./BotaoNotificacoes";
 import ChecklistFaixa from "./ChecklistFaixa";
+import DestaquesTurma from "./DestaquesTurma";
+import SecaoAtual from "./SecaoAtual";
 import { FotosDaPasta } from "./Galeria";
 import TabelaPesos from "./TabelaPesos";
 import { registrarAtividade } from "../lib/atividades";
@@ -182,13 +184,7 @@ function Conteudo({ uid }: { uid: string }) {
         </button>
       </div>
 
-      <nav className="tabs tabs-scroll perfil-abas" aria-label="Páginas da minha área">
-        {ABAS_PERFIL.map(([id, rotulo]) => (
-          <a key={id} href={"#" + id} aria-current={aba === id ? "page" : undefined} className={aba === id ? "ativa" : undefined}>
-            {rotulo}
-          </a>
-        ))}
-      </nav>
+      <SecaoAtual grupo="Minha área" nome={ABAS_PERFIL.find(([id]) => id === aba)?.[1] ?? "Resumo"} />
 
       {aba === "resumo" && equipe && (
         <div className="aviso-dia" role="note">
@@ -248,6 +244,7 @@ function Conteudo({ uid }: { uid: string }) {
               </li>
             )}
           </ul>
+          {p.academia && <DestaquesTurma turma={p.academia} />}
           {minhaTurma.dados?.pastaFotos && (
             <details className="fotos-turma">
               <summary>📷 Fotos da turma</summary>

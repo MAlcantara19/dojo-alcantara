@@ -52,6 +52,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   };
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
+  // Botão “Outras seções” das páginas abre este menu
+  useEffect(() => {
+    const abrir = () => setAberto(true);
+    window.addEventListener("dojo-abrir-menu", abrir);
+    return () => window.removeEventListener("dojo-abrir-menu", abrir);
+  }, []);
   const [desktop, setDesktop] = useState(false);
   const [mostrarTopo, setMostrarTopo] = useState(false);
   const menuBtn = useRef<HTMLButtonElement>(null);

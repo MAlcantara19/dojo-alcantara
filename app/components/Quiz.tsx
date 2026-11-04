@@ -19,14 +19,34 @@ const VAZIO_LIS: ListaPalavras[] = [];
 const LETRAS = ["A", "B", "C", "D", "E"];
 
 /* ---------- Simulado em aberto: o progresso fica guardado neste aparelho ---------- */
-type Prog = { i: number; acertos: number; respostas: Resp[]; escolha: number | null; n?: number };
+type Prog = { i: number; acertos: number; respostas: Resp[]; escolha: number | null; n?: number; s?: number };
 
-/** Deixa só N alternativas: a certa e as primeiras erradas, na ordem original. */
-function ajustar(q: Pergunta, n: number): Pergunta {
-  if (!n || q.opcoes.length <= n) return q;
-  const idx = q.opcoes.map((_, k) => k).filter((k) => k === q.correta).concat(q.opcoes.map((_, k) => k).filter((k) => k !== q.correta).slice(0, n - 1)).sort((a, b) => a - b);
+/** Sorteio que sempre dá o mesmo resultado para a mesma semente (assim o simulado em aberto continua igual). */
+function sorteio(semente: number) {
+  let s = semente % 2147483647 || 1;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+function embaralhar<T>(lista: T[], r: () => number): T[] {
+  const b = [...lista];
+  for (let k = b.length - 1; k > 0; k--) {
+    const j = Math.floor(r() * (k + 1));
+    [b[k], b[j]] = [b[j], b[k]];
+  }
+  return b;
+}
+/** Deixa N alternativas (tira erradas sorteadas) e embaralha a ordem delas, mantendo a explicação de cada uma. */
+function ajustar(q: Pergunta, n: number, r: () => number): Pergunta {
+  const erradas = embaralhar(q.opcoes.map((_, k) => k).filter((k) => k !== q.correta), r);
+  const manter = [q.correta, ...erradas.slice(0, n && n < q.opcoes.length ? n - 1 : erradas.length)];
+  const idx = embaralhar(manter, r);
   return { ...q, opcoes: idx.map((k) => q.opcoes[k]), correta: idx.indexOf(q.correta), porque: q.porque ? idx.map((k) => q.porque?.[k] ?? "") : undefined };
 }
+/** Perguntas em ordem sorteada e alternativas embaralhadas. */
+function prepararSimulado(s: SimuladoDoc, n: number, semente: number): SimuladoDoc {
+  const r = sorteio(semente);
+  return { ...s, perguntas: embaralhar(s.perguntas, r).map((x) => ajustar(x, n, r)) };
+}
+const maxAlternativas = (s: SimuladoDoc) => Math.max(0, ...s.perguntas.map((p) => p.opcoes.length));
 const CHAVE = "dojoSimulados";
 const ouvintes = new Set<() => void>();
 function assinar(cb: () => void) {
@@ -87,6 +107,7 @@ export default function Quiz() {
   );
   const simulados: SimuladoDoc[] = [...simuladosOuPadrao(doBanco.dados), ...sim60, ...porFaixa, ...palFaixa];
   const [numAlt, setNumAlt] = useState(0);
+  const [semente, setSemente] = useState(1);
   const [salvo, setSalvo] = useState("");
   const [respostas, setRespostas] = useState<Resp[]>([]);
   const [simId, setSimId] = useState<string | null>(null);
@@ -106,12 +127,14 @@ export default function Quiz() {
   }, [bruto]);
 
   const simBase = simulados.find((s) => s.id === simId) ?? null;
-  const sim: SimuladoDoc | null = simBase ? { ...simBase, perguntas: simBase.perguntas.map((x) => ajustar(x, numAlt)) } : null;
+  const sim: SimuladoDoc | null = useMemo(() => (simBase ? prepararSimulado(simBase, numAlt, semente) : null), [simBase, numAlt, semente]);
+  const maiorDeTodos = Math.max(3, ...simulados.map(maxAlternativas));
 
   function iniciar(id: string, retomar: boolean) {
     const p = retomar ? progressos[id] : undefined;
     setSimId(id);
     setNumAlt(p ? (p.n ?? 0) : numAlt);
+    setSemente(p?.s ?? Math.floor(Math.random() * 2e9) + 1);
     setI(p?.i ?? 0);
     setEscolha(p?.escolha ?? null);
     setAcertos(p?.acertos ?? 0);
@@ -145,12 +168,12 @@ export default function Quiz() {
         <div className="field">
           <label htmlFor="num-alt">Quantas alternativas por pergunta?</label>
           <select id="num-alt" value={numAlt} onChange={(e) => setNumAlt(Number(e.target.value))}>
-            <option value={0}>Como o simulado foi criado</option>
+            <option value={0}>Todas as do simulado</option>
             <option value={3}>3 alternativas (A a C), mais tranquilo</option>
-            <option value={4}>4 alternativas (A a D)</option>
-            <option value={5}>5 alternativas (A a E), como em provas de concurso</option>
+            {maiorDeTodos >= 4 && <option value={4}>4 alternativas (A a D)</option>}
+            {maiorDeTodos >= 5 && <option value={5}>5 alternativas (A a E), como em provas de concurso</option>}
           </select>
-          <p className="form-help">Vale para os simulados que você começar agora. Os que estão em aberto continuam como estavam.</p>
+          <p className="form-help">Com 3, uma das erradas sai sozinha. As perguntas e as alternativas vêm em ordem sorteada a cada vez. Os simulados em aberto continuam como estavam.</p>
         </div>
         {simulados.map((s) => {
           const p = progressos[s.id];
@@ -158,6 +181,7 @@ export default function Quiz() {
           return (
             <article className="card" key={s.id}>
               <h3>{s.titulo}</h3>
+              <small className="tmeta">{maxAlternativas(s)} alternativas por pergunta{numAlt && numAlt < maxAlternativas(s) ? ` (você vai ver ${numAlt})` : ""}</small>
               <p>{s.descricao}</p>
               <span className="tag">{s.perguntas.length} perguntas</span>
               {aberto && <span className="tag tag-aberto">em aberto: parou na pergunta {aberto.i + 1} de {s.perguntas.length}</span>}
@@ -222,7 +246,7 @@ export default function Quiz() {
     setEscolha(idx);
     setRespostas(novasResp);
     setAcertos(novosAcertos);
-    gravar({ ...progressos, [sim.id]: { i, acertos: novosAcertos, respostas: novasResp, escolha: idx, n: numAlt } });
+    gravar({ ...progressos, [sim.id]: { i, acertos: novosAcertos, respostas: novasResp, escolha: idx, n: numAlt, s: semente } });
   }
 
   function avancar() {
@@ -236,7 +260,7 @@ export default function Quiz() {
     } else {
       setI(i + 1);
       setEscolha(null);
-      gravar({ ...progressos, [sim.id]: { i: i + 1, acertos, respostas, escolha: null, n: numAlt } });
+      gravar({ ...progressos, [sim.id]: { i: i + 1, acertos, respostas, escolha: null, n: numAlt, s: semente } });
     }
   }
 

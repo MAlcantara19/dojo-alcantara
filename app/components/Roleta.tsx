@@ -11,7 +11,8 @@ import { exerciciosOuPadrao, lerExercicios, lerListasPalavras, lerPalavras, opco
 import type { Palavra } from "../lib/palavras";
 import { corDe, ehProibida, faixaEfetiva, familias, rotuloGrupo, tituloGrupoComFaixa, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 import { useCarga } from "../lib/useCarga";
-import Img from "./Img";
+import BotaoOuvir from "./BotaoOuvir";
+import CardTecnica from "./CardTecnica";
 import LinkBtns from "./LinkBtns";
 import Wheel, { type Fatia } from "./Wheel";
 
@@ -60,7 +61,9 @@ export default function Roleta() {
   const [jogo, setJogo] = useState<Jogo>("falar");
   const [resultado, setResultado] = useState<number | null>(null);
   const [apresentacao, setApresentacao] = useState(false);
-  const [som, setSom] = useState(true);
+  const [som, setSom] = useState<"classico" | "sino" | "arcade" | "nenhum">("classico");
+  const tiques = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [cardTec, setCardTec] = useState<Tecnica | null>(null);
   const [equipes, setEquipes] = useState<{ nome: string; pontos: number }[]>([]);
   const [vez, setVez] = useState(0);
   const caixa = useRef<HTMLDivElement>(null);
@@ -128,24 +131,47 @@ export default function Roleta() {
     setMarcada(null);
   }
 
-  function tocarSom() {
+  // Sons: tique-taque enquanto gira (desacelerando junto com a roleta) e um som ao parar.
+  function tom(ctx: AudioContext, freq: number, quando: number, dur: number, vol: number, tipo: OscillatorType) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = tipo;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + quando);
+    g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + quando + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + quando + dur);
+    o.connect(g).connect(ctx.destination);
+    o.start(ctx.currentTime + quando);
+    o.stop(ctx.currentTime + quando + dur + 0.02);
+  }
+  function contexto(): AudioContext | null {
     try {
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const ctx = new Ctx();
-      [660, 880, 1320].forEach((f, k) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.frequency.value = f;
-        o.type = "triangle";
-        g.gain.setValueAtTime(0.0001, ctx.currentTime + k * 0.12);
-        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + k * 0.12 + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + k * 0.12 + 0.35);
-        o.connect(g).connect(ctx.destination);
-        o.start(ctx.currentTime + k * 0.12);
-        o.stop(ctx.currentTime + k * 0.12 + 0.4);
-      });
-      setTimeout(() => void ctx.close(), 1200);
-    } catch {}
+      return new Ctx();
+    } catch {
+      return null;
+    }
+  }
+  function somGirando() {
+    tiques.current.forEach(clearTimeout);
+    tiques.current = [];
+    if (som !== "classico" && som !== "arcade") return;
+    const ctx = contexto();
+    if (!ctx) return;
+    const n = 34;
+    for (let k = 0; k < n; k++) {
+      const t = 4200 * (1 - Math.cbrt(1 - k / n)); // mais rápido no começo, mais lento no fim
+      tiques.current.push(setTimeout(() => (som === "classico" ? tom(ctx, 1800, 0, 0.025, 0.12, "square") : tom(ctx, 600 + (k % 4) * 120, 0, 0.05, 0.08, "triangle")), t));
+    }
+    tiques.current.push(setTimeout(() => void ctx.close(), 4600));
+  }
+  function tocarSom() {
+    if (som === "nenhum") return;
+    const ctx = contexto();
+    if (!ctx) return;
+    if (som === "arcade") [523, 659, 784, 1046].forEach((f, k) => tom(ctx, f, k * 0.09, 0.18, 0.2, "square"));
+    else [660, 880, 1320].forEach((f, k) => tom(ctx, f, k * 0.12, 0.4, 0.22, "triangle"));
+    setTimeout(() => void ctx.close(), 1400);
   }
 
   async function alternarApresentacao() {
@@ -161,7 +187,8 @@ export default function Roleta() {
 
   function terminou(i: number) {
     setResultado(i);
-    if (som) tocarSom();
+    tocarSom();
+    if (modo === "tecnicas" && tecs[i]) setCardTec(tecs[i]);
     setGirando(false);
     if (modo === "palavras" && semRepetir && palavras[i]) setSorteadas((s) => [...s, palavras[i].termo]);
     if (modo === "palavras" && (jogo === "escolher" || jogo === "inverso-escolher")) setEscolhas(montarEscolhas(todasPalavras, todasPalavras.indexOf(palavras[i]), jogo === "inverso-escolher"));
@@ -181,9 +208,12 @@ export default function Roleta() {
         <button type="button" className="btn btn-ghost mini" onClick={() => void alternarApresentacao()}>
           {apresentacao ? "✕ Sair da apresentação" : "📺 Modo apresentação"}
         </button>
-        <button type="button" className="btn btn-ghost mini" onClick={() => setSom((v) => !v)} aria-pressed={som}>
-          {som ? "🔔 Som ligado" : "🔕 Som desligado"}
-        </button>
+        <select className="som-escolha" value={som} onChange={(e) => setSom(e.target.value as typeof som)} aria-label="Som da roleta">
+          <option value="classico">🔔 Som: roleta clássica</option>
+          <option value="sino">🔔 Som: só o sino no fim</option>
+          <option value="arcade">🎮 Som: videogame</option>
+          <option value="nenhum">🔕 Sem som</option>
+        </select>
         {!equipes.length && (
           <button type="button" className="btn btn-ghost mini" onClick={() => (setEquipes([{ nome: "Equipe 1", pontos: 0 }, { nome: "Equipe 2", pontos: 0 }]), setVez(0))}>
             🏆 Jogar em equipes
@@ -315,7 +345,7 @@ export default function Roleta() {
         </div>
       )}
 
-      <Wheel key={chave} fatias={fatias} onInicio={() => (setResultado(null), setMostrar(false), setEscolhas([]), setMarcada(null), setGirando(true), resultado !== null && equipes.length > 1 && setVez((v) => (v + 1) % equipes.length))} onResultado={terminou} />
+      <Wheel key={chave} fatias={fatias} onInicio={() => (setResultado(null), setMostrar(false), setEscolhas([]), setMarcada(null), setGirando(true), somGirando(), resultado !== null && equipes.length > 1 && setVez((v) => (v + 1) % equipes.length))} onResultado={terminou} />
 
       <div className="result-card" aria-live="polite" style={{ borderColor: tec ? corDe(tec) : undefined }}>
         {resultado === null ? (
@@ -343,6 +373,7 @@ export default function Roleta() {
               <>
                 <strong className="result-word">{pal.termo}</strong>
                 {pal.folha && pal.folha.toLowerCase() !== pal.termo.toLowerCase() && <small className="na-folha">Na folha: {pal.folha}</small>}
+                <BotaoOuvir texto={pal.termo} grande={apresentacao} />
               </>
             )}
             {jogo === "escolher" || jogo === "inverso-escolher" ? (
@@ -377,7 +408,7 @@ export default function Roleta() {
                   inverso ? (
                     <span className="reel-meaning-dark">
                       <b>{pal.termo}</b>
-                      {pal.folha && pal.folha.toLowerCase() !== pal.termo.toLowerCase() ? ` (na folha: ${pal.folha})` : ""}
+                      {pal.folha && pal.folha.toLowerCase() !== pal.termo.toLowerCase() ? ` (na folha: ${pal.folha})` : ""} <BotaoOuvir texto={pal.termo} grande={apresentacao} />
                     </span>
                   ) : (
                     <span className="reel-meaning-dark">
@@ -397,8 +428,11 @@ export default function Roleta() {
         ) : tec ? (
           <>
             <strong className="result-word">{tec.nome}</strong>
+            <BotaoOuvir texto={tec.nome} grande={apresentacao} />
             {ehProibida(tec, cfg) && <span className="aviso-proibida">⛔ Proibida em competições</span>}
-            {cfg?.imagem && <Img className="result-img" src={cfg.imagem} alt={`Imagem da técnica ${tec.nome}`} largura={700} />}
+            <button type="button" className="btn btn-primary" onClick={() => setCardTec(tec)}>
+              🥋 Abrir o card da técnica
+            </button>
             <span className="chip" style={{ background: corDe(tec), color: ["6", "5", "S", "-"].includes(tec.grupo) || tec.categoria === "Katame-waza" ? "#fff" : "#1a1030" }}>
               {rotuloGrupo(tec)}
             </span>
@@ -414,6 +448,7 @@ export default function Roleta() {
           </>
         ) : null}
       </div>
+      {cardTec && <CardTecnica t={cardTec} onFechar={() => setCardTec(null)} onAbrir={(x) => setCardTec(x)} />}
       {modo === "palavras" && escolhida.nome === NOME_LISTA_60 && (
         <details className="tabela-60">
           <summary>📄 Ver as 60 palavras (folha e uso atual)</summary>

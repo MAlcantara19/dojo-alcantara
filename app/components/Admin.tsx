@@ -15,6 +15,7 @@ import AdminAlunos from "./AdminAlunos";
 import AdminAulas from "./AdminAulas";
 import AdminCampeonatos from "./AdminCampeonatos";
 import AdminChamada from "./AdminChamada";
+import SecaoAtual from "./SecaoAtual";
 import AdminExames from "./AdminExames";
 import AdminExperimentais from "./AdminExperimentais";
 import AdminMensalidades from "./AdminMensalidades";
@@ -106,13 +107,7 @@ function Painel({ nome, email, uid, ehAdmin, turmas }: { nome: string; email: st
         </button>
       )}
 
-      <div className="tabs tabs-scroll tabs-painel" role="tablist" aria-label="Seções do painel">
-        {abas.map(([k, r]) => (
-          <button key={k} role="tab" aria-selected={aba === k} onClick={() => setAba(k)}>
-            {r}
-          </button>
-        ))}
-      </div>
+      <SecaoAtual grupo="Área do professor" nome={abas.find(([k]) => k === aba)?.[1] ?? "Resumo"} />
 
       <div className="aba" key={aba}>
         {aba === "resumo" && <AdminResumo uid={uid} escopo={escopo} novosResultados={res.novos} ir={(x) => setAba(x)} ehAdmin={ehAdmin} />}

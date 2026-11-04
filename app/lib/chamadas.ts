@@ -2,7 +2,7 @@ import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase
 import { getDb } from "./firebase";
 
 /* Chamada: uma por turma e por dia. Marcado = veio; não marcado = faltou. */
-export type Chamada = { id: string; turma: string; data: string; presentes: string[]; total: number; autor: string; ts: number; obs?: string; visitantes?: string[] };
+export type Chamada = { id: string; turma: string; data: string; presentes: string[]; total: number; autor: string; ts: number; obs?: string; visitantes?: string[]; nomes?: Record<string, string> };
 
 export const idChamada = (turma: string, data: string) => `${turma.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-")}_${data}`;
 

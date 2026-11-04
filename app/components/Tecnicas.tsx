@@ -3,14 +3,10 @@
 import { useState, useSyncExternalStore } from "react";
 import { useTecnicas } from "../lib/conteudo";
 import { podeVer, useAcessoTecnicas } from "../lib/acesso";
-import { useFichas } from "../lib/fichas";
 import Link from "next/link";
 import { corDaFaixa, faixas } from "../lib/faixas";
-import Carrossel from "./Carrossel";
+import CardTecnica from "./CardTecnica";
 import Img from "./Img";
-import { idYoutube } from "./Midia";
-import LinkBtns from "./LinkBtns";
-import Modal from "./Modal";
 import TiltCard from "./TiltCard";
 import { ehProibida, faixaEfetiva, familias, grupos, tituloGrupoComFaixa, type Familia, type GrupoId, type Tecnica } from "../lib/tecnicas";
 
@@ -32,7 +28,6 @@ export default function Tecnicas() {
   const [modo, setModo] = useState<Modo>("grupo");
   const [busca, setBusca] = useState("");
   const { mapa, lista: catalogo } = useTecnicas();
-  const fichasDrive = useFichas();
   const [aberta, setAberta] = useState<Item | null>(null);
 
   const termo = busca.trim().toLowerCase();
@@ -170,85 +165,10 @@ export default function Tecnicas() {
       ))}
       </div>
 
-      {atual && (
-        <Modal titulo={atual.nome} onFechar={fecharCard}>
-          <h3 className="modal-titulo">{atual.nome}</h3>
-          <p className="tmeta">
-            {atual.familia ?? "Nage-waza"}
-            {atual.grupo === "S" && " · Shinmeisho"}
-            {atual.faixaFinal && ` · Faixa ${atual.faixaFinal.toLowerCase()}${atual.sugerida ? " (padrão do grupo)" : ""}`}
-          </p>
-          {ehProibida(atual, mapa[atual.id]) && <p className="aviso-proibida" role="note">⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.</p>}
-          <LinkBtns nome={atual.nome} cfg={mapa[atual.id]} />
-          <Carrossel
-            itens={[mapa[atual.id]?.imagem, ...(mapa[atual.id]?.midias ?? []), mapa[atual.id]?.video && idYoutube(mapa[atual.id]?.video ?? "") ? mapa[atual.id]?.video : "", ...(mapa[atual.id]?.links ?? []).map((l) => (idYoutube(l.url) ? l.url : ""))]
-              .filter((s): s is string => Boolean(s))
-              .filter((s, i, l) => l.indexOf(s) === i)
-              .map((src, i) => ({ src, alt: `${atual.nome} (${i + 1})` }))}
-          />
-          {atual.nota && <p className="tnota">* {atual.nota}</p>}
-          <Ligacoes t={atual} catalogo={catalogo} mapa={mapa} abrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />
-          {(() => {
-            const fx = faixaEfetiva(atual, mapa[atual.id]).faixa;
-            const ff = fx ? fichasDrive.faixas[fx] : undefined;
-            const url = ff?.pdf ?? ff?.imagem;
-            return url ? (
-              <a className="btn btn-ghost ficha-faixa" href={url} target="_blank" rel="noopener noreferrer">
-                📘 Abrir a ficha completa da faixa {fx?.toLowerCase()}
-              </a>
-            ) : null;
-          })()}
-        </Modal>
-      )}
+      {atual && <CardTecnica t={atual} onFechar={fecharCard} onAbrir={(x) => setAberta({ ...x, faixaFinal: faixaEfetiva(x, mapa[x.id]).faixa, sugerida: faixaEfetiva(x, mapa[x.id]).sugerida })} />}
 
       <p className="form-help">Lista baseada nas 100 técnicas do Kodokan (2022). A faixa “padrão do grupo” pode ser trocada pelo professor, técnica por técnica.</p>
     </div>
   );
 }
 
-/** Sequências e contragolpes da técnica, e onde ela aparece nas outras (toque para abrir). */
-function Ligacoes({ t, catalogo, mapa, abrir }: { t: Tecnica; catalogo: Tecnica[]; mapa: Record<string, { sequencias?: string[]; contragolpes?: string[] }>; abrir: (t: Tecnica) => void }) {
-  const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
-  const achar = (nome: string) => catalogo.find((x) => norm(x.nome) === norm(nome));
-  const seq = mapa[t.id]?.sequencias ?? [];
-  const con = mapa[t.id]?.contragolpes ?? [];
-  const vemDepois = catalogo.filter((x) => (mapa[x.id]?.sequencias ?? []).some((n) => norm(n) === norm(t.nome)));
-  const respondeA = catalogo.filter((x) => (mapa[x.id]?.contragolpes ?? []).some((n) => norm(n) === norm(t.nome)));
-  if (!seq.length && !con.length && !vemDepois.length && !respondeA.length) return null;
-  const chip = (nome: string, k: string, seta: string) => {
-    const x = achar(nome);
-    return x ? (
-      <button key={k} type="button" className="lig-chip" onClick={() => abrir(x)}>
-        {seta} {x.nome}
-      </button>
-    ) : (
-      <span key={k} className="lig-chip">
-        {seta} {nome}
-      </span>
-    );
-  };
-  return (
-    <div className="ligacoes">
-      {seq.length > 0 && (
-        <p>
-          <b>Sequência (renraku-waza):</b> {t.nome} {seq.map((n, i) => chip(n, "s" + i, "→"))}
-        </p>
-      )}
-      {vemDepois.length > 0 && (
-        <p>
-          <b>Vem depois de:</b> {vemDepois.map((x, i) => chip(x.nome, "v" + i, "←"))}
-        </p>
-      )}
-      {con.length > 0 && (
-        <p>
-          <b>Contragolpes (kaeshi-waza):</b> {con.map((n, i) => chip(n, "c" + i, "↩"))}
-        </p>
-      )}
-      {respondeA.length > 0 && (
-        <p>
-          <b>É contragolpe de:</b> {respondeA.map((x, i) => chip(x.nome, "r" + i, "↩"))}
-        </p>
-      )}
-    </div>
-  );
-}
