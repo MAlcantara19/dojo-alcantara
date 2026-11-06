@@ -1,27 +1,18 @@
-ATUALIZAÇÃO 37 — PASTA "app" COMPLETA (já inclui da 30 até a 36; instale só esta)
+ATUALIZAÇÃO 38 — PASTA "app" COMPLETA (já inclui da 30 até a 37; instale só esta)
 
 1. Na pasta C:\projetos\dojo-alcantara, MOVA a pasta "app" para a Área de Trabalho (cópia fora do projeto).
 2. Extraia este zip em C:\projetos\dojo-alcantara.
-3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR (obrigatório: destaques e chamadas da turma).
+3. Firebase > Firestore > Regras: cole o firestore.rules deste zip e PUBLICAR.
 4. npm run build
 5. git add .
-   git commit -m "Card da tecnica com todas as fichas e zoom, roleta melhor, simulados aleatorios, destaques da turma e menu so na lateral"
+   git commit -m "Vozes feminina e masculina, card por cima de tudo e tecnicas liberadas direto na pagina Tecnicas"
    git push
 
 NOVIDADES
- - Card da técnica igual em todo o site (Técnicas, Roleta, perfil): todas as fichas da técnica
-   em carrossel (setas ou arrastar), vídeos, PDF e 🔊 pronúncia. Toque na foto: tela cheia com
-   zoom só nela (dois dedos, toque duplo, + e −) e arrastar para trocar de foto.
- - Fichas do Drive: várias fichas da mesma técnica entram juntas. Nomeie assim:
-   "Harai-goshi.jpg", "Harai-goshi 2.jpg", "Harai-goshi 3.jpg" (ou "Harai-goshi (2).jpg").
- - Roleta: controles pequenos à direita; sons para escolher (roleta clássica com tique-taque,
-   só o sino, videogame, sem som); no modo apresentação dá para trocar listas e modos, e no
-   computador a roleta fica de um lado e a resposta do outro; técnica sorteada abre o card
-   sozinha; 🔊 Ouvir nas palavras.
- - Simulados: perguntas e alternativas em ordem sorteada a cada vez; o menu só mostra as
-   quantidades que existem (com 3, uma errada sai sozinha).
- - Materiais e PDFs: sem a faixa branca e só as faixas liberadas para quem está vendo.
- - Menu só na lateral: o painel e a Minha área mostram em qual seção você está e o botão
-   "☰ Outras seções", que abre o menu lateral.
- - Destaques do mês (Painel > Resumo): presença com empates (🥇🥈🥉🥉, bronze até o 4º) e
-   competições internas (exercício, tempo e observação). A turma vê em Minha área.
+ - Card da técnica: os botões de ouvir saíram de trás do X; o card abre por cima de tudo,
+   direto na tela (no celular não fica mais lá embaixo). A foto em tela cheia também.
+ - 🔊 Voz feminina e 🔊 Voz masculina, e a opção "ler também a família" (ex.: Seoi-nage, Te-waza).
+   Se o aparelho só tiver voz feminina em japonês, a masculina sai simulada (mais grave) e o
+   site avisa.
+ - "Minhas técnicas" saiu da Minha área: quem entra com a conta já vê na página Técnicas só as
+   técnicas liberadas para a faixa dele (o atalho do início leva para lá).

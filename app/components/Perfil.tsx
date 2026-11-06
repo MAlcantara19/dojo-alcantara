@@ -92,6 +92,10 @@ function useAba() {
 
 function Conteudo({ uid }: { uid: string }) {
   const aba = useAba();
+  // “Minhas técnicas” agora é a própria página Técnicas (já mostra só o que está liberado para você)
+  useEffect(() => {
+    if (window.location.hash === "#tecnicas") window.location.replace("/tecnicas");
+  }, []);
   const { perfilCompleto } = usePerfil(uid);
   const medidas = useCarga(() => lerMedidas(uid), VAZIO_M);
   const notas = useCarga(() => lerNotas(uid), VAZIO_N);

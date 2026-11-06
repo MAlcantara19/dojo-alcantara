@@ -68,20 +68,43 @@ export function romajiParaKana(romaji: string): string {
   return r;
 }
 
-export function vozJaponesaDisponivel(): boolean {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-  return speechSynthesis.getVoices().some((v) => v.lang.toLowerCase().startsWith("ja"));
+/* Vozes: cada aparelho tem as suas. Procura uma masculina e uma feminina pelo nome; se não houver
+   masculina, usa a mesma voz com tom mais grave (aparece como “simulada”). */
+const MASCULINAS = /ichiro|keita|otoya|hattori|daichi|naoki|takumi|kenji|male|homem|masculin/i;
+const FEMININAS = /kyoko|haruka|ayumi|nanami|mizuki|sayaka|o-ren|female|mulher|feminin|google/i;
+export type Voz = "feminina" | "masculina";
+
+function vozesJa(): SpeechSynthesisVoice[] {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
+  return speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("ja"));
+}
+/** Qual voz o aparelho tem de verdade (para avisar quando a masculina for simulada). */
+export function temVozMasculina(): boolean {
+  return vozesJa().some((v) => MASCULINAS.test(v.name));
 }
 
-/** Fala a palavra. Devolve false se o aparelho não falar (sem voz em japonês). */
-export function falarJapones(romaji: string, kana?: string): boolean {
+export function vozJaponesaDisponivel(): boolean {
+  return vozesJa().length > 0;
+}
+
+/** Fala a palavra (e, se vier, a família: “Seoi-nage. Te-waza”). Devolve false se o aparelho não falar japonês. */
+export function falarJapones(romaji: string, kana?: string, voz: Voz = "feminina", extra?: string): boolean {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-  const u = new SpeechSynthesisUtterance(kana || romajiParaKana(romaji));
+  const texto = (kana || romajiParaKana(romaji)) + (extra ? "。" + romajiParaKana(extra) : "");
+  const u = new SpeechSynthesisUtterance(texto);
   u.lang = "ja-JP";
   u.rate = 0.85;
-  const voz = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("ja"));
-  if (voz) u.voice = voz;
+  const lista = vozesJa();
+  const masc = lista.find((v) => MASCULINAS.test(v.name));
+  const fem = lista.find((v) => FEMININAS.test(v.name) && !MASCULINAS.test(v.name)) ?? lista.find((v) => !MASCULINAS.test(v.name));
+  if (voz === "masculina") {
+    u.voice = masc ?? fem ?? lista[0] ?? null;
+    u.pitch = masc ? 1 : 0.55; // sem voz masculina no aparelho: deixa mais grave
+  } else {
+    u.voice = fem ?? lista[0] ?? null;
+    u.pitch = 1.05;
+  }
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
-  return Boolean(voz) || speechSynthesis.getVoices().length === 0;
+  return lista.length > 0 || speechSynthesis.getVoices().length === 0;
 }

@@ -28,16 +28,14 @@ export default function CardTecnica({ t, onFechar, onAbrir }: { t: Tecnica & { n
 
   return (
     <Modal titulo={t.nome} onFechar={onFechar}>
-      <div className="card-tec-topo">
-        <h3 className="modal-titulo">{t.nome}</h3>
-        <BotaoOuvir texto={t.nome} />
-      </div>
+      <h3 className="modal-titulo">{t.nome}</h3>
       <p className="tmeta">
         {t.familia ?? "Nage-waza"}
         {t.grupo === "S" && " · Shinmeisho"}
         {fx.faixa && ` · Faixa ${fx.faixa.toLowerCase()}${fx.sugerida ? " (padrão do grupo)" : ""}`}
         {itens.length > 1 ? ` · ${itens.length} fichas e vídeos` : ""}
       </p>
+      <BotaoOuvir texto={t.nome} familia={(t.familia ?? "Nage-waza").split(/[·(]/)[0].trim()} />
       {ehProibida(t, cfg) && (
         <p className="aviso-proibida" role="note">
           ⛔ Técnica proibida em competições. Não use em campeonato: há risco de lesão para o atleta.

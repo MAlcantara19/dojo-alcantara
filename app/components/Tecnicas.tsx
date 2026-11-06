@@ -80,6 +80,9 @@ export default function Tecnicas() {
 
   return (
     <div className="tool">
+      {acesso.logado && !acesso.todas && (
+        <p className="form-help">🥋 Aqui aparecem as técnicas liberadas para você, até a faixa {Array.from(acesso.liberadas).pop()?.toLowerCase() ?? "atual"}.</p>
+      )}
       {faixaDoEndereco && (
         <div className="filtro-faixa">
           <span>

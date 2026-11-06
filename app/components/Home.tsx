@@ -108,7 +108,7 @@ export default function Home() {
                     ["/calendario", "🗓 Calendário"],
                   ]
                 : [
-                    ["/perfil#tecnicas", "🥋 Minhas técnicas"],
+                    ["/tecnicas", "🥋 Minhas técnicas"],
                     ["/perfil#checklist", "✅ Checklist"],
                     ["/simulados", "📝 Simulados"],
                     ["/perfil#corpo", "⚖️ Peso"],

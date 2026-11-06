@@ -1233,3 +1233,9 @@ html[data-leve="on"] *{backdrop-filter:none!important;-webkit-backdrop-filter:no
 .podio li>span:nth-child(2){display:grid;flex:1;min-width:0}
 .podio small{color:var(--muted)}
 .podio-medalha{font-size:1.6rem;width:34px;text-align:center}
+
+/* Título do card nunca fica atrás do X */
+.modal .modal-titulo{padding-right:52px}
+.ouvir-botoes{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ouvir-familia{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer}
+.ouvir-botoes .btn{width:auto!important;flex:0 0 auto}

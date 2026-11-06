@@ -1,5 +1,6 @@
 "use client";
 
+import PorCima from "./PorCima";
 import { useEffect, useRef } from "react";
 
 /** Janela por cima da página (para ver a foto grande ou os detalhes da técnica). */
@@ -21,6 +22,7 @@ export default function Modal({ titulo, onFechar, children }: { titulo: string; 
   }, [onFechar]);
 
   return (
+    <PorCima>
     <div className="modal-fundo" onClick={onFechar}>
       <div className="modal" role="dialog" aria-modal="true" aria-label={titulo} onClick={(e) => e.stopPropagation()}>
         <button ref={fechar} className="icon-btn modal-x" aria-label="Fechar" onClick={onFechar}>
@@ -31,5 +33,6 @@ export default function Modal({ titulo, onFechar, children }: { titulo: string; 
         {children}
       </div>
     </div>
+    </PorCima>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Img from "./Img";
+import PorCima from "./PorCima";
 
 /**
  * Foto em tela cheia com zoom só nela (não no site): dois dedos para aproximar, arrastar para mover,
@@ -76,6 +77,7 @@ export default function ZoomImagem({ fotos, inicio, onFechar }: { fotos: { src: 
 
   const f = fotos[i];
   return (
+    <PorCima>
     <div className="zoom-fundo" role="dialog" aria-modal="true" aria-label={f.alt}>
       <div className="zoom-topo">
         <span>{fotos.length > 1 ? `${i + 1} de ${fotos.length}` : ""}</span>
@@ -115,5 +117,6 @@ export default function ZoomImagem({ fotos, inicio, onFechar }: { fotos: { src: 
       )}
       <p className="zoom-dica">Dois dedos para aproximar · toque duplo para ampliar · arraste para o lado para trocar</p>
     </div>
+    </PorCima>
   );
 }
